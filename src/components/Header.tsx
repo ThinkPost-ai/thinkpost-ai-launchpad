@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Rocket, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,8 +19,12 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="bg-gradient-primary p-2 rounded-lg">
-              <Rocket className="h-6 w-6 text-white" />
+            <div className="p-1">
+              <img 
+                src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
+                alt="ThinkPost.ai Logo" 
+                className="h-10 w-10"
+              />
             </div>
             <span className="text-xl font-bold text-deep-blue">ThinkPost.ai</span>
           </div>
