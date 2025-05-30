@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,7 +15,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -26,7 +27,7 @@ const Header = () => {
                 className="h-10 w-10"
               />
             </div>
-            <span className="text-xl font-bold text-deep-blue">ThinkPost.ai</span>
+            <span className="text-xl font-bold text-deep-blue dark:text-white">ThinkPost.ai</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -35,16 +36,17 @@ const Header = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-gray-600 hover:text-deep-blue transition-colors duration-200 font-medium"
+                className="text-gray-600 dark:text-gray-300 hover:text-deep-blue dark:hover:text-white transition-colors duration-200 font-medium"
               >
                 {link.name}
               </a>
             ))}
           </nav>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Auth Buttons and Theme Toggle */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-deep-blue hover:bg-deep-blue/10">
+            <ThemeToggle />
+            <Button variant="ghost" className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10">
               Sign In
             </Button>
             <Button className="bg-gradient-primary hover:opacity-90 text-white">
@@ -53,34 +55,37 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-deep-blue" />
-            ) : (
-              <Menu className="h-6 w-6 text-deep-blue" />
-            )}
-          </button>
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              className="p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6 text-deep-blue dark:text-white" />
+              ) : (
+                <Menu className="h-6 w-6 text-deep-blue dark:text-white" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
+          <div className="md:hidden py-4 border-t border-gray-100 dark:border-gray-800">
             <nav className="flex flex-col space-y-4">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-gray-600 hover:text-deep-blue transition-colors duration-200 font-medium px-2 py-1"
+                  className="text-gray-600 dark:text-gray-300 hover:text-deep-blue dark:hover:text-white transition-colors duration-200 font-medium px-2 py-1"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}
                 </a>
               ))}
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="ghost" className="text-deep-blue hover:bg-deep-blue/10 w-full">
+                <Button variant="ghost" className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full">
                   Sign In
                 </Button>
                 <Button className="bg-gradient-primary hover:opacity-90 text-white w-full">
