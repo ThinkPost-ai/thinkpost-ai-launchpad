@@ -7,20 +7,8 @@ const Hero = () => {
     <section className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16 transition-colors">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left side - Demo Video */}
-          <div className="order-2 lg:order-1">
-            <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg shadow-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Play className="h-8 w-8 text-white ml-1" />
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right side - Text Content */}
-          <div className="order-1 lg:order-2 text-center lg:text-left">
+          {/* Left side - Text Content */}
+          <div className="order-1 lg:order-1 text-center lg:text-left">
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-gradient-primary/10 dark:bg-gradient-primary/20 px-4 py-2 rounded-full mb-8 animate-fade-in">
               <Sparkles className="h-4 w-4 text-vibrant-purple dark:text-purple-400" />
@@ -74,6 +62,18 @@ const Hero = () => {
               <div className="text-center lg:text-left">
                 <div className="text-3xl font-bold text-deep-blue dark:text-white mb-2">99.9%</div>
                 <div className="text-gray-600 dark:text-gray-400">Uptime</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Demo Video */}
+          <div className="order-2 lg:order-2">
+            <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg shadow-lg flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Play className="h-8 w-8 text-white ml-1" />
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
               </div>
             </div>
           </div>
