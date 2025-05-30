@@ -25,11 +25,9 @@ const Hero = () => {
 
             {/* Slogan */}
             <div className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 animate-fade-in animate-delay-100">
-              <div className="leading-relaxed">
-                Post smarter.<br />
-                <span className="ml-8">Reach further.</span><br />
-                <span className="ml-16 bg-gradient-primary bg-clip-text text-transparent">AI will do.</span>
-              </div>
+              <p className="leading-relaxed">
+                Post smarter. Reach further. <span className="bg-gradient-primary bg-clip-text text-transparent">AI will do.</span>
+              </p>
             </div>
 
             {/* Subheading */}
@@ -68,14 +66,14 @@ const Hero = () => {
 
           {/* Right side - Demo Video */}
           <div className="order-2 lg:order-2 flex items-center justify-center">
-            <div className="relative w-full max-w-lg bg-gray-200 dark:bg-gray-700 rounded-xl shadow-2xl overflow-hidden">
-              <div className="aspect-video flex items-center justify-center p-8">
+            <div className="relative w-full max-w-2xl bg-gray-200 dark:bg-gray-700 rounded-xl shadow-2xl overflow-hidden">
+              <div className="aspect-video flex items-center justify-center p-12">
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                    <Play className="h-10 w-10 text-white ml-1" />
+                  <div className="w-24 h-24 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
+                    <Play className="h-12 w-12 text-white ml-1" />
                   </div>
-                  <p className="text-lg text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">See our AI in action</p>
+                  <p className="text-xl text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
+                  <p className="text-base text-gray-500 dark:text-gray-400 mt-3">See our AI in action</p>
                 </div>
               </div>
             </div>
