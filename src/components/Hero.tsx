@@ -21,6 +21,15 @@ const Hero = () => {
             </span>
           </h1>
 
+          {/* Slogan */}
+          <div className="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-300 mb-6 animate-fade-in animate-delay-100">
+            <div className="leading-relaxed">
+              Post smarter.<br />
+              <span className="ml-8">Reach further.</span><br />
+              <span className="ml-16 bg-gradient-primary bg-clip-text text-transparent">AI will do.</span>
+            </div>
+          </div>
+
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed animate-fade-in animate-delay-200">
             Create engaging, high-quality content in seconds with our advanced AI platform. 
