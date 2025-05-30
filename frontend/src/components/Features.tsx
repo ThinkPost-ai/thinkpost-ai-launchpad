@@ -1,4 +1,3 @@
-
 import { Upload, Sparkles, Share2, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
