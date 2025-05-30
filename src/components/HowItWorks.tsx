@@ -1,3 +1,4 @@
+
 import { ArrowRight, Upload, Wand2, Rocket } from 'lucide-react';
 
 const HowItWorks = () => {
