@@ -10,13 +10,13 @@ const Hero = () => {
           {/* Left side - Text Content */}
           <div className="order-1 lg:order-1 text-center lg:text-left">
             {/* Badge */}
-            <div className="inline-flex items-center space-x-2 bg-gradient-primary/10 dark:bg-gradient-primary/20 px-4 py-2 rounded-full mb-8 animate-fade-in">
+            <div className="inline-flex items-center space-x-2 bg-gradient-primary/10 dark:bg-gradient-primary/20 px-4 py-2 rounded-full mb-6 animate-fade-in">
               <Sparkles className="h-4 w-4 text-vibrant-purple dark:text-purple-400" />
               <span className="text-sm font-medium text-deep-blue dark:text-gray-300">AI-Powered Content Generation</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-deep-blue dark:text-white mb-6 animate-fade-in">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-deep-blue dark:text-white mb-4 animate-fade-in">
               Transform Your
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 Content Strategy
@@ -24,7 +24,7 @@ const Hero = () => {
             </h1>
 
             {/* Slogan */}
-            <div className="text-xl md:text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-6 animate-fade-in animate-delay-100">
+            <div className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 animate-fade-in animate-delay-100">
               <div className="leading-relaxed">
                 Post smarter.<br />
                 <span className="ml-8">Reach further.</span><br />
@@ -33,47 +33,50 @@ const Hero = () => {
             </div>
 
             {/* Subheading */}
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed animate-fade-in animate-delay-200">
+            <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed animate-fade-in animate-delay-200">
               Create engaging, high-quality content in seconds with our advanced AI platform. 
               Boost your productivity and never run out of ideas again.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-12 animate-fade-in animate-delay-400">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 text-white px-8 py-4 text-lg font-semibold group">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-center mb-8 animate-fade-in animate-delay-400">
+              <Button size="lg" className="bg-gradient-primary hover:opacity-90 text-white px-6 py-3 text-base font-semibold group">
                 Start Creating Free
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="outline" size="lg" className="border-deep-blue text-deep-blue dark:border-gray-600 dark:text-gray-300 hover:bg-deep-blue hover:text-white dark:hover:bg-gray-700 px-8 py-4 text-lg font-semibold">
+              <Button variant="outline" size="lg" className="border-deep-blue text-deep-blue dark:border-gray-600 dark:text-gray-300 hover:bg-deep-blue hover:text-white dark:hover:bg-gray-700 px-6 py-3 text-base font-semibold">
                 Watch Demo
               </Button>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in animate-delay-600">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in animate-delay-600">
               <div className="text-center lg:text-left">
-                <div className="text-3xl font-bold text-deep-blue dark:text-white mb-2">10M+</div>
-                <div className="text-gray-600 dark:text-gray-400">Content Pieces Generated</div>
+                <div className="text-2xl font-bold text-deep-blue dark:text-white mb-1">10M+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Content Pieces Generated</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-3xl font-bold text-deep-blue dark:text-white mb-2">50K+</div>
-                <div className="text-gray-600 dark:text-gray-400">Happy Users</div>
+                <div className="text-2xl font-bold text-deep-blue dark:text-white mb-1">50K+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Happy Users</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-3xl font-bold text-deep-blue dark:text-white mb-2">99.9%</div>
-                <div className="text-gray-600 dark:text-gray-400">Uptime</div>
+                <div className="text-2xl font-bold text-deep-blue dark:text-white mb-1">99.9%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Uptime</div>
               </div>
             </div>
           </div>
 
           {/* Right side - Demo Video */}
-          <div className="order-2 lg:order-2">
-            <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg shadow-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Play className="h-8 w-8 text-white ml-1" />
+          <div className="order-2 lg:order-2 flex items-center justify-center">
+            <div className="relative w-full max-w-lg bg-gray-200 dark:bg-gray-700 rounded-xl shadow-2xl overflow-hidden">
+              <div className="aspect-video flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <Play className="h-10 w-10 text-white ml-1" />
+                  </div>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">See our AI in action</p>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 font-medium">Demo Video Coming Soon</p>
               </div>
             </div>
           </div>
