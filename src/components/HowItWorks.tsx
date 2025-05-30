@@ -1,93 +1,70 @@
 
-import { ArrowRight, Upload, Wand2, Rocket } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PenTool, Sparkles, Download, ArrowRight } from 'lucide-react';
 
 const HowItWorks = () => {
   const steps = [
     {
-      icon: Upload,
-      title: 'Upload Your Content',
-      description: 'Drag and drop your photos and videos into our platform. We handle the rest.',
-      step: '01'
+      icon: PenTool,
+      step: "01",
+      title: "Describe Your Needs",
+      description: "Tell us what type of content you need, your target audience, and key messaging points."
     },
     {
-      icon: Wand2,
-      title: 'AI Generates Captions',
-      description: 'Our smart AI creates engaging captions, hashtags, and content optimized for each platform.',
-      step: '02'
+      icon: Sparkles,
+      step: "02", 
+      title: "AI Creates Content",
+      description: "Our advanced AI analyzes your requirements and generates high-quality, engaging content."
     },
     {
-      icon: Rocket,
-      title: 'Post & Engage',
-      description: 'Publish across all your social media platforms instantly or schedule for later.',
-      step: '03'
+      icon: Download,
+      step: "03",
+      title: "Review & Use",
+      description: "Review the generated content, make any adjustments, and publish across your channels."
     }
   ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-gradient-to-br from-gray-50 to-white">
+    <section id="how-it-works" className="py-20 bg-gray-50 dark:bg-gray-800 transition-colors">
       <div className="container mx-auto px-4 lg:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold text-deep-blue mb-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-deep-blue dark:text-white mb-6">
             How It Works
           </h2>
-          <p className="text-lg text-gray-600">
-            Get from content idea to published post in just three simple steps.
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Get started with ThinkPost.ai in just three simple steps and transform your content creation process.
           </p>
         </div>
 
-        <div className="relative">
-          {/* Connection lines for desktop */}
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-vibrant-purple to-deep-blue transform -translate-y-1/2 z-0"></div>
-          
-          <div className="grid md:grid-cols-3 gap-12 relative z-10">
-            {steps.map((step, index) => (
-              <div key={index} className="text-center animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
-                {/* Step number */}
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary text-white rounded-full text-xl font-bold mb-6 relative">
-                  {step.step}
-                  {index < steps.length - 1 && (
-                    <ArrowRight className="hidden lg:block absolute -right-8 top-1/2 transform -translate-y-1/2 h-6 w-6 text-vibrant-purple" />
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {steps.map((step, index) => (
+            <div key={index} className="relative">
+              <Card className="text-center p-8 h-full border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 hover:shadow-lg transition-all duration-300">
+                <CardContent className="pt-6">
+                  <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                    <step.icon className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="text-sm font-bold text-vibrant-purple dark:text-purple-400 mb-2">STEP {step.step}</div>
+                  <h3 className="text-xl font-semibold text-deep-blue dark:text-white mb-4">{step.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{step.description}</p>
+                </CardContent>
+              </Card>
+              
+              {/* Arrow between steps */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+                  <ArrowRight className="h-6 w-6 text-gray-400 dark:text-gray-500" />
                 </div>
-
-                {/* Icon */}
-                <div className="w-20 h-20 mx-auto mb-6 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow duration-300">
-                  <step.icon className="h-10 w-10 text-vibrant-purple" />
-                </div>
-
-                {/* Content */}
-                <h3 className="text-xl font-semibold text-deep-blue mb-4">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {step.description}
-                </p>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Demo section */}
-        <div className="mt-20 text-center animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-deep-blue mb-6">
-              See It In Action
-            </h3>
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl h-64 flex items-center justify-center mb-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Rocket className="h-8 w-8 text-white" />
-                </div>
-                <p className="text-gray-600">Interactive Demo Coming Soon</p>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Watch how ThinkPost.ai transforms your content into engaging social media posts in seconds.
-            </p>
-            <button className="bg-gradient-primary text-white px-8 py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold">
-              Request Demo
-            </button>
-          </div>
+        <div className="text-center">
+          <Button size="lg" className="bg-gradient-primary hover:opacity-90 text-white px-8 py-4 text-lg font-semibold">
+            Start Your Free Trial
+          </Button>
         </div>
       </div>
     </section>
