@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-  const [authDialogTab, setAuthDialogTab] = useState<'signin' | 'signup'>('signin');
   const { user, signOut } = useAuth();
 
   const navLinks = [
@@ -19,13 +18,7 @@ const Header = () => {
     { name: 'Contact', href: '#contact' },
   ];
 
-  const openSignInDialog = () => {
-    setAuthDialogTab('signin');
-    setIsAuthDialogOpen(true);
-  };
-
-  const openSignUpDialog = () => {
-    setAuthDialogTab('signup');
+  const openAuthDialog = () => {
     setIsAuthDialogOpen(true);
   };
 
@@ -80,21 +73,12 @@ const Header = () => {
                   </Button>
                 </div>
               ) : (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    onClick={openSignInDialog}
-                    className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    onClick={openSignUpDialog}
-                    className="bg-gradient-primary hover:opacity-90 text-white"
-                  >
-                    Sign Up
-                  </Button>
-                </>
+                <Button 
+                  onClick={openAuthDialog}
+                  className="bg-gradient-primary hover:opacity-90 text-white"
+                >
+                  Get Started
+                </Button>
               )}
             </div>
 
@@ -146,27 +130,15 @@ const Header = () => {
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        onClick={() => {
-                          openSignInDialog();
-                          setIsMenuOpen(false);
-                        }}
-                        className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full"
-                      >
-                        Sign In
-                      </Button>
-                      <Button 
-                        onClick={() => {
-                          openSignUpDialog();
-                          setIsMenuOpen(false);
-                        }}
-                        className="bg-gradient-primary hover:opacity-90 text-white w-full"
-                      >
-                        Sign Up
-                      </Button>
-                    </>
+                    <Button 
+                      onClick={() => {
+                        openAuthDialog();
+                        setIsMenuOpen(false);
+                      }}
+                      className="bg-gradient-primary hover:opacity-90 text-white w-full"
+                    >
+                      Get Started
+                    </Button>
                   )}
                 </div>
               </nav>
@@ -179,7 +151,7 @@ const Header = () => {
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={() => setIsAuthDialogOpen(false)}
-        defaultTab={authDialogTab}
+        defaultTab="signup"
       />
     </>
   );
