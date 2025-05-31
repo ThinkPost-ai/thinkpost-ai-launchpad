@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import UserDashboard from "./pages/UserDashboard";
 import RestaurantSetup from "./pages/RestaurantSetup";
 import ImageUpload from "./pages/ImageUpload";
 import ImageGallery from "./pages/ImageGallery";
@@ -26,6 +27,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/restaurant-setup" element={<RestaurantSetup />} />
               <Route path="/upload" element={<ImageUpload />} />
               <Route path="/images" element={<ImageGallery />} />
