@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +26,7 @@ const ImageGallery = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   const [editingCaption, setEditingCaption] = useState('');
+  const [mealName, setMealName] = useState('');
   const [generatingCaption, setGeneratingCaption] = useState(false);
 
   useEffect(() => {
@@ -129,7 +129,10 @@ const ImageGallery = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-caption', {
-        body: { imageId }
+        body: { 
+          imageId,
+          mealName: mealName || 'وجبة مميزة'
+        }
       });
 
       if (error) throw error;
@@ -137,14 +140,21 @@ const ImageGallery = () => {
       const newCaption = data.caption;
       setEditingCaption(newCaption);
       
+      // Update the local state
+      setImages(prev => prev.map(img => 
+        img.id === imageId ? { ...img, caption: newCaption } : img
+      ));
+      
+      setSelectedImage(prev => prev ? { ...prev, caption: newCaption } : null);
+      
       toast({
-        title: "Success",
-        description: "AI caption generated successfully"
+        title: "نجح!",
+        description: "تم إنشاء المحتوى بنجاح"
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to generate caption",
+        title: "خطأ",
+        description: "فشل في إنشاء المحتوى",
         variant: "destructive"
       });
     } finally {
@@ -223,6 +233,7 @@ const ImageGallery = () => {
                     onClick={() => {
                       setSelectedImage(image);
                       setEditingCaption(image.caption || '');
+                      setMealName('');
                     }}
                   >
                     <img
@@ -233,7 +244,7 @@ const ImageGallery = () => {
                     <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all" />
                     {image.caption && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                        <p className="text-white text-sm truncate">
+                        <p className="text-white text-sm truncate" dir="rtl">
                           {image.caption}
                         </p>
                       </div>
@@ -269,12 +280,23 @@ const ImageGallery = () => {
                     />
                     
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Caption</label>
+                      <label className="text-sm font-medium">اسم الوجبة (اختياري)</label>
+                      <Input
+                        value={mealName}
+                        onChange={(e) => setMealName(e.target.value)}
+                        placeholder="مثال: كبسة الدجاج، برجر اللحم..."
+                        dir="rtl"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">المحتوى</label>
                       <Textarea
                         value={editingCaption}
                         onChange={(e) => setEditingCaption(e.target.value)}
-                        placeholder="Enter a caption for this image..."
-                        rows={4}
+                        placeholder="أدخل محتوى للصورة..."
+                        rows={6}
+                        dir="rtl"
                       />
                     </div>
 
@@ -288,12 +310,12 @@ const ImageGallery = () => {
                         {generatingCaption ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating...
+                            جاري الإنشاء...
                           </>
                         ) : (
                           <>
                             <Wand2 className="mr-2 h-4 w-4" />
-                            AI Generate
+                            إنشاء بالذكاء الاصطناعي
                           </>
                         )}
                       </Button>
@@ -301,7 +323,7 @@ const ImageGallery = () => {
                         onClick={() => updateCaption(selectedImage.id, editingCaption)}
                         className="flex-1 bg-gradient-primary hover:opacity-90"
                       >
-                        Save Caption
+                        حفظ المحتوى
                       </Button>
                     </div>
 

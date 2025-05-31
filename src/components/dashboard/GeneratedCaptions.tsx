@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   Table,
   TableBody,
@@ -17,7 +18,9 @@ import {
   Play, 
   TrendingUp,
   Eye,
-  Heart
+  Heart,
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +45,8 @@ const GeneratedCaptions = () => {
   const { toast } = useToast();
   const [captions, setCaptions] = useState<CaptionData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
+  const [mealNames, setMealNames] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     fetchCaptions();
@@ -117,6 +122,48 @@ const GeneratedCaptions = () => {
     );
   };
 
+  const regenerateCaption = async (imageId: string) => {
+    setGeneratingCaption(imageId);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-caption', {
+        body: { 
+          imageId,
+          mealName: mealNames[imageId] || 'وجبة مميزة'
+        }
+      });
+
+      if (error) throw error;
+
+      const newCaption = data.caption;
+      
+      // Update the local state
+      setCaptions(prev => prev.map(caption => 
+        caption.id === imageId ? { ...caption, caption: newCaption } : caption
+      ));
+      
+      toast({
+        title: "نجح!",
+        description: "تم إنشاء المحتوى بنجاح"
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: "فشل في إنشاء المحتوى",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingCaption(null);
+    }
+  };
+
+  const updateMealName = (imageId: string, mealName: string) => {
+    setMealNames(prev => ({
+      ...prev,
+      [imageId]: mealName
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -139,7 +186,10 @@ const GeneratedCaptions = () => {
                 Manage your AI-generated captions and social media performance
               </CardDescription>
             </div>
-            <Button className="bg-gradient-primary hover:opacity-90">
+            <Button 
+              onClick={() => window.location.href = '/images'}
+              className="bg-gradient-primary hover:opacity-90"
+            >
               <MessageSquare className="h-4 w-4 mr-2" />
               Generate New Caption
             </Button>
@@ -155,7 +205,10 @@ const GeneratedCaptions = () => {
               <p className="text-muted-foreground mb-4">
                 Upload some images and generate AI captions to get started
               </p>
-              <Button className="bg-gradient-primary hover:opacity-90">
+              <Button 
+                onClick={() => window.location.href = '/images'}
+                className="bg-gradient-primary hover:opacity-90"
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Generate Your First Caption
               </Button>
@@ -167,6 +220,7 @@ const GeneratedCaptions = () => {
                   <TableRow>
                     <TableHead>Image</TableHead>
                     <TableHead>Caption (Arabic)</TableHead>
+                    <TableHead>Meal Name</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Social Media Performance</TableHead>
                     <TableHead>Actions</TableHead>
@@ -193,9 +247,18 @@ const GeneratedCaptions = () => {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-right" dir="rtl">
+                        <p className="text-sm text-right line-clamp-3" dir="rtl">
                           {caption.caption || 'No caption generated'}
                         </p>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={mealNames[caption.id] || ''}
+                          onChange={(e) => updateMealName(caption.id, e.target.value)}
+                          placeholder="اسم الوجبة"
+                          className="w-32 text-right"
+                          dir="rtl"
+                        />
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(caption.status)}
@@ -223,8 +286,17 @@ const GeneratedCaptions = () => {
                           <Button size="sm" variant="outline">
                             <Edit className="h-3 w-3" />
                           </Button>
-                          <Button size="sm" variant="outline">
-                            <MessageSquare className="h-3 w-3" />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => regenerateCaption(caption.id)}
+                            disabled={generatingCaption === caption.id}
+                          >
+                            {generatingCaption === caption.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Wand2 className="h-3 w-3" />
+                            )}
                           </Button>
                           {caption.status === 'draft' && (
                             <Button size="sm" className="bg-gradient-primary hover:opacity-90">

@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageId } = await req.json()
+    const { imageId, mealName } = await req.json()
 
     if (!imageId) {
       throw new Error('Image ID is required')
@@ -25,20 +25,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the image details and user's restaurant info
+    // Get the image details
     const { data: image, error: imageError } = await supabaseClient
       .from('images')
-      .select(`
-        *,
-        user_profiles:user_id (
-          restaurants (
-            name,
-            category,
-            vision,
-            location
-          )
-        )
-      `)
+      .select('*')
       .eq('id', imageId)
       .single()
 
@@ -46,20 +36,39 @@ serve(async (req) => {
       throw new Error(`Failed to fetch image: ${imageError.message}`)
     }
 
-    const restaurant = image.user_profiles?.restaurants?.[0]
+    // Get the user's restaurant info
+    const { data: restaurant, error: restaurantError } = await supabaseClient
+      .from('restaurants')
+      .select('*')
+      .eq('owner_id', image.user_id)
+      .single()
+
+    if (restaurantError) {
+      console.log('No restaurant found, using default info')
+    }
     
     // Get image URL
     const { data: urlData } = supabaseClient.storage
       .from('restaurant-images')
       .getPublicUrl(image.file_path)
 
-    // Prepare context for AI
-    const restaurantContext = restaurant ? `
-    Restaurant: ${restaurant.name}
-    Category: ${restaurant.category.replace('_', ' ')}
-    Location: ${restaurant.location}
-    Vision: ${restaurant.vision || 'No specific vision provided'}
-    ` : 'No restaurant context available'
+    // Prepare Arabic prompt
+    const restaurantInfo = restaurant || {
+      name: 'مطعم الذوق الرفيع',
+      location: 'الرياض',
+      category: 'مطعم عام',
+      vision: 'تقديم أفضل الأطباق'
+    }
+
+    const prompt = `معطى هذه الصورة: ${urlData.publicUrl}
+وهذه المعلومات
+اسم المطعم: ${restaurantInfo.name}
+موقعه: ${restaurantInfo.location}
+تصنيف المطعم: ${restaurantInfo.category}
+رؤية المطعم: ${restaurantInfo.vision || 'تقديم أفضل الأطباق'}
+اسم الوجبة: ${mealName || 'وجبة مميزة'}
+
+أكتب محتوى ابداعي للصورة لنشره على برامج التواصل الاجتماعي`
 
     // Generate caption using OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -73,24 +82,21 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a social media expert specializing in restaurant marketing. Generate engaging, authentic captions for food images that will perform well on social media platforms like TikTok and Instagram. 
+            content: `أنت خبير تسويق وتقدر تكتب محتوى أبداعي وتسويقي عن الصور المعطاه لك للتسويق عنها في السوشل ميديا للمطاعم. بتكتب المحتوى بالاستعانة بعدة أمور:
+1-أسم المطعم.
+2-موقعه: عشان تشوف وش الثقافة السائدة وتكون كتابتك مناسبة للجمهور وتلامسهم.
+3-تنصيف المطعم: أكل شعبي, اكلات سريعة, معجنات, مقاهي , حلويات, مخبوزات..الخ.
+4-رؤية المطعم: تساعدك رؤية المطعم على صنع أسلوب تسويقي خاص في المطعم ويركز على أهدافه ورؤيته وقيمته التنافسية.
+5-أسم الوجبة: استخدم اسم الوجبة في المحتوى التسويقي.
 
-            Consider the restaurant context and create captions that:
-            - Are engaging and encourage interaction
-            - Use relevant food and restaurant hashtags
-            - Match the restaurant's style and location
-            - Are authentic and not overly promotional
-            - Include a call-to-action when appropriate
-            - Support both English and Arabic if the location suggests it
-            
-            Keep captions concise but impactful (under 150 characters for the main text).`
+اجعل لهجهتك في الكتابة اقرب للعامية السعودية وابتعد عن اللهجة العربية الفصحى.`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Generate a social media caption for this food image. Restaurant context: ${restaurantContext}`
+                text: prompt
               },
               {
                 type: 'image_url',
