@@ -5,20 +5,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SignInFormProps {
-  onSubmit: (email: string, password: string) => void;
-  isLoading?: boolean;
+  onSuccess?: () => void;
 }
 
-const SignInForm = ({ onSubmit, isLoading = false }: SignInFormProps) => {
+const SignInForm = ({ onSuccess }: SignInFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(email, password);
+    setIsLoading(true);
+    
+    const { error } = await signIn(email, password);
+    
+    setIsLoading(false);
+    
+    if (!error) {
+      onSuccess?.();
+    }
   };
 
   return (

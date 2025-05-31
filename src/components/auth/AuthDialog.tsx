@@ -13,26 +13,9 @@ interface AuthDialogProps {
 
 const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps) => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = async (email: string, password: string) => {
-    setIsLoading(true);
-    // TODO: Implement actual sign in logic here
-    console.log('Sign in attempt:', { email, password });
-    setTimeout(() => {
-      setIsLoading(false);
-      onClose();
-    }, 1000);
-  };
-
-  const handleSignUp = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    // TODO: Implement actual sign up logic here
-    console.log('Sign up attempt:', { name, email, password });
-    setTimeout(() => {
-      setIsLoading(false);
-      onClose();
-    }, 1000);
+  const handleAuthSuccess = () => {
+    onClose();
   };
 
   return (
@@ -77,9 +60,9 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
 
         {/* Forms */}
         {activeTab === 'signin' ? (
-          <SignInForm onSubmit={handleSignIn} isLoading={isLoading} />
+          <SignInForm onSuccess={handleAuthSuccess} />
         ) : (
-          <SignUpForm onSubmit={handleSignUp} isLoading={isLoading} />
+          <SignUpForm onSuccess={handleAuthSuccess} />
         )}
 
         {/* Switch between forms */}

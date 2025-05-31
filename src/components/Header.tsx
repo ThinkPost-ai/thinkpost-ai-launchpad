@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import AuthDialog from '@/components/auth/AuthDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [authDialogTab, setAuthDialogTab] = useState<'signin' | 'signup'>('signin');
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { name: 'Features', href: '#features' },
@@ -25,6 +27,10 @@ const Header = () => {
   const openSignUpDialog = () => {
     setAuthDialogTab('signup');
     setIsAuthDialogOpen(true);
+  };
+
+  const handleSignOut = () => {
+    signOut();
   };
 
   return (
@@ -60,19 +66,36 @@ const Header = () => {
             {/* Desktop Auth Buttons and Theme Toggle */}
             <div className="hidden md:flex items-center space-x-4">
               <ThemeToggle />
-              <Button 
-                variant="ghost" 
-                onClick={openSignInDialog}
-                className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
-              >
-                Sign In
-              </Button>
-              <Button 
-                onClick={openSignUpDialog}
-                className="bg-gradient-primary hover:opacity-90 text-white"
-              >
-                Sign Up
-              </Button>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Welcome back!
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleSignOut}
+                    className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    onClick={openSignInDialog}
+                    className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    onClick={openSignUpDialog}
+                    className="bg-gradient-primary hover:opacity-90 text-white"
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -106,25 +129,45 @@ const Header = () => {
                   </a>
                 ))}
                 <div className="flex flex-col space-y-2 pt-4">
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => {
-                      openSignInDialog();
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full"
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      openSignUpDialog();
-                      setIsMenuOpen(false);
-                    }}
-                    className="bg-gradient-primary hover:opacity-90 text-white w-full"
-                  >
-                    Sign Up
-                  </Button>
+                  {user ? (
+                    <>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                        Welcome back!
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          handleSignOut();
+                          setIsMenuOpen(false);
+                        }}
+                        className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full"
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          openSignInDialog();
+                          setIsMenuOpen(false);
+                        }}
+                        className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full"
+                      >
+                        Sign In
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          openSignUpDialog();
+                          setIsMenuOpen(false);
+                        }}
+                        className="bg-gradient-primary hover:opacity-90 text-white w-full"
+                      >
+                        Sign Up
+                      </Button>
+                    </>
+                  )}
                 </div>
               </nav>
             </div>

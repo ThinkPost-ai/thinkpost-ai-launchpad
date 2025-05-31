@@ -5,27 +5,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SignUpFormProps {
-  onSubmit: (name: string, email: string, password: string) => void;
-  isLoading?: boolean;
+  onSuccess?: () => void;
 }
 
-const SignUpForm = ({ onSubmit, isLoading = false }: SignUpFormProps) => {
+const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (password !== confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-    onSubmit(name, email, password);
+    
+    setIsLoading(true);
+    
+    const { error } = await signUp(email, password, name);
+    
+    setIsLoading(false);
+    
+    if (!error) {
+      onSuccess?.();
+    }
   };
 
   return (
