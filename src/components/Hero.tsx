@@ -104,8 +104,8 @@ const Hero = () => {
             {/* Right Content - Video Section */}
             <div className="flex flex-col items-center justify-center">
               <div className="relative">
-                {/* Circular Video Placeholder */}
-                <div className="w-80 h-80 bg-gradient-to-br from-vibrant-purple to-deep-blue rounded-full flex items-center justify-center relative overflow-hidden">
+                {/* Square Video Placeholder */}
+                <div className="w-80 h-80 bg-gradient-to-br from-vibrant-purple to-deep-blue rounded-lg flex items-center justify-center relative overflow-hidden">
                   {/* Play Button */}
                   <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-colors cursor-pointer">
                     <Play className="h-8 w-8 text-white ml-1" />
