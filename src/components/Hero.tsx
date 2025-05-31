@@ -102,13 +102,13 @@ const Hero = () => {
             </div>
 
             {/* Right Content - Video Section */}
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center h-full">
               <div className="relative">
-                {/* Square Video Placeholder */}
-                <div className="w-80 h-80 bg-gradient-to-br from-vibrant-purple to-deep-blue rounded-lg flex items-center justify-center relative overflow-hidden">
+                {/* Large Square Video Placeholder */}
+                <div className="w-96 h-96 lg:w-[450px] lg:h-[450px] bg-gradient-to-br from-vibrant-purple to-deep-blue rounded-lg flex items-center justify-center relative overflow-hidden">
                   {/* Play Button */}
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-colors cursor-pointer">
-                    <Play className="h-8 w-8 text-white ml-1" />
+                  <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm hover:bg-white/30 transition-colors cursor-pointer">
+                    <Play className="h-10 w-10 text-white ml-1" />
                   </div>
                   
                   {/* Decorative elements */}
