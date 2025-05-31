@@ -8,7 +8,7 @@ const Testimonials = () => {
       name: 'Sarah Al-Rashid',
       role: 'Restaurant Owner',
       company: 'Al-Baik Delights',
-      content: 'ThinkPost.ai transformed our social media presence. Our engagement increased by 300% and we save 10 hours per week!',
+      content: 'ThinkPost transformed our social media presence. Our engagement increased by 300% and we save 10 hours per week!',
       avatar: '👩‍🍳',
       rating: 5
     },
@@ -38,7 +38,7 @@ const Testimonials = () => {
             What Our Customers Say
           </h2>
           <p className="text-lg text-gray-600">
-            Join hundreds of businesses that are already dominating social media with ThinkPost.ai
+            Join hundreds of businesses that are already dominating social media with ThinkPost
           </p>
         </div>
 

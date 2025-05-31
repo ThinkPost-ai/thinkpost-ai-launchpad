@@ -37,7 +37,7 @@ const Footer = () => {
         {/* Newsletter Section */}
         <div className="bg-gradient-primary/10 dark:bg-gradient-primary/20 rounded-2xl p-8 mb-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold mb-4">Stay Updated with ThinkPost.ai</h3>
+            <h3 className="text-2xl font-bold mb-4">Stay Updated with ThinkPost</h3>
             <p className="text-gray-300 dark:text-gray-400 mb-6">
               Get the latest updates, tips, and exclusive content creation strategies delivered to your inbox.
             </p>
@@ -61,10 +61,10 @@ const Footer = () => {
             <div className="flex items-center space-x-2 mb-4">
               <img 
                 src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
-                alt="ThinkPost.ai Logo" 
+                alt="ThinkPost Logo" 
                 className="h-8 w-8"
               />
-              <span className="text-xl font-bold">ThinkPost.ai</span>
+              <span className="text-xl font-bold">ThinkPost</span>
             </div>
             <p className="text-gray-300 dark:text-gray-400 mb-6 max-w-sm">
               Revolutionizing content creation with AI-powered tools that help you create engaging, 
@@ -140,7 +140,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-300 dark:text-gray-400 text-sm">
-            © 2024 ThinkPost.ai. All rights reserved.
+            © 2024 ThinkPost. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">

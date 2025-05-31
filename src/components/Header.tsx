@@ -43,11 +43,11 @@ const Header = () => {
               <div className="p-1">
                 <img 
                   src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
-                  alt="ThinkPost.ai Logo" 
+                  alt="ThinkPost Logo" 
                   className="h-10 w-10"
                 />
               </div>
-              <span className="text-xl font-bold text-deep-blue dark:text-white">ThinkPost.ai</span>
+              <span className="text-xl font-bold text-deep-blue dark:text-white">ThinkPost</span>
             </div>
 
             {/* Desktop Navigation */}

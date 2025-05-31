@@ -33,7 +33,7 @@ const HowItWorks = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Get started with ThinkPost.ai in just three simple steps and transform your content creation process.
+            Get started with ThinkPost in just three simple steps and transform your content creation process.
           </p>
         </div>
 

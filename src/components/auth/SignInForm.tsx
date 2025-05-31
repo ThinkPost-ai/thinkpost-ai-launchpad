@@ -38,7 +38,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
           Welcome Back
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
-          Sign in to your ThinkPost.ai account
+          Sign in to your ThinkPost account
         </CardDescription>
       </CardHeader>
       <CardContent>

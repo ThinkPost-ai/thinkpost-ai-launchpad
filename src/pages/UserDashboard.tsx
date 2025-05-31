@@ -136,7 +136,7 @@ const UserDashboard = () => {
             <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
-                alt="ThinkPost.ai" 
+                alt="ThinkPost" 
                 className="h-8 w-8"
               />
               <h1 className="text-2xl font-bold text-deep-blue dark:text-white">

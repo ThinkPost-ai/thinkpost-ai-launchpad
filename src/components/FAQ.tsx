@@ -16,7 +16,7 @@ const FAQ = () => {
 
   const faqs = [
     {
-      question: 'How does ThinkPost.ai generate captions?',
+      question: 'How does ThinkPost generate captions?',
       answer: 'Our advanced AI analyzes your content, understands the context, and generates engaging captions tailored to each social media platform. It considers factors like audience, tone, trending hashtags, and platform-specific best practices.'
     },
     {
@@ -57,7 +57,7 @@ const FAQ = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-gray-600">
-            Everything you need to know about ThinkPost.ai
+            Everything you need to know about ThinkPost
           </p>
         </div>
 
@@ -102,7 +102,7 @@ const FAQ = () => {
               Still Have Questions?
             </h3>
             <p className="text-white/80 mb-6">
-              Our support team is here to help you get the most out of ThinkPost.ai
+              Our support team is here to help you get the most out of ThinkPost
             </p>
             <button className="bg-white text-deep-blue px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors font-semibold">
               Contact Support

@@ -25,10 +25,10 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
           <div className="flex items-center justify-center space-x-2 mb-4">
             <img 
               src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
-              alt="ThinkPost.ai Logo" 
+              alt="ThinkPost Logo" 
               className="h-8 w-8"
             />
-            <span className="text-lg font-bold text-deep-blue dark:text-white">ThinkPost.ai</span>
+            <span className="text-lg font-bold text-deep-blue dark:text-white">ThinkPost</span>
           </div>
         </DialogHeader>
 

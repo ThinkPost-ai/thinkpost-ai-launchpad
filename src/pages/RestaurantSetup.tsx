@@ -163,7 +163,7 @@ const RestaurantSetup = () => {
             <CardDescription>
               {isEditing 
                 ? 'Update your restaurant information'
-                : 'Tell us about your restaurant to get started with ThinkPost.ai'
+                : 'Tell us about your restaurant to get started with ThinkPost'
               }
             </CardDescription>
           </CardHeader>

@@ -44,7 +44,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     <Card className="w-full">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold text-deep-blue dark:text-white">
-          Join ThinkPost.ai
+          Join ThinkPost
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
           Create your account and start creating amazing content
