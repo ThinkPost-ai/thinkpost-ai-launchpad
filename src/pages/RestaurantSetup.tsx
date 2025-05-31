@@ -113,6 +113,7 @@ const RestaurantSetup = () => {
         const { error } = await supabase
           .from('restaurants')
           .insert({
+            owner_id: user?.id,
             name: formData.name,
             location: formData.location,
             category: formData.category,
