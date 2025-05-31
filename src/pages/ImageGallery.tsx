@@ -176,7 +176,7 @@ const ImageGallery = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/user-dashboard')}
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
