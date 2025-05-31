@@ -11,8 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
 
-const restaurantCategories = [
+type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
+
+const restaurantCategories: { value: RestaurantCategory; label: string }[] = [
   { value: 'fast_food', label: 'Fast Food' },
   { value: 'casual_dining', label: 'Casual Dining' },
   { value: 'fine_dining', label: 'Fine Dining' },
@@ -37,7 +40,7 @@ const RestaurantSetup = () => {
   const [formData, setFormData] = useState({
     name: '',
     location: '',
-    category: '',
+    category: '' as RestaurantCategory,
     vision: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,7 +113,6 @@ const RestaurantSetup = () => {
         const { error } = await supabase
           .from('restaurants')
           .insert({
-            owner_id: user?.id,
             name: formData.name,
             location: formData.location,
             category: formData.category,
@@ -188,7 +190,10 @@ const RestaurantSetup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value: RestaurantCategory) => setFormData({ ...formData, category: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select restaurant category" />
                   </SelectTrigger>
