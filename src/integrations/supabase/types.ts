@@ -9,24 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          file_path: string
+          id: string
+          original_filename: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          file_path: string
+          id?: string
+          original_filename: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          file_path?: string
+          id?: string
+          original_filename?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          display_name: string | null
           full_name: string | null
           id: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          display_name?: string | null
           full_name?: string | null
           id: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          display_name?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      restaurants: {
+        Row: {
+          category: Database["public"]["Enums"]["restaurant_category"]
+          created_at: string | null
+          id: string
+          location: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+          vision: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["restaurant_category"]
+          created_at?: string | null
+          id?: string
+          location: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+          vision?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["restaurant_category"]
+          created_at?: string | null
+          id?: string
+          location?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+          vision?: string | null
         }
         Relationships: []
       }
@@ -38,7 +104,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      restaurant_category:
+        | "fast_food"
+        | "casual_dining"
+        | "fine_dining"
+        | "cafe"
+        | "bakery"
+        | "pizza"
+        | "seafood"
+        | "middle_eastern"
+        | "asian"
+        | "italian"
+        | "american"
+        | "mexican"
+        | "indian"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -153,6 +233,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      restaurant_category: [
+        "fast_food",
+        "casual_dining",
+        "fine_dining",
+        "cafe",
+        "bakery",
+        "pizza",
+        "seafood",
+        "middle_eastern",
+        "asian",
+        "italian",
+        "american",
+        "mexican",
+        "indian",
+        "other",
+      ],
+    },
   },
 } as const
