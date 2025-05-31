@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,20 +59,33 @@ const GeneratedCaptions = () => {
       if (error) throw error;
 
       // Transform data and add mock social stats for demo
-      const transformedData = (data || []).map(image => ({
-        id: image.id,
-        image_path: image.file_path,
-        original_filename: image.original_filename,
-        caption: image.caption,
-        created_at: image.created_at,
-        status: Math.random() > 0.7 ? 'posted' : Math.random() > 0.5 ? 'scheduled' : 'draft' as const,
-        social_stats: {
-          instagram_views: Math.floor(Math.random() * 1000) + 100,
-          instagram_likes: Math.floor(Math.random() * 100) + 10,
-          tiktok_views: Math.floor(Math.random() * 5000) + 500,
-          tiktok_likes: Math.floor(Math.random() * 500) + 50,
+      const transformedData = (data || []).map(image => {
+        // Generate random status with proper typing
+        const randomValue = Math.random();
+        let status: 'draft' | 'scheduled' | 'posted';
+        if (randomValue > 0.7) {
+          status = 'posted';
+        } else if (randomValue > 0.5) {
+          status = 'scheduled';
+        } else {
+          status = 'draft';
         }
-      }));
+
+        return {
+          id: image.id,
+          image_path: image.file_path,
+          original_filename: image.original_filename,
+          caption: image.caption,
+          created_at: image.created_at,
+          status,
+          social_stats: {
+            instagram_views: Math.floor(Math.random() * 1000) + 100,
+            instagram_likes: Math.floor(Math.random() * 100) + 10,
+            tiktok_views: Math.floor(Math.random() * 5000) + 500,
+            tiktok_likes: Math.floor(Math.random() * 500) + 50,
+          }
+        };
+      });
 
       setCaptions(transformedData);
     } catch (error: any) {
@@ -95,7 +107,7 @@ const GeneratedCaptions = () => {
     const variants = {
       draft: 'secondary',
       scheduled: 'default',
-      posted: 'success'
+      posted: 'outline'
     } as const;
 
     return (
