@@ -33,7 +33,7 @@ const restaurantCategories: { value: RestaurantCategory; label: string }[] = [
 ];
 
 const RestaurantSetup = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, checkUserProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -128,7 +128,11 @@ const RestaurantSetup = () => {
         });
       }
 
-      navigate('/dashboard');
+      // Update the auth context to reflect the new restaurant
+      await checkUserProfile();
+      
+      // Navigate to user dashboard
+      navigate('/user-dashboard');
     } catch (error: any) {
       toast({
         title: "Error",

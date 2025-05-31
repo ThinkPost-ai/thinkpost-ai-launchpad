@@ -8,9 +8,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  hasRestaurant: boolean | null;
+  checkingProfile: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  checkUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +30,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
+  const [checkingProfile, setCheckingProfile] = useState(false);
   const { toast } = useToast();
+
+  const checkUserProfile = async () => {
+    if (!user) {
+      setHasRestaurant(null);
+      return;
+    }
+
+    setCheckingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setHasRestaurant(!!data);
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+      setHasRestaurant(false);
+    } finally {
+      setCheckingProfile(false);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -37,6 +66,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Check profile when user logs in
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(() => {
+            checkUserProfile();
+          }, 0);
+        } else if (!session?.user) {
+          setHasRestaurant(null);
+        }
       }
     );
 
@@ -45,6 +83,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        setTimeout(() => {
+          checkUserProfile();
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -130,6 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           variant: "destructive"
         });
       } else {
+        setHasRestaurant(null);
         toast({
           title: "Signed out",
           description: "You have been signed out successfully."
@@ -148,9 +193,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    hasRestaurant,
+    checkingProfile,
     signUp,
     signIn,
-    signOut
+    signOut,
+    checkUserProfile
   };
 
   return (
