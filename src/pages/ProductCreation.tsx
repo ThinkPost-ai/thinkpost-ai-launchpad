@@ -1,289 +1,26 @@
 
-import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Upload, X, Loader2, ArrowLeft, Plus, ImageIcon } from 'lucide-react';
-
-interface Product {
-  id?: string;
-  name: string;
-  price: string;
-  description: string;
-  image: File | null;
-  imagePreview: string | null;
-}
+import { ArrowLeft } from 'lucide-react';
+import ProductCard from '@/components/product/ProductCard';
+import ProductCreationActions from '@/components/product/ProductCreationActions';
+import { useProductManagement } from '@/hooks/useProductManagement';
 
 const ProductCreation = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const [products, setProducts] = useState<Product[]>([
-    {
-      name: '',
-      price: '',
-      description: '',
-      image: null,
-      imagePreview: null
-    }
-  ]);
-  const [saving, setSaving] = useState(false);
-  const [generatingCaptions, setGeneratingCaptions] = useState(false);
-
-  const addProduct = () => {
-    setProducts(prevProducts => [...prevProducts, {
-      name: '',
-      price: '',
-      description: '',
-      image: null,
-      imagePreview: null
-    }]);
-  };
-
-  const removeProduct = (index: number) => {
-    if (products.length > 1) {
-      setProducts(prevProducts => prevProducts.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateProduct = useCallback((index: number, field: keyof Product, value: any) => {
-    setProducts(prevProducts => {
-      const updatedProducts = prevProducts.map((product, i) => {
-        if (i === index) {
-          return { ...product, [field]: value };
-        }
-        return product;
-      });
-      return updatedProducts;
-    });
-  }, []);
-
-  const handleImageSelect = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      
-      setProducts(prevProducts => {
-        const updatedProducts = prevProducts.map((product, i) => {
-          if (i === index) {
-            return { 
-              ...product, 
-              image: file,
-              imagePreview: imageUrl
-            };
-          }
-          return product;
-        });
-        return updatedProducts;
-      });
-    }
-  }, []);
-
-  const removeImage = useCallback((index: number) => {
-    setProducts(prevProducts => {
-      const updatedProducts = prevProducts.map((product, i) => {
-        if (i === index) {
-          // Clean up the previous image URL to prevent memory leaks
-          if (product.imagePreview) {
-            URL.revokeObjectURL(product.imagePreview);
-          }
-          return { 
-            ...product, 
-            image: null,
-            imagePreview: null
-          };
-        }
-        return product;
-      });
-      return updatedProducts;
-    });
-  }, []);
-
-  const validateProducts = () => {
-    return products.every(product => 
-      product.name.trim() && 
-      product.price.trim() && 
-      product.description.trim() && 
-      product.image
-    );
-  };
-
-  const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('restaurant-images')
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    return uploadData.path;
-  };
-
-  const saveProductsOnly = async () => {
-    if (!user || !validateProducts()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all fields and add images for all products",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      const productPromises = products.map(async (product) => {
-        // Upload image
-        const imagePath = await uploadImage(product.image!);
-
-        // Prepare product data without caption
-        const productData = {
-          user_id: user.id,
-          name: product.name,
-          price: parseFloat(product.price),
-          description: product.description,
-          image_path: imagePath,
-          caption: null
-        };
-
-        // Insert product into database
-        const { data: insertedProduct, error: dbError } = await supabase
-          .from('products')
-          .insert(productData)
-          .select()
-          .single();
-
-        if (dbError) throw dbError;
-
-        return insertedProduct;
-      });
-
-      await Promise.all(productPromises);
-
-      toast({
-        title: "Success!",
-        description: `${products.length} product(s) saved successfully`
-      });
-
-      navigate('/user-dashboard');
-    } catch (error: any) {
-      console.error('Save error:', error);
-      toast({
-        title: "Save Failed",
-        description: error.message || "Failed to save products",
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const saveProductsWithCaptions = async () => {
-    if (!user || !validateProducts()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all fields and add images for all products",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setGeneratingCaptions(true);
-
-    try {
-      const productPromises = products.map(async (product) => {
-        // Upload image
-        const imagePath = await uploadImage(product.image!);
-
-        // Prepare product data
-        const productData = {
-          user_id: user.id,
-          name: product.name,
-          price: parseFloat(product.price),
-          description: product.description,
-          image_path: imagePath,
-          caption: null
-        };
-
-        // Insert product into database
-        const { data: insertedProduct, error: dbError } = await supabase
-          .from('products')
-          .insert(productData)
-          .select()
-          .single();
-
-        if (dbError) throw dbError;
-
-        return insertedProduct;
-      });
-
-      const savedProducts = await Promise.all(productPromises);
-
-      // Generate captions using AI
-      const captionPromises = savedProducts.map(async (product) => {
-        try {
-          const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
-            body: {
-              productName: product.name,
-              price: product.price,
-              description: product.description
-            }
-          });
-
-          if (captionError) {
-            console.error('Caption generation error:', captionError);
-            return product;
-          }
-
-          const caption = captionData?.caption;
-
-          if (caption) {
-            // Update product with generated caption
-            const { error: updateError } = await supabase
-              .from('products')
-              .update({ caption })
-              .eq('id', product.id);
-
-            if (updateError) {
-              console.error('Caption update error:', updateError);
-            }
-          }
-
-          return { ...product, caption };
-        } catch (error) {
-          console.error('Failed to generate caption for product:', product.name, error);
-          return product;
-        }
-      });
-
-      await Promise.all(captionPromises);
-
-      toast({
-        title: "Success!",
-        description: `${products.length} product(s) saved and captions generated successfully`
-      });
-
-      navigate('/user-dashboard');
-    } catch (error: any) {
-      console.error('Save with captions error:', error);
-      toast({
-        title: "Save Failed",
-        description: error.message || "Failed to save products with captions",
-        variant: "destructive"
-      });
-    } finally {
-      setGeneratingCaptions(false);
-    }
-  };
+  const {
+    products,
+    saving,
+    generatingCaptions,
+    addProduct,
+    removeProduct,
+    updateProduct,
+    handleImageSelect,
+    removeImage,
+    validateProducts,
+    saveProductsOnly,
+    saveProductsWithCaptions
+  } = useProductManagement();
 
   const isFormValid = validateProducts();
 
@@ -309,140 +46,26 @@ const ProductCreation = () => {
 
         <div className="space-y-6">
           {products.map((product, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Product {index + 1}</CardTitle>
-                  {products.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeProduct(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor={`name-${index}`}>Product Name</Label>
-                    <Input
-                      id={`name-${index}`}
-                      value={product.name}
-                      onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                      placeholder="e.g., Margherita Pizza"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`price-${index}`}>Price ($)</Label>
-                    <Input
-                      id={`price-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={product.price}
-                      onChange={(e) => updateProduct(index, 'price', e.target.value)}
-                      placeholder="e.g., 12.99"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor={`description-${index}`}>Description</Label>
-                  <Textarea
-                    id={`description-${index}`}
-                    value={product.description}
-                    onChange={(e) => updateProduct(index, 'description', e.target.value)}
-                    placeholder="Describe your product..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`image-${index}`}>Product Image</Label>
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-                    {product.imagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={product.imagePreview}
-                          alt="Product preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <Label htmlFor={`image-${index}`} className="cursor-pointer">
-                          <span className="text-lg font-medium text-deep-blue dark:text-white">
-                            Click to upload image
-                          </span>
-                        </Label>
-                        <Input
-                          id={`image-${index}`}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageSelect(index, e)}
-                          className="hidden"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ProductCard
+              key={index}
+              index={index}
+              product={product}
+              canRemove={products.length > 1}
+              onUpdateProduct={updateProduct}
+              onRemoveProduct={removeProduct}
+              onImageSelect={handleImageSelect}
+              onRemoveImage={removeImage}
+            />
           ))}
 
-          <div className="flex flex-col gap-4">
-            <Button
-              variant="outline"
-              onClick={addProduct}
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Another Product
-            </Button>
-
-            <div className="flex gap-4">
-              <Button
-                onClick={saveProductsOnly}
-                disabled={saving || generatingCaptions || !isFormValid}
-                variant="outline"
-                className="flex-1"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save'
-                )}
-              </Button>
-              <Button
-                onClick={saveProductsWithCaptions}
-                disabled={saving || generatingCaptions || !isFormValid}
-                className="bg-gradient-primary hover:opacity-90 flex-1"
-              >
-                {generatingCaptions ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving & Generating...
-                  </>
-                ) : (
-                  'Save and Generate Content by AI'
-                )}
-              </Button>
-            </div>
-          </div>
+          <ProductCreationActions
+            onAddProduct={addProduct}
+            onSaveProductsOnly={saveProductsOnly}
+            onSaveProductsWithCaptions={saveProductsWithCaptions}
+            saving={saving}
+            generatingCaptions={generatingCaptions}
+            isFormValid={isFormValid}
+          />
         </div>
       </div>
     </div>
