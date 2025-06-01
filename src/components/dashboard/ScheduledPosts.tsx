@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,7 @@ interface ScheduledPost {
   caption: string;
   scheduled_date: string;
   platform: 'instagram' | 'tiktok' | 'facebook';
-  status: 'scheduled' | 'posted' | 'failed' | 'cancelled';
+  status: 'scheduled' | 'posted' | 'failed';
   image_path?: string;
   product_name?: string;
 }
@@ -77,7 +76,7 @@ const ScheduledPosts = () => {
         caption: post.caption,
         scheduled_date: post.scheduled_date,
         platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
-        status: post.status as 'scheduled' | 'posted' | 'failed' | 'cancelled',
+        status: post.status as 'scheduled' | 'posted' | 'failed',
         image_path: post.products?.image_path || post.images?.file_path,
         product_name: post.products?.name
       }));
@@ -228,14 +227,14 @@ const ScheduledPosts = () => {
 
       toast({
         title: "Success!",
-        description: "All scheduled posts have been cancelled",
+        description: "All scheduled posts have been deleted",
       });
 
       await fetchScheduledPosts();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to cancel scheduled posts",
+        description: "Failed to delete scheduled posts",
         variant: "destructive"
       });
     } finally {
@@ -264,8 +263,7 @@ const ScheduledPosts = () => {
     const variants = {
       scheduled: 'default',
       posted: 'outline',
-      failed: 'destructive',
-      cancelled: 'secondary'
+      failed: 'destructive'
     } as const;
 
     return (
@@ -275,25 +273,25 @@ const ScheduledPosts = () => {
     );
   };
 
-  const cancelPost = async (postId: string) => {
+  const deletePost = async (postId: string) => {
     try {
       const { error } = await supabase
         .from('scheduled_posts')
-        .update({ status: 'cancelled' })
+        .delete()
         .eq('id', postId);
 
       if (error) throw error;
 
       toast({
-        title: "Post Cancelled",
-        description: "The scheduled post has been cancelled",
+        title: "Post Deleted",
+        description: "The scheduled post has been deleted",
       });
 
       await fetchScheduledPosts();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to cancel post",
+        description: "Failed to delete post",
         variant: "destructive"
       });
     }
@@ -352,12 +350,12 @@ const ScheduledPosts = () => {
                 {cancellingAll ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Cancelling...
+                    Deleting...
                   </>
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Cancel All Scheduled Tasks
+                    Delete All Scheduled Tasks
                   </>
                 )}
               </Button>
@@ -448,9 +446,9 @@ const ScheduledPosts = () => {
                                 <Button 
                                   size="sm" 
                                   variant="destructive"
-                                  onClick={() => cancelPost(post.id)}
+                                  onClick={() => deletePost(post.id)}
                                 >
-                                  Cancel
+                                  Delete
                                 </Button>
                               </div>
                             )}
