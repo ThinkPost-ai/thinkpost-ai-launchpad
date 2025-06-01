@@ -4,18 +4,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Grid3X3, 
   List, 
   Upload, 
   MessageSquare, 
   Filter,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useProductDeletion } from '@/hooks/useProductDeletion';
+import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
 interface MediaItem {
   id: string;
@@ -37,6 +40,19 @@ const MediaManagement = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState<string>('all');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteAllMode, setDeleteAllMode] = useState(false);
+
+  const {
+    deleting,
+    selectedItems,
+    toggleItemSelection,
+    selectAllItems,
+    clearSelection,
+    deleteSelectedProducts,
+    deleteAllProducts
+  } = useProductDeletion();
 
   const tags = ['All', 'Images', 'Products', 'With Captions', 'Without Captions'];
 
@@ -55,7 +71,6 @@ const MediaManagement = () => {
 
       if (imagesError) throw imagesError;
 
-      // Fetch products
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('*')
@@ -64,7 +79,6 @@ const MediaManagement = () => {
 
       if (productsError) throw productsError;
 
-      // Transform and combine data
       const transformedImages = (images || []).map(image => ({
         id: image.id,
         file_path: image.file_path,
@@ -85,7 +99,6 @@ const MediaManagement = () => {
         type: 'product' as const
       }));
 
-      // Combine and sort by creation date
       const allItems = [...transformedImages, ...transformedProducts].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -116,6 +129,41 @@ const MediaManagement = () => {
   };
 
   const filteredItems = getFilteredItems();
+  const productItems = filteredItems.filter(item => item.type === 'product');
+  const hasProducts = productItems.length > 0;
+
+  const handleDeleteProducts = () => {
+    if (selectedItems.size === 0) return;
+    setDeleteAllMode(false);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteAllProducts = () => {
+    setDeleteAllMode(true);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    let success = false;
+    
+    if (deleteAllMode) {
+      success = await deleteAllProducts();
+    } else {
+      success = await deleteSelectedProducts(filteredItems);
+    }
+    
+    if (success) {
+      await fetchMediaItems();
+      setSelectionMode(false);
+    }
+    
+    setShowDeleteDialog(false);
+  };
+
+  const cancelSelection = () => {
+    setSelectionMode(false);
+    clearSelection();
+  };
 
   if (loading) {
     return (
@@ -141,20 +189,65 @@ const MediaManagement = () => {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                onClick={() => navigate('/upload')}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Add Products
-              </Button>
-              <Button
-                onClick={() => navigate('/images')}
-                variant="outline"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Generate Captions
-              </Button>
+              {!selectionMode ? (
+                <>
+                  <Button
+                    onClick={() => navigate('/upload')}
+                    className="bg-gradient-primary hover:opacity-90"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Add Products
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/images')}
+                    variant="outline"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Generate Captions
+                  </Button>
+                  {hasProducts && (
+                    <Button
+                      onClick={() => setSelectionMode(true)}
+                      variant="outline"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Products
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={cancelSelection}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => selectAllItems(filteredItems)}
+                    variant="outline"
+                    disabled={selectedItems.size === productItems.length}
+                  >
+                    Select All Products
+                  </Button>
+                  <Button
+                    onClick={handleDeleteAllProducts}
+                    variant="destructive"
+                    disabled={!hasProducts}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete All Products
+                  </Button>
+                  <Button
+                    onClick={handleDeleteProducts}
+                    variant="destructive"
+                    disabled={selectedItems.size === 0}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected ({selectedItems.size})
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -230,6 +323,21 @@ const MediaManagement = () => {
                     ? 'group relative aspect-square overflow-hidden rounded-lg border bg-muted'
                     : 'flex items-center gap-4 p-4 border rounded-lg'
                 }>
+                  {/* Selection checkbox for products */}
+                  {selectionMode && item.type === 'product' && (
+                    <div className={
+                      viewMode === 'grid'
+                        ? 'absolute top-2 left-2 z-10'
+                        : 'flex-shrink-0'
+                    }>
+                      <Checkbox
+                        checked={selectedItems.has(item.id)}
+                        onCheckedChange={() => toggleItemSelection(item.id)}
+                        className="bg-white/90 border-gray-300"
+                      />
+                    </div>
+                  )}
+                  
                   <img
                     src={getImageUrl(item.file_path)}
                     alt={item.name || item.original_filename || 'Media'}
@@ -288,6 +396,15 @@ const MediaManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDelete}
+        isDeleting={deleting}
+        selectedCount={deleteAllMode ? productItems.length : selectedItems.size}
+        isDeleteAll={deleteAllMode}
+      />
     </div>
   );
 };
