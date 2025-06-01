@@ -1,4 +1,6 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,41 +11,211 @@ import {
   Plus, 
   Clock,
   Instagram,
-  Play
+  Play,
+  Facebook,
+  Loader2
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScheduledPost {
   id: string;
-  image_url: string;
+  product_id?: string;
+  image_id?: string;
   caption: string;
-  scheduled_date: Date;
+  scheduled_date: string;
   platform: 'instagram' | 'tiktok' | 'facebook';
-  status: 'scheduled' | 'posted' | 'failed';
+  status: 'scheduled' | 'posted' | 'failed' | 'cancelled';
+  image_path?: string;
+  product_name?: string;
+}
+
+interface MediaItem {
+  id: string;
+  file_path: string;
+  caption?: string;
+  type: 'product' | 'image';
+  name?: string;
 }
 
 const ScheduledPosts = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily');
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [scheduling, setScheduling] = useState(false);
 
-  // Mock data for scheduled posts
-  const scheduledPosts: ScheduledPost[] = [
-    {
-      id: '1',
-      image_url: '/api/placeholder/200/200',
-      caption: 'تذوق أشهى الأطباق في مطعمنا اليوم! 🍽️✨',
-      scheduled_date: new Date(),
-      platform: 'instagram',
-      status: 'scheduled'
-    },
-    {
-      id: '2',
-      image_url: '/api/placeholder/200/200',
-      caption: 'وجبة الغداء الخاصة متوفرة الآن! 🥘',
-      scheduled_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      platform: 'tiktok',
-      status: 'scheduled'
+  useEffect(() => {
+    if (user) {
+      fetchScheduledPosts();
     }
-  ];
+  }, [user]);
+
+  const fetchScheduledPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scheduled_posts')
+        .select(`
+          *,
+          products(name, image_path),
+          images(file_path)
+        `)
+        .eq('user_id', user?.id)
+        .order('scheduled_date', { ascending: true });
+
+      if (error) throw error;
+
+      const transformedPosts = data.map(post => ({
+        id: post.id,
+        product_id: post.product_id,
+        image_id: post.image_id,
+        caption: post.caption,
+        scheduled_date: post.scheduled_date,
+        platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
+        status: post.status as 'scheduled' | 'posted' | 'failed' | 'cancelled',
+        image_path: post.products?.image_path || post.images?.file_path,
+        product_name: post.products?.name
+      }));
+
+      setScheduledPosts(transformedPosts);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load scheduled posts",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMediaItems = async (): Promise<MediaItem[]> => {
+    // Fetch products with captions
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, name, image_path, caption')
+      .eq('user_id', user?.id)
+      .not('caption', 'is', null);
+
+    if (productsError) throw productsError;
+
+    // Fetch images with captions
+    const { data: images, error: imagesError } = await supabase
+      .from('images')
+      .select('id, file_path, caption, original_filename')
+      .eq('user_id', user?.id)
+      .not('caption', 'is', null);
+
+    if (imagesError) throw imagesError;
+
+    const mediaItems: MediaItem[] = [
+      ...(products || []).map(p => ({
+        id: p.id,
+        file_path: p.image_path,
+        caption: p.caption,
+        type: 'product' as const,
+        name: p.name
+      })),
+      ...(images || []).map(i => ({
+        id: i.id,
+        file_path: i.file_path,
+        caption: i.caption,
+        type: 'image' as const,
+        name: i.original_filename
+      }))
+    ];
+
+    return mediaItems.filter(item => item.caption && item.file_path);
+  };
+
+  const generateSchedule = () => {
+    const schedule: Date[] = [];
+    const startDate = new Date();
+    startDate.setHours(12, 0, 0, 0); // Set to noon
+    
+    // Generate 20 posts over 4 weeks (28 days)
+    const totalDays = 28;
+    const postsNeeded = 20;
+    
+    // Calculate which days to skip to get 20 posts in 28 days
+    const daysToUse = Array.from({ length: totalDays }, (_, i) => i)
+      .filter((_, index) => {
+        // Distribute posts evenly, skipping some days
+        const interval = totalDays / postsNeeded;
+        return index % Math.ceil(interval) === 0;
+      })
+      .slice(0, postsNeeded);
+
+    daysToUse.forEach(dayOffset => {
+      const postDate = new Date(startDate);
+      postDate.setDate(startDate.getDate() + dayOffset);
+      schedule.push(postDate);
+    });
+
+    return schedule;
+  };
+
+  const scheduleAutomaticPosts = async () => {
+    setScheduling(true);
+
+    try {
+      const mediaItems = await fetchMediaItems();
+
+      if (mediaItems.length === 0) {
+        toast({
+          title: "No Content Available",
+          description: "You need products or images with captions to schedule posts",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const schedule = generateSchedule();
+      const platforms = ['instagram', 'tiktok', 'facebook'] as const;
+
+      const postsToCreate = schedule.map((date, index) => {
+        const mediaItem = mediaItems[index % mediaItems.length];
+        const platform = platforms[index % platforms.length];
+
+        return {
+          user_id: user!.id,
+          product_id: mediaItem.type === 'product' ? mediaItem.id : null,
+          image_id: mediaItem.type === 'image' ? mediaItem.id : null,
+          caption: mediaItem.caption!,
+          scheduled_date: date.toISOString(),
+          platform,
+          status: 'scheduled' as const
+        };
+      });
+
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .insert(postsToCreate);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: `${schedule.length} posts have been scheduled over the next 4 weeks`,
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      toast({
+        title: "Scheduling Failed",
+        description: error.message || "Failed to schedule posts",
+        variant: "destructive"
+      });
+    } finally {
+      setScheduling(false);
+    }
+  };
+
+  const getImageUrl = (filePath: string) => {
+    return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
+  };
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
@@ -51,6 +223,8 @@ const ScheduledPosts = () => {
         return <Instagram className="h-4 w-4 text-pink-500" />;
       case 'tiktok':
         return <Play className="h-4 w-4 text-black" />;
+      case 'facebook':
+        return <Facebook className="h-4 w-4 text-blue-600" />;
       default:
         return <CalendarIcon className="h-4 w-4" />;
     }
@@ -60,7 +234,8 @@ const ScheduledPosts = () => {
     const variants = {
       scheduled: 'default',
       posted: 'outline',
-      failed: 'destructive'
+      failed: 'destructive',
+      cancelled: 'secondary'
     } as const;
 
     return (
@@ -69,6 +244,38 @@ const ScheduledPosts = () => {
       </Badge>
     );
   };
+
+  const cancelPost = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .update({ status: 'cancelled' })
+        .eq('id', postId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Post Cancelled",
+        description: "The scheduled post has been cancelled",
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel post",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-purple"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -84,9 +291,22 @@ const ScheduledPosts = () => {
                 Manage your scheduled social media posts
               </CardDescription>
             </div>
-            <Button className="bg-gradient-primary hover:opacity-90">
-              <Plus className="h-4 w-4 mr-2" />
-              Schedule New Post
+            <Button 
+              className="bg-gradient-primary hover:opacity-90"
+              onClick={scheduleAutomaticPosts}
+              disabled={scheduling}
+            >
+              {scheduling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Scheduling...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Schedule Posts
+                </>
+              )}
             </Button>
           </div>
         </CardHeader>
@@ -125,15 +345,17 @@ const ScheduledPosts = () => {
                     <div className="space-y-4">
                       {scheduledPosts
                         .filter(post => 
-                          post.scheduled_date.toDateString() === selectedDate?.toDateString()
+                          new Date(post.scheduled_date).toDateString() === selectedDate?.toDateString()
                         )
                         .map((post) => (
                           <div key={post.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                            <img
-                              src={post.image_url}
-                              alt="Scheduled post"
-                              className="h-16 w-16 object-cover rounded-md"
-                            />
+                            {post.image_path && (
+                              <img
+                                src={getImageUrl(post.image_path)}
+                                alt="Scheduled post"
+                                className="h-16 w-16 object-cover rounded-md"
+                              />
+                            )}
                             <div className="flex-1">
                               <p className="text-sm text-right mb-2" dir="rtl">
                                 {post.caption}
@@ -142,24 +364,27 @@ const ScheduledPosts = () => {
                                 {getPlatformIcon(post.platform)}
                                 <Clock className="h-3 w-3 text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground">
-                                  {post.scheduled_date.toLocaleTimeString()}
+                                  {new Date(post.scheduled_date).toLocaleTimeString()}
                                 </span>
                                 {getStatusBadge(post.status)}
                               </div>
                             </div>
-                            <div className="flex flex-col gap-2">
-                              <Button size="sm" variant="outline">
-                                Edit
-                              </Button>
-                              <Button size="sm" variant="destructive">
-                                Cancel
-                              </Button>
-                            </div>
+                            {post.status === 'scheduled' && (
+                              <div className="flex flex-col gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => cancelPost(post.id)}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       
                       {scheduledPosts.filter(post => 
-                        post.scheduled_date.toDateString() === selectedDate?.toDateString()
+                        new Date(post.scheduled_date).toDateString() === selectedDate?.toDateString()
                       ).length === 0 && (
                         <div className="text-center py-8">
                           <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -197,12 +422,12 @@ const ScheduledPosts = () => {
                           {/* Posts for this day */}
                           <div className="space-y-2">
                             {scheduledPosts
-                              .filter(post => post.scheduled_date.toDateString() === date.toDateString())
+                              .filter(post => new Date(post.scheduled_date).toDateString() === date.toDateString())
                               .map(post => (
                                 <div key={post.id} className="p-2 bg-muted rounded text-xs">
                                   <div className="flex items-center gap-1 mb-1">
                                     {getPlatformIcon(post.platform)}
-                                    <span>{post.scheduled_date.toLocaleTimeString([], { 
+                                    <span>{new Date(post.scheduled_date).toLocaleTimeString([], { 
                                       hour: '2-digit', 
                                       minute: '2-digit' 
                                     })}</span>
