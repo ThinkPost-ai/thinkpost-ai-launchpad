@@ -38,7 +38,7 @@ const ProductCreation = () => {
   const [generatingCaptions, setGeneratingCaptions] = useState(false);
 
   const addProduct = () => {
-    setProducts([...products, {
+    setProducts(prevProducts => [...prevProducts, {
       name: '',
       price: '',
       description: '',
@@ -49,23 +49,61 @@ const ProductCreation = () => {
 
   const removeProduct = (index: number) => {
     if (products.length > 1) {
-      setProducts(products.filter((_, i) => i !== index));
+      setProducts(prevProducts => prevProducts.filter((_, i) => i !== index));
     }
   };
 
-  const updateProduct = (index: number, field: keyof Product, value: any) => {
-    const updatedProducts = [...products];
-    updatedProducts[index] = { ...updatedProducts[index], [field]: value };
-    setProducts(updatedProducts);
-  };
+  const updateProduct = useCallback((index: number, field: keyof Product, value: any) => {
+    setProducts(prevProducts => {
+      const updatedProducts = prevProducts.map((product, i) => {
+        if (i === index) {
+          return { ...product, [field]: value };
+        }
+        return product;
+      });
+      return updatedProducts;
+    });
+  }, []);
 
   const handleImageSelect = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const imageUrl = URL.createObjectURL(file);
-      updateProduct(index, 'image', file);
-      updateProduct(index, 'imagePreview', imageUrl);
+      
+      setProducts(prevProducts => {
+        const updatedProducts = prevProducts.map((product, i) => {
+          if (i === index) {
+            return { 
+              ...product, 
+              image: file,
+              imagePreview: imageUrl
+            };
+          }
+          return product;
+        });
+        return updatedProducts;
+      });
     }
+  }, []);
+
+  const removeImage = useCallback((index: number) => {
+    setProducts(prevProducts => {
+      const updatedProducts = prevProducts.map((product, i) => {
+        if (i === index) {
+          // Clean up the previous image URL to prevent memory leaks
+          if (product.imagePreview) {
+            URL.revokeObjectURL(product.imagePreview);
+          }
+          return { 
+            ...product, 
+            image: null,
+            imagePreview: null
+          };
+        }
+        return product;
+      });
+      return updatedProducts;
+    });
   }, []);
 
   const validateProducts = () => {
@@ -282,11 +320,9 @@ const ProductCreation = () => {
                           className="w-full h-48 object-cover rounded-lg"
                         />
                         <button
-                          onClick={() => {
-                            updateProduct(index, 'image', null);
-                            updateProduct(index, 'imagePreview', null);
-                          }}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
                           <X className="h-4 w-4" />
                         </button>
