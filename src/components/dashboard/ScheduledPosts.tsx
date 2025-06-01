@@ -13,10 +13,12 @@ import {
   Instagram,
   Play,
   Facebook,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { DayContentProps } from 'react-day-picker';
 
 interface ScheduledPost {
   id: string;
@@ -46,6 +48,7 @@ const ScheduledPosts = () => {
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
+  const [cancellingAll, setCancellingAll] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -135,7 +138,7 @@ const ScheduledPosts = () => {
     const startDate = new Date();
     startDate.setHours(12, 0, 0, 0); // Set to noon
     
-    // Generate 20 posts over 4 weeks (28 days)
+    // Generate 20 posts over 4 weeks (28 days) - one post per day, skipping some days
     const totalDays = 28;
     const postsNeeded = 20;
     
@@ -173,11 +176,9 @@ const ScheduledPosts = () => {
       }
 
       const schedule = generateSchedule();
-      const platforms = ['instagram', 'tiktok', 'facebook'] as const;
 
       const postsToCreate = schedule.map((date, index) => {
         const mediaItem = mediaItems[index % mediaItems.length];
-        const platform = platforms[index % platforms.length];
 
         return {
           user_id: user!.id,
@@ -185,7 +186,7 @@ const ScheduledPosts = () => {
           image_id: mediaItem.type === 'image' ? mediaItem.id : null,
           caption: mediaItem.caption!,
           scheduled_date: date.toISOString(),
-          platform,
+          platform: 'tiktok',
           status: 'scheduled' as const
         };
       });
@@ -198,7 +199,7 @@ const ScheduledPosts = () => {
 
       toast({
         title: "Success!",
-        description: `${schedule.length} posts have been scheduled over the next 4 weeks`,
+        description: `${schedule.length} TikTok posts have been scheduled over the next 4 weeks`,
       });
 
       await fetchScheduledPosts();
@@ -210,6 +211,35 @@ const ScheduledPosts = () => {
       });
     } finally {
       setScheduling(false);
+    }
+  };
+
+  const cancelAllScheduledPosts = async () => {
+    setCancellingAll(true);
+
+    try {
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .delete()
+        .eq('user_id', user?.id)
+        .eq('status', 'scheduled');
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "All scheduled posts have been cancelled",
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel scheduled posts",
+        variant: "destructive"
+      });
+    } finally {
+      setCancellingAll(false);
     }
   };
 
@@ -269,6 +299,28 @@ const ScheduledPosts = () => {
     }
   };
 
+  // Helper function to check if a date has scheduled posts
+  const hasScheduledPosts = (date: Date) => {
+    return scheduledPosts.some(post => 
+      new Date(post.scheduled_date).toDateString() === date.toDateString() &&
+      post.status === 'scheduled'
+    );
+  };
+
+  // Custom day content component for calendar
+  const DayContent = ({ date }: DayContentProps) => {
+    const hasPost = hasScheduledPosts(date);
+    
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        <span>{date.getDate()}</span>
+        {hasPost && (
+          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border border-yellow-500"></div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -291,23 +343,42 @@ const ScheduledPosts = () => {
                 Manage your scheduled social media posts
               </CardDescription>
             </div>
-            <Button 
-              className="bg-gradient-primary hover:opacity-90"
-              onClick={scheduleAutomaticPosts}
-              disabled={scheduling}
-            >
-              {scheduling ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Scheduling...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Schedule Posts
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={cancelAllScheduledPosts}
+                disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0}
+              >
+                {cancellingAll ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Cancel All Scheduled Tasks
+                  </>
+                )}
+              </Button>
+              <Button 
+                className="bg-gradient-primary hover:opacity-90"
+                onClick={scheduleAutomaticPosts}
+                disabled={scheduling}
+              >
+                {scheduling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Posts
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -330,6 +401,9 @@ const ScheduledPosts = () => {
                       selected={selectedDate}
                       onSelect={setSelectedDate}
                       className="rounded-md border"
+                      components={{
+                        DayContent: DayContent
+                      }}
                     />
                   </CardContent>
                 </Card>
