@@ -17,43 +17,84 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
-interface Image {
+interface MediaItem {
   id: string;
   file_path: string;
-  original_filename: string;
+  original_filename?: string;
+  name?: string;
+  price?: number;
+  description?: string;
   caption?: string;
   created_at: string;
+  type: 'image' | 'product';
 }
 
 const MediaManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [images, setImages] = useState<Image[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState<string>('all');
 
-  const tags = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Deals', 'Desserts'];
+  const tags = ['All', 'Images', 'Products', 'With Captions', 'Without Captions'];
 
   useEffect(() => {
-    fetchImages();
+    fetchMediaItems();
   }, [user]);
 
-  const fetchImages = async () => {
+  const fetchMediaItems = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch images
+      const { data: images, error: imagesError } = await supabase
         .from('images')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setImages(data || []);
+      if (imagesError) throw imagesError;
+
+      // Fetch products
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (productsError) throw productsError;
+
+      // Transform and combine data
+      const transformedImages = (images || []).map(image => ({
+        id: image.id,
+        file_path: image.file_path,
+        original_filename: image.original_filename,
+        caption: image.caption,
+        created_at: image.created_at,
+        type: 'image' as const
+      }));
+
+      const transformedProducts = (products || []).map(product => ({
+        id: product.id,
+        file_path: product.image_path,
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        caption: product.caption,
+        created_at: product.created_at,
+        type: 'product' as const
+      }));
+
+      // Combine and sort by creation date
+      const allItems = [...transformedImages, ...transformedProducts].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setMediaItems(allItems);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to load images",
+        description: "Failed to load media",
         variant: "destructive"
       });
     } finally {
@@ -64,6 +105,17 @@ const MediaManagement = () => {
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
+
+  const getFilteredItems = () => {
+    if (filter === 'all') return mediaItems;
+    if (filter === 'images') return mediaItems.filter(item => item.type === 'image');
+    if (filter === 'products') return mediaItems.filter(item => item.type === 'product');
+    if (filter === 'with captions') return mediaItems.filter(item => item.caption);
+    if (filter === 'without captions') return mediaItems.filter(item => !item.caption);
+    return mediaItems;
+  };
+
+  const filteredItems = getFilteredItems();
 
   if (loading) {
     return (
@@ -85,7 +137,7 @@ const MediaManagement = () => {
                 Media Management
               </CardTitle>
               <CardDescription>
-                Manage your uploaded photos and videos
+                Manage your uploaded photos and product images
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -94,7 +146,7 @@ const MediaManagement = () => {
                 className="bg-gradient-primary hover:opacity-90"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Media
+                Add Products
               </Button>
               <Button
                 onClick={() => navigate('/images')}
@@ -149,21 +201,21 @@ const MediaManagement = () => {
       {/* Media Grid/List */}
       <Card>
         <CardContent className="p-6">
-          {images.length === 0 ? (
+          {filteredItems.length === 0 ? (
             <div className="text-center py-12">
               <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-2">
-                No media uploaded yet
+                {filter === 'all' ? 'No media uploaded yet' : `No ${filter} found`}
               </h3>
               <p className="text-muted-foreground mb-4">
-                Start by uploading some photos of your delicious dishes
+                Start by adding some products with images
               </p>
               <Button 
                 onClick={() => navigate('/upload')}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Your First Image
+                Add Your First Product
               </Button>
             </div>
           ) : (
@@ -172,15 +224,15 @@ const MediaManagement = () => {
                 ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
                 : 'space-y-4'
             }>
-              {images.map((image) => (
-                <div key={image.id} className={
+              {filteredItems.map((item) => (
+                <div key={`${item.type}-${item.id}`} className={
                   viewMode === 'grid'
                     ? 'group relative aspect-square overflow-hidden rounded-lg border bg-muted'
                     : 'flex items-center gap-4 p-4 border rounded-lg'
                 }>
                   <img
-                    src={getImageUrl(image.file_path)}
-                    alt={image.original_filename}
+                    src={getImageUrl(item.file_path)}
+                    alt={item.name || item.original_filename || 'Media'}
                     className={
                       viewMode === 'grid'
                         ? 'h-full w-full object-cover transition-transform group-hover:scale-105'
@@ -191,28 +243,43 @@ const MediaManagement = () => {
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <div className="text-white text-center p-2">
                         <p className="text-sm font-medium truncate">
-                          {image.original_filename}
+                          {item.name || item.original_filename}
                         </p>
-                        {image.caption && (
-                          <Badge variant="secondary" className="mt-1">
-                            Has Caption
+                        <div className="flex gap-1 mt-1 justify-center">
+                          <Badge variant="secondary" className="text-xs">
+                            {item.type === 'product' ? 'Product' : 'Image'}
                           </Badge>
-                        )}
+                          {item.caption && (
+                            <Badge variant="secondary" className="text-xs">
+                              Has Caption
+                            </Badge>
+                          )}
+                          {item.type === 'product' && item.price && (
+                            <Badge variant="secondary" className="text-xs">
+                              ${item.price}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex-1">
                       <h4 className="font-medium text-deep-blue dark:text-white">
-                        {image.original_filename}
+                        {item.name || item.original_filename}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Uploaded {new Date(image.created_at).toLocaleDateString()}
+                        {item.type === 'product' ? 'Product' : 'Image'} • Uploaded {new Date(item.created_at).toLocaleDateString()}
                       </p>
-                      {image.caption && (
-                        <Badge variant="secondary" className="mt-1">
-                          Has Caption
-                        </Badge>
+                      {item.type === 'product' && item.price && (
+                        <p className="text-sm font-medium text-green-600">${item.price}</p>
                       )}
+                      <div className="flex gap-1 mt-1">
+                        {item.caption && (
+                          <Badge variant="secondary" className="text-xs">
+                            Has Caption
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

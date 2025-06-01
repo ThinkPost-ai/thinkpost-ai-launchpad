@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,10 +29,14 @@ import { useToast } from '@/hooks/use-toast';
 interface CaptionData {
   id: string;
   image_path: string;
-  original_filename: string;
+  original_filename?: string;
+  name?: string;
+  price?: number;
+  description?: string;
   caption?: string;
   created_at: string;
   status: 'draft' | 'scheduled' | 'posted';
+  type: 'image' | 'product';
   social_stats?: {
     instagram_views?: number;
     instagram_likes?: number;
@@ -54,18 +59,27 @@ const GeneratedCaptions = () => {
 
   const fetchCaptions = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch images with captions
+      const { data: images, error: imagesError } = await supabase
         .from('images')
         .select('*')
         .eq('user_id', user?.id)
         .not('caption', 'is', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (imagesError) throw imagesError;
 
-      // Transform data and add mock social stats for demo
-      const transformedData = (data || []).map(image => {
-        // Generate random status with proper typing
+      // Fetch products (with or without captions)
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (productsError) throw productsError;
+
+      // Transform and combine data
+      const transformedImages = (images || []).map(image => {
         const randomValue = Math.random();
         let status: 'draft' | 'scheduled' | 'posted';
         if (randomValue > 0.7) {
@@ -83,6 +97,7 @@ const GeneratedCaptions = () => {
           caption: image.caption,
           created_at: image.created_at,
           status,
+          type: 'image' as const,
           social_stats: {
             instagram_views: Math.floor(Math.random() * 1000) + 100,
             instagram_likes: Math.floor(Math.random() * 100) + 10,
@@ -92,7 +107,42 @@ const GeneratedCaptions = () => {
         };
       });
 
-      setCaptions(transformedData);
+      const transformedProducts = (products || []).map(product => {
+        const randomValue = Math.random();
+        let status: 'draft' | 'scheduled' | 'posted';
+        if (randomValue > 0.7) {
+          status = 'posted';
+        } else if (randomValue > 0.5) {
+          status = 'scheduled';
+        } else {
+          status = 'draft';
+        }
+
+        return {
+          id: product.id,
+          image_path: product.image_path,
+          name: product.name,
+          price: product.price,
+          description: product.description,
+          caption: product.caption,
+          created_at: product.created_at,
+          status,
+          type: 'product' as const,
+          social_stats: {
+            instagram_views: Math.floor(Math.random() * 1000) + 100,
+            instagram_likes: Math.floor(Math.random() * 100) + 10,
+            tiktok_views: Math.floor(Math.random() * 5000) + 500,
+            tiktok_likes: Math.floor(Math.random() * 500) + 50,
+          }
+        };
+      });
+
+      // Combine and sort by creation date
+      const allCaptions = [...transformedImages, ...transformedProducts].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setCaptions(allCaptions);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -122,34 +172,55 @@ const GeneratedCaptions = () => {
     );
   };
 
-  const regenerateCaption = async (imageId: string) => {
-    setGeneratingCaption(imageId);
+  const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
+    setGeneratingCaption(itemId);
     
     try {
+      let requestBody;
+      if (itemType === 'product') {
+        const product = captions.find(c => c.id === itemId && c.type === 'product');
+        requestBody = {
+          productName: product?.name || 'وجبة مميزة',
+          price: product?.price,
+          description: product?.description
+        };
+      } else {
+        requestBody = { 
+          imageId: itemId,
+          mealName: mealNames[itemId] || 'وجبة مميزة'
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-caption', {
-        body: { 
-          imageId,
-          mealName: mealNames[imageId] || 'وجبة مميزة'
-        }
+        body: requestBody
       });
 
       if (error) throw error;
 
       const newCaption = data.caption;
       
+      // Update the database
+      const table = itemType === 'product' ? 'products' : 'images';
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({ caption: newCaption })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+      
       // Update the local state
       setCaptions(prev => prev.map(caption => 
-        caption.id === imageId ? { ...caption, caption: newCaption } : caption
+        caption.id === itemId ? { ...caption, caption: newCaption } : caption
       ));
       
       toast({
-        title: "نجح!",
-        description: "تم إنشاء المحتوى بنجاح"
+        title: "Success!",
+        description: "Caption generated successfully"
       });
     } catch (error: any) {
       toast({
-        title: "خطأ",
-        description: "فشل في إنشاء المحتوى",
+        title: "Error",
+        description: "Failed to generate caption",
         variant: "destructive"
       });
     } finally {
@@ -157,10 +228,10 @@ const GeneratedCaptions = () => {
     }
   };
 
-  const updateMealName = (imageId: string, mealName: string) => {
+  const updateMealName = (itemId: string, mealName: string) => {
     setMealNames(prev => ({
       ...prev,
-      [imageId]: mealName
+      [itemId]: mealName
     }));
   };
 
@@ -183,15 +254,15 @@ const GeneratedCaptions = () => {
                 Generated Captions
               </CardTitle>
               <CardDescription>
-                Manage your AI-generated captions and social media performance
+                Manage your AI-generated captions for images and products
               </CardDescription>
             </div>
             <Button 
-              onClick={() => window.location.href = '/images'}
+              onClick={() => window.location.href = '/upload'}
               className="bg-gradient-primary hover:opacity-90"
             >
               <MessageSquare className="h-4 w-4 mr-2" />
-              Generate New Caption
+              Add More Content
             </Button>
           </div>
         </CardHeader>
@@ -200,17 +271,17 @@ const GeneratedCaptions = () => {
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-2">
-                No captions generated yet
+                No content yet
               </h3>
               <p className="text-muted-foreground mb-4">
-                Upload some images and generate AI captions to get started
+                Add some products with images to generate AI captions
               </p>
               <Button 
-                onClick={() => window.location.href = '/images'}
+                onClick={() => window.location.href = '/upload'}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Generate Your First Caption
+                Add Your First Product
               </Button>
             </div>
           ) : (
@@ -218,47 +289,64 @@ const GeneratedCaptions = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Caption (Arabic)</TableHead>
-                    <TableHead>Meal Name</TableHead>
+                    <TableHead>Content</TableHead>
+                    <TableHead>Caption</TableHead>
+                    <TableHead>Details</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Social Media Performance</TableHead>
+                    <TableHead>Performance</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {captions.map((caption) => (
-                    <TableRow key={caption.id}>
+                    <TableRow key={`${caption.type}-${caption.id}`}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <img
                             src={getImageUrl(caption.image_path)}
-                            alt={caption.original_filename}
+                            alt={caption.name || caption.original_filename || 'Content'}
                             className="h-12 w-12 object-cover rounded-md"
                           />
                           <div>
                             <p className="text-sm font-medium text-deep-blue dark:text-white">
-                              {caption.original_filename}
+                              {caption.name || caption.original_filename}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(caption.created_at).toLocaleDateString()}
+                              {caption.type === 'product' ? 'Product' : 'Image'} • {new Date(caption.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
                         <p className="text-sm text-right line-clamp-3" dir="rtl">
-                          {caption.caption || 'No caption generated'}
+                          {caption.caption || (
+                            <span className="text-muted-foreground italic">
+                              No caption generated yet
+                            </span>
+                          )}
                         </p>
                       </TableCell>
                       <TableCell>
-                        <Input
-                          value={mealNames[caption.id] || ''}
-                          onChange={(e) => updateMealName(caption.id, e.target.value)}
-                          placeholder="اسم الوجبة"
-                          className="w-32 text-right"
-                          dir="rtl"
-                        />
+                        {caption.type === 'product' ? (
+                          <div className="space-y-1">
+                            {caption.price && (
+                              <p className="text-sm font-medium">${caption.price}</p>
+                            )}
+                            {caption.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {caption.description}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <Input
+                            value={mealNames[caption.id] || ''}
+                            onChange={(e) => updateMealName(caption.id, e.target.value)}
+                            placeholder="اسم الوجبة"
+                            className="w-32 text-right"
+                            dir="rtl"
+                          />
+                        )}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(caption.status)}
@@ -289,7 +377,7 @@ const GeneratedCaptions = () => {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => regenerateCaption(caption.id)}
+                            onClick={() => regenerateCaption(caption.id, caption.type)}
                             disabled={generatingCaption === caption.id}
                           >
                             {generatingCaption === caption.id ? (
