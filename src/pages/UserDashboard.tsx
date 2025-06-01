@@ -46,6 +46,7 @@ interface DashboardStats {
   captionQuotaUsed: number;
   captionQuotaTotal: number;
   totalImages: number;
+  totalProducts: number;
 }
 
 const UserDashboard = () => {
@@ -59,7 +60,8 @@ const UserDashboard = () => {
     upcomingPosts: 0,
     captionQuotaUsed: 15,
     captionQuotaTotal: 100,
-    totalImages: 0
+    totalImages: 0,
+    totalProducts: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -99,9 +101,16 @@ const UserDashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user?.id);
 
+      // Fetch products count
+      const { count: productsCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user?.id);
+
       setStats(prev => ({
         ...prev,
-        totalImages: imagesCount || 0
+        totalImages: imagesCount || 0,
+        totalProducts: productsCount || 0
       }));
 
     } catch (error: any) {
@@ -175,8 +184,8 @@ const UserDashboard = () => {
                     onClick={() => navigate('/upload')}
                     className="h-20 bg-gradient-primary hover:opacity-90 flex flex-col gap-2"
                   >
-                    <Upload className="h-6 w-6" />
-                    Upload Media
+                    <Plus className="h-6 w-6" />
+                    Start & add products
                   </Button>
                   <Button 
                     onClick={() => navigate('/images')}
