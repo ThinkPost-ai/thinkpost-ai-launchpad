@@ -128,7 +128,7 @@ const ProductCreation = () => {
     return uploadData.path;
   };
 
-  const saveProducts = async (generateCaptions = false) => {
+  const saveProductsOnly = async () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
@@ -138,11 +138,66 @@ const ProductCreation = () => {
       return;
     }
 
-    if (generateCaptions) {
-      setGeneratingCaptions(true);
-    } else {
-      setSaving(true);
+    setSaving(true);
+
+    try {
+      const productPromises = products.map(async (product) => {
+        // Upload image
+        const imagePath = await uploadImage(product.image!);
+
+        // Prepare product data without caption
+        const productData = {
+          user_id: user.id,
+          name: product.name,
+          price: parseFloat(product.price),
+          description: product.description,
+          image_path: imagePath,
+          caption: null
+        };
+
+        // Insert product into database
+        const { data: insertedProduct, error: dbError } = await supabase
+          .from('products')
+          .insert(productData)
+          .select()
+          .single();
+
+        if (dbError) throw dbError;
+
+        return insertedProduct;
+      });
+
+      await Promise.all(productPromises);
+
+      toast({
+        title: "Success!",
+        description: `${products.length} product(s) saved successfully`
+      });
+
+      navigate('/user-dashboard');
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save products",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const saveProductsWithCaptions = async () => {
+    if (!user || !validateProducts()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields and add images for all products",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGeneratingCaptions(true);
 
     try {
       const productPromises = products.map(async (product) => {
@@ -173,68 +228,64 @@ const ProductCreation = () => {
 
       const savedProducts = await Promise.all(productPromises);
 
-      if (generateCaptions) {
-        // Generate captions using AI
-        const captionPromises = savedProducts.map(async (product) => {
-          try {
-            const response = await fetch('/api/generate-caption', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                productName: product.name,
-                price: product.price,
-                description: product.description
-              })
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to generate caption');
+      // Generate captions using AI
+      const captionPromises = savedProducts.map(async (product) => {
+        try {
+          const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
+            body: {
+              productName: product.name,
+              price: product.price,
+              description: product.description
             }
+          });
 
-            const { caption } = await response.json();
+          if (captionError) {
+            console.error('Caption generation error:', captionError);
+            return product;
+          }
 
+          const caption = captionData?.caption;
+
+          if (caption) {
             // Update product with generated caption
             const { error: updateError } = await supabase
               .from('products')
               .update({ caption })
               .eq('id', product.id);
 
-            if (updateError) throw updateError;
-
-            return { ...product, caption };
-          } catch (error) {
-            console.error('Failed to generate caption for product:', product.name, error);
-            return product;
+            if (updateError) {
+              console.error('Caption update error:', updateError);
+            }
           }
-        });
 
-        await Promise.all(captionPromises);
+          return { ...product, caption };
+        } catch (error) {
+          console.error('Failed to generate caption for product:', product.name, error);
+          return product;
+        }
+      });
 
-        toast({
-          title: "Success!",
-          description: `${products.length} product(s) saved and captions generated successfully`
-        });
-      } else {
-        toast({
-          title: "Success!",
-          description: `${products.length} product(s) saved successfully`
-        });
-      }
+      await Promise.all(captionPromises);
+
+      toast({
+        title: "Success!",
+        description: `${products.length} product(s) saved and captions generated successfully`
+      });
 
       navigate('/user-dashboard');
     } catch (error: any) {
+      console.error('Save with captions error:', error);
       toast({
         title: "Save Failed",
-        description: error.message || "Failed to save products",
+        description: error.message || "Failed to save products with captions",
         variant: "destructive"
       });
     } finally {
-      setSaving(false);
       setGeneratingCaptions(false);
     }
   };
+
+  const isFormValid = validateProducts();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-8">
@@ -362,8 +413,8 @@ const ProductCreation = () => {
 
             <div className="flex gap-4">
               <Button
-                onClick={() => saveProducts(false)}
-                disabled={saving || generatingCaptions || !validateProducts()}
+                onClick={saveProductsOnly}
+                disabled={saving || generatingCaptions || !isFormValid}
                 variant="outline"
                 className="flex-1"
               >
@@ -377,8 +428,8 @@ const ProductCreation = () => {
                 )}
               </Button>
               <Button
-                onClick={() => saveProducts(true)}
-                disabled={saving || generatingCaptions || !validateProducts()}
+                onClick={saveProductsWithCaptions}
+                disabled={saving || generatingCaptions || !isFormValid}
                 className="bg-gradient-primary hover:opacity-90 flex-1"
               >
                 {generatingCaptions ? (
