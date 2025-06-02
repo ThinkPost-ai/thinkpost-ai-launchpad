@@ -5,6 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { 
   Calendar as CalendarIcon, 
   Plus, 
@@ -13,11 +26,14 @@ import {
   Play,
   Facebook,
   Loader2,
-  Trash2
+  Trash2,
+  Edit
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DayContentProps } from 'react-day-picker';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ScheduledPost {
   id: string;
@@ -48,6 +64,10 @@ const ScheduledPosts = () => {
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
   const [cancellingAll, setCancellingAll] = useState(false);
+  const [editingPost, setEditingPost] = useState<string | null>(null);
+  const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -297,6 +317,53 @@ const ScheduledPosts = () => {
     }
   };
 
+  const startEditDate = (post: ScheduledPost) => {
+    setEditingPost(post.id);
+    setNewScheduleDate(new Date(post.scheduled_date));
+    setEditDialogOpen(true);
+  };
+
+  const updatePostDate = async () => {
+    if (!editingPost || !newScheduleDate) return;
+
+    try {
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .update({ 
+          scheduled_date: newScheduleDate.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingPost);
+
+      if (error) throw error;
+
+      toast({
+        title: "Date Updated",
+        description: "The posting date has been updated successfully",
+      });
+
+      await fetchScheduledPosts();
+      setEditDialogOpen(false);
+      setEditingPost(null);
+      setNewScheduleDate(undefined);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update posting date",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const setTimeForDate = (hours: number, minutes: number) => {
+    if (!newScheduleDate) return;
+    
+    const updatedDate = new Date(newScheduleDate);
+    updatedDate.setHours(hours, minutes, 0, 0);
+    setNewScheduleDate(updatedDate);
+    setTimePickerOpen(false);
+  };
+
   // Helper function to check if a date has scheduled posts
   const hasScheduledPosts = (date: Date) => {
     return scheduledPosts.some(post => 
@@ -445,6 +512,14 @@ const ScheduledPosts = () => {
                               <div className="flex flex-col gap-2">
                                 <Button 
                                   size="sm" 
+                                  variant="outline"
+                                  onClick={() => startEditDate(post)}
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Edit Date
+                                </Button>
+                                <Button 
+                                  size="sm" 
                                   variant="destructive"
                                   onClick={() => deletePost(post.id)}
                                 >
@@ -520,6 +595,72 @@ const ScheduledPosts = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Edit Date Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Posting Date</DialogTitle>
+            <DialogDescription>
+              Choose a new date and time for this scheduled post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Date</label>
+              <Calendar
+                mode="single"
+                selected={newScheduleDate}
+                onSelect={setNewScheduleDate}
+                className="rounded-md border mt-2"
+                disabled={(date) => date < new Date()}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">Time</label>
+              <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !newScheduleDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {newScheduleDate ? format(newScheduleDate, "HH:mm") : "Pick a time"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-4" align="start">
+                  <div className="grid grid-cols-3 gap-2">
+                    {[9, 12, 15, 18, 21].map((hour) => (
+                      <Button
+                        key={hour}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTimeForDate(hour, 0)}
+                        className="text-xs"
+                      >
+                        {hour}:00
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={updatePostDate} disabled={!newScheduleDate}>
+                Update Date
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
