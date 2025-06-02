@@ -690,8 +690,14 @@ const ScheduledPosts = () => {
                 mode="single"
                 selected={newScheduleDate}
                 onSelect={setNewScheduleDate}
-                className="rounded-md border mt-2"
-                disabled={(date) => date < new Date()}
+                className="rounded-md border mt-2 pointer-events-auto"
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const checkDate = new Date(date);
+                  checkDate.setHours(0, 0, 0, 0);
+                  return checkDate < today;
+                }}
               />
             </div>
             
