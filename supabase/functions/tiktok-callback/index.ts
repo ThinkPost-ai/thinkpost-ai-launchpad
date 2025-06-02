@@ -14,79 +14,98 @@ serve(async (req) => {
   }
 
   try {
-    console.log('TikTok callback received:', req.url)
+    console.log('TikTok callback function called');
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const url = new URL(req.url)
-    const code = url.searchParams.get('code')
-    const state = url.searchParams.get('state')
-    const error = url.searchParams.get('error')
-    const scopes = url.searchParams.get('scopes')
-    
-    console.log('Callback params:', { 
-      hasCode: !!code, 
-      state, 
-      error, 
-      scopes 
-    })
-    
-    // Handle OAuth errors
-    if (error) {
-      console.error('TikTok OAuth error:', error)
-      const errorDescription = url.searchParams.get('error_description')
-      // Redirect to your app's domain with error
-      const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent(error + (errorDescription ? ': ' + errorDescription : ''))}`
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl,
-        },
-      })
+    // Get the authorization header
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      console.error('No authorization header provided')
+      return new Response(
+        JSON.stringify({ error: 'Authorization required' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
+    // Verify the user token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    
+    if (userError || !user) {
+      console.error('User verification failed:', userError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid authorization token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    console.log('User verified:', user.id)
+
+    // Get request body
+    const { code, state } = await req.json()
+    
     if (!code || !state) {
-      console.error('Missing required parameters:', { code: !!code, state: !!state })
-      const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent('Missing authorization code or state parameter')}`
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl,
-        },
-      })
+      console.error('Missing code or state parameter')
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameters' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    console.log('Processing callback with code:', code, 'and state:', state)
+
+    // Verify state token
+    const { data: stateData, error: stateError } = await supabase
+      .from('tiktok_oauth_states')
+      .select('*')
+      .eq('state_token', state)
+      .eq('user_id', user.id)
+      .gte('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (stateError || !stateData) {
+      console.error('Invalid or expired state token:', stateError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired state token' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     // Get TikTok configuration
     const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     const clientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
-    const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
-    
-    console.log('TikTok config:', {
-      hasClientKey: !!clientKey,
-      hasClientSecret: !!clientSecret,
-      redirectUri
-    })
+    const redirectUri = `${req.headers.get('origin')}/api/tiktok/callback`
     
     if (!clientKey || !clientSecret) {
       console.error('TikTok credentials not configured')
-      const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent('TikTok credentials not configured')}`
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl,
-        },
-      })
+      return new Response(
+        JSON.stringify({ error: 'TikTok credentials not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
     
     console.log('Exchanging code for access token...')
     
-    // Exchange code for access token using TikTok's token endpoint
+    // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
       headers: {
@@ -102,22 +121,17 @@ serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log('Token exchange response:', {
-      status: tokenResponse.status,
-      hasAccessToken: !!tokenData.access_token,
-      tokenData: tokenData
-    })
+    console.log('Token exchange response:', tokenResponse.status, tokenData)
     
     if (!tokenResponse.ok || !tokenData.access_token) {
       console.error('Token exchange failed:', tokenData)
-      const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent('Failed to exchange authorization code for access token')}`
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl,
-        },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Failed to exchange authorization code for access token' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     // Get user info from TikTok
@@ -130,63 +144,82 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
-    console.log('User info response:', {
-      status: userResponse.status,
-      userData: userData
-    })
+    console.log('User info response:', userResponse.status, userData)
     
     if (!userResponse.ok || !userData.data?.user) {
       console.error('Failed to get user info:', userData)
-      const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent('Failed to get user information from TikTok')}`
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl,
-        },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Failed to get user information from TikTok' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     const tiktokUser = userData.data.user
-    
-    // For now, we'll need to get the user ID from the state or another method
-    // This is a simplified version - in production you'd need to validate the state
-    // and get the actual user ID who initiated the OAuth flow
     
     // Calculate token expiration time
     const expiresAt = tokenData.expires_in 
       ? new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString()
       : null
 
-    // For now, return a success response with user info
-    // In production, you'd store this in the database linked to the authenticated user
-    console.log('TikTok connection successful:', {
-      tiktokUserId: tiktokUser.open_id,
-      username: tiktokUser.display_name
-    })
+    // Store TikTok connection in database
+    const { data: connectionData, error: connectionError } = await supabase
+      .from('tiktok_connections')
+      .upsert({
+        user_id: user.id,
+        tiktok_user_id: tiktokUser.open_id,
+        tiktok_username: tiktokUser.display_name,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        token_expires_at: expiresAt,
+        scope: tokenData.scope,
+      }, { onConflict: 'user_id' })
+      .select()
+
+    if (connectionError) {
+      console.error('Failed to store TikTok connection:', connectionError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to store TikTok connection' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Clean up state token
+    await supabase
+      .from('tiktok_oauth_states')
+      .delete()
+      .eq('state_token', state)
+
+    console.log('TikTok connection successful for user:', user.id)
     
-    // Redirect to success page
-    const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_connected=true&username=${encodeURIComponent(tiktokUser.display_name)}`
-    
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        'Location': redirectUrl,
-      },
-    })
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        tiktok_username: tiktokUser.display_name
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
     
   } catch (error) {
     console.error('TikTok callback error:', error)
     
-    const redirectUrl = `https://thinkpost.co/user-dashboard?tiktok_error=${encodeURIComponent(error.message)}`
-    
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        'Location': redirectUrl,
-      },
-    })
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 })

@@ -66,12 +66,16 @@ serve(async (req) => {
       )
     }
 
+    // Get the origin from the request to build the redirect URI
+    const origin = req.headers.get('origin') || 'https://thinkpost.co'
+    const redirectUri = `${origin}/api/tiktok/callback`
+
     console.log('Returning TikTok client key to user:', user.id)
     
     return new Response(
       JSON.stringify({ 
         clientKey,
-        redirectUri: 'https://thinkpost.co/api/tiktok/callback'
+        redirectUri
       }),
       {
         status: 200,
