@@ -66,13 +66,13 @@ serve(async (req) => {
 
     console.log('User verified:', user.id)
 
-    const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
+    const clientKey = Deno.env.get('TIKTOK_CLIENT_ID') // Note: TikTok calls this client_key
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
     
-    console.log('TikTok Client ID configured:', !!clientId)
+    console.log('TikTok Client Key configured:', !!clientKey)
     console.log('Redirect URI:', redirectUri)
     
-    if (!clientId) {
+    if (!clientKey) {
       console.error('TikTok Client ID not configured')
       return new Response(
         JSON.stringify({ error: 'TikTok Client ID not configured' }),
@@ -83,8 +83,8 @@ serve(async (req) => {
       )
     }
     
-    const scope = 'user.info.basic'
-    const state = crypto.randomUUID() // Generate random state for security
+    // Create anti-forgery state token as recommended by TikTok docs
+    const state = crypto.randomUUID()
     
     console.log('Generated state token:', state)
     console.log('Attempting to store state token for user:', user.id)
@@ -113,12 +113,13 @@ serve(async (req) => {
 
     console.log('State token stored successfully:', insertData)
     
-    const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
-      `?client_key=${clientId}` +
-      `&scope=${scope}` +
-      `&response_type=code` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${state}`
+    // Build the TikTok authorization URL following their exact specification
+    const authUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
+      '?client_key=' + encodeURIComponent(clientKey) +
+      '&scope=' + encodeURIComponent('user.info.basic') +
+      '&response_type=code' +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&state=' + encodeURIComponent(state)
 
     console.log('Final TikTok auth URL:', authUrl)
     console.log('Redirecting to TikTok OAuth with state:', state)

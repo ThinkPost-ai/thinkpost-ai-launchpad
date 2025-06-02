@@ -23,13 +23,21 @@ serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
     const error = url.searchParams.get('error')
+    const scopes = url.searchParams.get('scopes')
     
-    console.log('TikTok callback received:', { code: !!code, state, error })
+    console.log('TikTok callback received:', { 
+      code: !!code, 
+      state, 
+      error, 
+      scopes,
+      fullUrl: req.url 
+    })
     
     // Handle OAuth errors
     if (error) {
       console.error('TikTok OAuth error:', error)
-      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent(error)}`
+      const errorDescription = url.searchParams.get('error_description')
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent(error + (errorDescription ? ': ' + errorDescription : ''))}`
       return new Response(null, {
         status: 302,
         headers: {
@@ -41,7 +49,14 @@ serve(async (req) => {
 
     if (!code || !state) {
       console.error('Missing required parameters:', { code: !!code, state: !!state })
-      throw new Error('Missing authorization code or state parameter')
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('Missing authorization code or state parameter')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
 
     console.log('Validating state token:', state)
@@ -55,13 +70,27 @@ serve(async (req) => {
 
     if (stateError || !stateData) {
       console.error('Invalid state token:', stateError)
-      throw new Error('Invalid or expired state token')
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('Invalid or expired state token')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
 
     // Check if state token is expired
     if (new Date(stateData.expires_at) < new Date()) {
       console.error('State token expired')
-      throw new Error('State token has expired')
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('State token has expired')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
 
     // Clean up the used state token
@@ -72,10 +101,17 @@ serve(async (req) => {
 
     console.log('State validated, exchanging code for tokens for user:', stateData.user_id)
     
-    // Exchange code for access token
-    const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
+    // Exchange code for access token using TikTok's token endpoint
+    const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     const clientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    
+    console.log('Exchanging code for token with:', {
+      clientKey: !!clientKey,
+      clientSecret: !!clientSecret,
+      redirectUri,
+      code: code.substring(0, 10) + '...'
+    })
     
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
@@ -83,7 +119,7 @@ serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_key: clientId!,
+        client_key: clientKey!,
         client_secret: clientSecret!,
         code: code,
         grant_type: 'authorization_code',
@@ -92,13 +128,23 @@ serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
+    console.log('Token exchange response status:', tokenResponse.status)
     console.log('Token exchange response:', tokenData)
     
-    if (!tokenData.access_token) {
-      throw new Error(`Failed to get access token from TikTok: ${JSON.stringify(tokenData)}`)
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      console.error('Token exchange failed:', tokenData)
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('Failed to exchange authorization code for access token')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
 
     // Get user info from TikTok
+    console.log('Fetching user info with access token')
     const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
       method: 'GET',
       headers: {
@@ -107,10 +153,19 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
+    console.log('User info response status:', userResponse.status)
     console.log('User data from TikTok:', userData)
     
-    if (!userData.data?.user) {
-      throw new Error(`Failed to get user data from TikTok: ${JSON.stringify(userData)}`)
+    if (!userResponse.ok || !userData.data?.user) {
+      console.error('Failed to get user info:', userData)
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('Failed to get user information from TikTok')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
 
     const tiktokUser = userData.data.user
@@ -120,7 +175,9 @@ serve(async (req) => {
       ? new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString()
       : null
 
-    // Store the TikTok connection with real tokens
+    console.log('Storing TikTok connection for user:', stateData.user_id)
+    
+    // Store the TikTok connection
     const { error: connectionError } = await supabase
       .from('tiktok_connections')
       .upsert({
@@ -129,7 +186,7 @@ serve(async (req) => {
         tiktok_username: tiktokUser.display_name,
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token || null,
-        scope: tokenData.scope || 'user.info.basic',
+        scope: tokenData.scope || scopes || 'user.info.basic',
         token_expires_at: expiresAt,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -137,7 +194,14 @@ serve(async (req) => {
 
     if (connectionError) {
       console.error('Failed to store TikTok connection:', connectionError)
-      throw new Error('Failed to save TikTok connection')
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent('Failed to save TikTok connection')}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
     }
     
     // Redirect to dashboard with success message
