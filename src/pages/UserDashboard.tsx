@@ -49,7 +49,7 @@ interface DashboardStats {
 }
 
 const UserDashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, hasRestaurant } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -71,10 +71,15 @@ const UserDashboard = () => {
       return;
     }
 
+    if (!loading && !hasRestaurant) {
+      navigate('/restaurant-setup');
+      return;
+    }
+
     if (user) {
       fetchDashboardData();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, hasRestaurant, navigate]);
 
   const fetchDashboardData = async () => {
     try {
@@ -86,11 +91,6 @@ const UserDashboard = () => {
         .maybeSingle();
 
       if (restaurantError) throw restaurantError;
-
-      if (!restaurantData) {
-        navigate('/restaurant-setup');
-        return;
-      }
 
       setRestaurant(restaurantData);
 
