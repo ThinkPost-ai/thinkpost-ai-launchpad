@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +6,7 @@ import { useState } from 'react';
 import AuthDialog from '@/components/auth/AuthDialog';
 
 const Hero = () => {
-  const { user, hasRestaurant, checkingProfile } = useAuth();
+  const { user, checkingProfile } = useAuth();
   const navigate = useNavigate();
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
@@ -21,11 +20,8 @@ const Hero = () => {
       return; // Wait for profile check to complete
     }
 
-    if (hasRestaurant) {
-      navigate('/user-dashboard');
-    } else {
-      navigate('/restaurant-setup');
-    }
+    // Always navigate to dashboard which will handle the redirection
+    navigate('/dashboard');
   };
 
   const getButtonText = () => {
