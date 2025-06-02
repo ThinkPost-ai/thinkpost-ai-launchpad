@@ -374,7 +374,6 @@ const ScheduledPosts = () => {
     const updatedDate = new Date(newScheduleDate);
     updatedDate.setHours(hours, minutes, 0, 0);
     setNewScheduleDate(updatedDate);
-    setTimePickerOpen(false);
   };
 
   // Helper function to check if a date has scheduled posts
