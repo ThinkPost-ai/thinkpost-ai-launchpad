@@ -53,14 +53,7 @@ const TikTokConnection = () => {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      // Get the current session token
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      // Redirect to TikTok OAuth using the simplified auth endpoint
+      // Simply redirect to the TikTok auth endpoint
       const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth`;
       window.location.href = authUrl;
     } catch (error: any) {

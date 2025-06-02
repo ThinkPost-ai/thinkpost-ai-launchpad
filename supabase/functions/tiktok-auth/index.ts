@@ -17,6 +17,10 @@ serve(async (req) => {
     const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
     
+    if (!clientId) {
+      throw new Error('TikTok Client ID not configured')
+    }
+    
     const scope = 'user.info.basic'
     const state = crypto.randomUUID() // Generate random state for security
     
