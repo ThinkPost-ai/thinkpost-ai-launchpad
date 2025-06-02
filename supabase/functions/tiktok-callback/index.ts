@@ -166,7 +166,7 @@ serve(async (req) => {
       );
     }
 
-    // Get user info from TikTok with required fields parameter
+    // Get user info from TikTok with correct scope
     console.log('Fetching user info from TikTok...')
     const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,username', {
       method: 'GET',
@@ -216,7 +216,8 @@ serve(async (req) => {
             tiktok_username: tiktokUser.display_name || tiktokUser.username,
             access_token: tokenData.access_token,
             refresh_token: tokenData.refresh_token,
-            expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+            scope: tokenData.scope
           });
 
         if (insertError) {
@@ -240,7 +241,8 @@ serve(async (req) => {
             tiktok_username: tiktokUser.display_name || tiktokUser.username,
             access_token: tokenData.access_token,
             refresh_token: tokenData.refresh_token,
-            expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+            scope: tokenData.scope
           })
           .eq('user_id', userId)
           .eq('tiktok_user_id', tiktokUser.open_id);
