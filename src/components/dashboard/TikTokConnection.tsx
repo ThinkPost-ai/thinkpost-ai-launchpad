@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,8 +60,8 @@ const TikTokConnection = () => {
         throw new Error('Not authenticated');
       }
 
-      // Redirect to TikTok OAuth
-      const authUrl = `${supabase.supabaseUrl}/functions/v1/tiktok-auth?action=connect`;
+      // Redirect to TikTok OAuth using the correct Supabase URL
+      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth?action=connect`;
       window.location.href = authUrl;
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
