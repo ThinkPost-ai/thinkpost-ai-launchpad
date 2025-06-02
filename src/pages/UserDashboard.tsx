@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useTikTokConnectionData } from '@/hooks/useTikTokConnection';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
@@ -22,7 +21,7 @@ const UserDashboard = () => {
 
   // Use custom hooks for data management
   const { restaurant, stats, isLoading, handleCreditsUpdate } = useDashboardData();
-  useTikTokConnection();
+  useTikTokConnectionData();
 
   useEffect(() => {
     if (!loading && !user) {
