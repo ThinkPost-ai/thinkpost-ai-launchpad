@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -102,8 +101,6 @@ export const useProductManagement = () => {
   const validateProducts = () => {
     return products.every(product => 
       product.name.trim() && 
-      product.price.trim() && 
-      product.description.trim() && 
       product.image
     );
   };
@@ -125,7 +122,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields and add images for all products",
+        description: "Please fill in the product name and add an image for all products",
         variant: "destructive"
       });
       return;
@@ -140,8 +137,8 @@ export const useProductManagement = () => {
         const productData = {
           user_id: user.id,
           name: product.name,
-          price: parseFloat(product.price),
-          description: product.description,
+          price: product.price ? parseFloat(product.price) : null,
+          description: product.description || null,
           image_path: imagePath,
           caption: null
         };
@@ -181,7 +178,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields and add images for all products",
+        description: "Please fill in the product name and add an image for all products",
         variant: "destructive"
       });
       return;
@@ -196,8 +193,8 @@ export const useProductManagement = () => {
         const productData = {
           user_id: user.id,
           name: product.name,
-          price: parseFloat(product.price),
-          description: product.description,
+          price: product.price ? parseFloat(product.price) : null,
+          description: product.description || null,
           image_path: imagePath,
           caption: null
         };

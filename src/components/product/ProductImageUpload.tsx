@@ -19,7 +19,9 @@ const ProductImageUpload = ({
 }: ProductImageUploadProps) => {
   return (
     <div>
-      <Label htmlFor={`image-${index}`}>Product Image</Label>
+      <Label htmlFor={`image-${index}`}>
+        Product Image <span className="text-red-500">*</span>
+      </Label>
       <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
         {imagePreview ? (
           <div className="relative">
@@ -41,7 +43,7 @@ const ProductImageUpload = ({
             <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <Label htmlFor={`image-${index}`} className="cursor-pointer">
               <span className="text-lg font-medium text-deep-blue dark:text-white">
-                Click to upload image
+                Click to upload image <span className="text-red-500">*</span>
               </span>
             </Label>
             <Input
@@ -50,6 +52,7 @@ const ProductImageUpload = ({
               accept="image/*"
               onChange={(e) => onImageSelect(index, e)}
               className="hidden"
+              required
             />
           </div>
         )}

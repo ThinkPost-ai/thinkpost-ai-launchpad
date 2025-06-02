@@ -22,12 +22,15 @@ const ProductForm = ({ index, product, onUpdateProduct }: ProductFormProps) => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor={`name-${index}`}>Product Name</Label>
+          <Label htmlFor={`name-${index}`}>
+            Product Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id={`name-${index}`}
             value={product.name}
             onChange={(e) => onUpdateProduct(index, 'name', e.target.value)}
             placeholder="e.g., Margherita Pizza"
+            required
           />
         </div>
         <div>
@@ -38,7 +41,7 @@ const ProductForm = ({ index, product, onUpdateProduct }: ProductFormProps) => {
             step="0.01"
             value={product.price}
             onChange={(e) => onUpdateProduct(index, 'price', e.target.value)}
-            placeholder="e.g., 12.99"
+            placeholder="e.g., 12.99 (optional)"
           />
         </div>
       </div>
@@ -49,7 +52,7 @@ const ProductForm = ({ index, product, onUpdateProduct }: ProductFormProps) => {
           id={`description-${index}`}
           value={product.description}
           onChange={(e) => onUpdateProduct(index, 'description', e.target.value)}
-          placeholder="Describe your product..."
+          placeholder="Describe your product... (optional)"
           rows={3}
         />
       </div>
