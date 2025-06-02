@@ -16,11 +16,24 @@ serve(async (req) => {
   try {
     console.log('TikTok auth request received')
     
-    // Get the authorization header to identify the user
+    // Get the authorization from either header or URL parameter
+    const url = new URL(req.url)
+    const tokenFromUrl = url.searchParams.get('token')
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      console.error('No authorization header provided')
-      throw new Error('Authorization header is required')
+    
+    let token = null;
+    if (authHeader) {
+      token = authHeader.replace('Bearer ', '')
+    } else if (tokenFromUrl) {
+      token = tokenFromUrl
+    }
+    
+    console.log('Token source:', authHeader ? 'header' : 'url_param')
+    console.log('Token exists:', !!token)
+    
+    if (!token) {
+      console.error('No authorization token provided')
+      throw new Error('Authorization token is required')
     }
 
     const supabase = createClient(
@@ -29,7 +42,6 @@ serve(async (req) => {
     )
 
     // Verify the user token and get user ID
-    const token = authHeader.replace('Bearer ', '')
     console.log('Verifying user token...')
     
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
@@ -43,6 +55,9 @@ serve(async (req) => {
 
     const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    
+    console.log('TikTok Client ID configured:', !!clientId)
+    console.log('Redirect URI:', redirectUri)
     
     if (!clientId) {
       console.error('TikTok Client ID not configured')
@@ -80,6 +95,7 @@ serve(async (req) => {
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&state=${state}`
 
+    console.log('Final TikTok auth URL:', authUrl)
     console.log('Redirecting to TikTok OAuth with state:', state)
     
     return new Response(null, {
