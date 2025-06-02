@@ -65,19 +65,16 @@ const TikTokConnection = () => {
     console.log('Starting TikTok connection process...');
     
     try {
-      // Call the TikTok auth endpoint directly using window.location
-      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth`;
+      // Redirect directly to the TikTok auth endpoint with the token
+      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth?token=${encodeURIComponent(session.access_token)}`;
       
       console.log('Redirecting to TikTok auth endpoint:', authUrl);
       console.log('Using session token:', session.access_token.substring(0, 20) + '...');
       
-      // Create a form to POST to the auth endpoint with the bearer token
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = authUrl;
+      // Direct redirect - no need to handle response since we're leaving the page
+      window.location.href = authUrl;
       
-      // Add authorization header by redirecting to a URL that includes the token
-      window.location.href = `${authUrl}?token=${encodeURIComponent(session.access_token)}`;
+      // Note: Code after window.location.href won't execute as we're navigating away
       
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
@@ -213,8 +210,8 @@ const TikTokConnection = () => {
               )}
             </Button>
             <div className="text-xs text-muted-foreground mt-2">
-              <p>Note: Make sure you have the correct TikTok Client ID configured</p>
-              <p>Redirect URI should be: https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback</p>
+              <p>Note: You'll be redirected to TikTok to authorize the connection</p>
+              <p>Redirect URI: https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback</p>
             </div>
           </div>
         )}
