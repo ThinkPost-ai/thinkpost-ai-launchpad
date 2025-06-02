@@ -84,6 +84,7 @@ serve(async (req) => {
     }
 
     // Get user from authorization header for POST requests
+    let userId;
     if (req.method === 'POST') {
       const authHeader = req.headers.get('authorization');
       if (!authHeader) {
@@ -109,7 +110,8 @@ serve(async (req) => {
         );
       }
 
-      console.log('User verified:', user.id);
+      userId = user.id;
+      console.log('User verified:', userId);
     }
 
     console.log('Processing callback with code:', code, 'and state:', state);
@@ -164,9 +166,9 @@ serve(async (req) => {
       );
     }
 
-    // Get user info from TikTok
+    // Get user info from TikTok with required fields parameter
     console.log('Fetching user info from TikTok...')
-    const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
+    const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,username', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -192,6 +194,73 @@ serve(async (req) => {
 
     const tiktokUser = userData.data.user;
     
+    // Store the connection in the database if we have a user ID
+    if (userId) {
+      console.log('Storing TikTok connection in database...');
+      
+      // Check if connection already exists
+      const { data: existingConnection } = await supabase
+        .from('tiktok_connections')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('tiktok_user_id', tiktokUser.open_id)
+        .maybeSingle();
+
+      if (!existingConnection) {
+        // Insert new connection
+        const { error: insertError } = await supabase
+          .from('tiktok_connections')
+          .insert({
+            user_id: userId,
+            tiktok_user_id: tiktokUser.open_id,
+            tiktok_username: tiktokUser.display_name || tiktokUser.username,
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+          });
+
+        if (insertError) {
+          console.error('Failed to store connection:', insertError);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Failed to store TikTok connection',
+              details: insertError.message 
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      } else {
+        // Update existing connection
+        const { error: updateError } = await supabase
+          .from('tiktok_connections')
+          .update({
+            tiktok_username: tiktokUser.display_name || tiktokUser.username,
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+          })
+          .eq('user_id', userId)
+          .eq('tiktok_user_id', tiktokUser.open_id);
+
+        if (updateError) {
+          console.error('Failed to update connection:', updateError);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Failed to update TikTok connection',
+              details: updateError.message 
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      }
+    }
+    
     console.log('TikTok connection successful');
     
     return new Response(
@@ -199,7 +268,7 @@ serve(async (req) => {
         success: true,
         user: {
           tiktok_user_id: tiktokUser.open_id,
-          tiktok_username: tiktokUser.display_name,
+          tiktok_username: tiktokUser.display_name || tiktokUser.username,
           access_token: tokenData.access_token
         }
       }),
