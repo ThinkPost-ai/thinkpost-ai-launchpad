@@ -40,6 +40,23 @@ export const useTikTokConnectionData = () => {
     }
   };
 
+  const getTikTokConfig = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error: any) {
+      console.error('Error getting TikTok config:', error);
+      throw new Error('Failed to get TikTok configuration');
+    }
+  };
+
   const handleConnect = async () => {
     if (!session?.access_token) {
       toast({
@@ -54,6 +71,13 @@ export const useTikTokConnectionData = () => {
     console.log('Starting TikTok connection process...');
     
     try {
+      // Get TikTok configuration from backend
+      const config = await getTikTokConfig();
+      
+      if (!config || !config.clientKey) {
+        throw new Error('TikTok client key not available');
+      }
+      
       // Generate state token for CSRF protection
       const state = crypto.randomUUID();
       
@@ -61,15 +85,12 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Get TikTok client key from environment or use placeholder
-      const clientKey = 'YOUR_CLIENT_KEY'; // This should be replaced with your actual client key
-      
       // Build TikTok OAuth URL according to Login Kit specs
       const tiktokAuthUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
-        '?client_key=' + encodeURIComponent(clientKey) +
+        '?client_key=' + encodeURIComponent(config.clientKey) +
         '&response_type=code' +
         '&scope=' + encodeURIComponent('user.info.basic') +
-        '&redirect_uri=' + encodeURIComponent('https://thinkpost.co/api/tiktok/callback') +
+        '&redirect_uri=' + encodeURIComponent(config.redirectUri) +
         '&state=' + encodeURIComponent(state);
       
       console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
