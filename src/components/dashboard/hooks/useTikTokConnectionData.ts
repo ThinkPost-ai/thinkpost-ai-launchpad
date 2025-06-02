@@ -15,8 +15,58 @@ export const useTikTokConnectionData = () => {
   useEffect(() => {
     if (user) {
       fetchConnection();
+      // Check for stored TikTok callback parameters after login
+      checkStoredTikTokCallback();
     }
-  }, [user]);
+  }, [user, session]);
+
+  const checkStoredTikTokCallback = async () => {
+    const storedCode = localStorage.getItem('tiktok_callback_code');
+    const storedState = localStorage.getItem('tiktok_callback_state');
+    
+    if (storedCode && storedState && session?.access_token) {
+      console.log('Found stored TikTok callback parameters, processing...');
+      
+      try {
+        const { data, error: functionError } = await supabase.functions.invoke('tiktok-callback', {
+          body: { code: storedCode, state: storedState },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (functionError) {
+          throw new Error(functionError.message);
+        }
+
+        console.log('TikTok connection successful:', data);
+        
+        toast({
+          title: "TikTok Connected!",
+          description: `Successfully connected your TikTok account`,
+        });
+        
+        // Clear stored parameters
+        localStorage.removeItem('tiktok_callback_code');
+        localStorage.removeItem('tiktok_callback_state');
+        
+        // Refresh connection status
+        fetchConnection();
+        
+      } catch (error: any) {
+        console.error('Error processing stored TikTok callback:', error);
+        toast({
+          title: "Connection Failed",
+          description: error.message || "Failed to complete TikTok connection",
+          variant: "destructive"
+        });
+        
+        // Clear stored parameters even on error
+        localStorage.removeItem('tiktok_callback_code');
+        localStorage.removeItem('tiktok_callback_state');
+      }
+    }
+  };
 
   const fetchConnection = async () => {
     try {
@@ -58,7 +108,11 @@ export const useTikTokConnectionData = () => {
   };
 
   const handleConnect = async () => {
-    if (!session?.access_token) {
+    console.log('handleConnect called, checking session:', session?.access_token ? 'present' : 'missing');
+    console.log('User state:', user ? 'present' : 'missing');
+    
+    if (!session?.access_token || !user) {
+      console.error('No valid session or user found');
       toast({
         title: "Authentication Required",
         description: "Please log in to connect your TikTok account",
