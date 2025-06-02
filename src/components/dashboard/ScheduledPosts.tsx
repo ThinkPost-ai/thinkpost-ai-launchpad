@@ -30,7 +30,8 @@ import {
   Facebook,
   Loader2,
   Trash2,
-  Edit
+  Edit,
+  Send
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -59,7 +60,7 @@ interface MediaItem {
 }
 
 const ScheduledPosts = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily');
@@ -72,6 +73,7 @@ const ScheduledPosts = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedHour, setSelectedHour] = useState<string>('12');
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const [postingNow, setPostingNow] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -263,6 +265,50 @@ const ScheduledPosts = () => {
       });
     } finally {
       setCancellingAll(false);
+    }
+  };
+
+  const postToTikTokNow = async (post: ScheduledPost) => {
+    setPostingNow(post.id);
+
+    try {
+      const mediaPath = post.image_path;
+      if (!mediaPath) {
+        throw new Error('No media found for this post');
+      }
+
+      const videoUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
+
+      const { data, error } = await supabase.functions.invoke('post-to-tiktok', {
+        body: {
+          scheduledPostId: post.id,
+          videoUrl: videoUrl,
+          caption: post.caption
+        },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast({
+        title: "Posted to TikTok!",
+        description: "Your post has been successfully published to TikTok",
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      console.error('Error posting to TikTok:', error);
+      toast({
+        title: "Posting Failed",
+        description: error.message || "Failed to post to TikTok",
+        variant: "destructive"
+      });
+    } finally {
+      setPostingNow(null);
     }
   };
 
@@ -522,6 +568,26 @@ const ScheduledPosts = () => {
                             </div>
                             {post.status === 'scheduled' && (
                               <div className="flex flex-col gap-2">
+                                {post.platform === 'tiktok' && (
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-gradient-primary hover:opacity-90"
+                                    onClick={() => postToTikTokNow(post)}
+                                    disabled={postingNow === post.id}
+                                  >
+                                    {postingNow === post.id ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                        Posting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Send className="h-3 w-3 mr-1" />
+                                        Post Now
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
                                 <Button 
                                   size="sm" 
                                   variant="outline"
