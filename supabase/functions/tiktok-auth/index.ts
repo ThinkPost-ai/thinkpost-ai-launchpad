@@ -21,27 +21,13 @@ serve(async (req) => {
     const url = new URL(req.url)
     console.log('URL search params:', url.searchParams.toString())
     
-    // Get the authorization token from URL parameter (primary method for this flow)
-    const tokenFromUrl = url.searchParams.get('token')
-    console.log('Token from URL:', tokenFromUrl ? 'present' : 'missing')
-    
-    // Also check Authorization header as fallback
-    const authHeader = req.headers.get('Authorization')
-    console.log('Auth header:', authHeader ? 'present' : 'missing')
-    
-    let token = null;
-    if (tokenFromUrl) {
-      token = tokenFromUrl
-      console.log('Using token from URL parameter')
-    } else if (authHeader) {
-      token = authHeader.replace('Bearer ', '')
-      console.log('Using token from Authorization header')
-    }
-    
-    console.log('Final token exists:', !!token)
+    // Get the authorization token from URL parameter
+    const token = url.searchParams.get('token')
+    console.log('Token from URL parameter:', token ? 'present' : 'missing')
+    console.log('Token length:', token?.length || 0)
     
     if (!token) {
-      console.error('No authorization token provided in URL parameter or header')
+      console.error('No authorization token provided in URL parameter')
       return new Response(
         JSON.stringify({ 
           error: 'Authorization token is required',
