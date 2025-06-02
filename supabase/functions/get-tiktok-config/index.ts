@@ -66,11 +66,12 @@ serve(async (req) => {
       )
     }
 
-    // Get the origin from the request to build the redirect URI
-    const origin = req.headers.get('origin') || 'https://thinkpost.co'
-    const redirectUri = `${origin}/api/tiktok/callback`
+    // Use the Supabase edge function URL for the callback
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const redirectUri = `${supabaseUrl}/functions/v1/tiktok-callback`
 
     console.log('Returning TikTok client key to user:', user.id)
+    console.log('Using redirect URI:', redirectUri)
     
     return new Response(
       JSON.stringify({ 
