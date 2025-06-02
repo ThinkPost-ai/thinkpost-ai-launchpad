@@ -30,6 +30,7 @@ import MediaManagement from '@/components/dashboard/MediaManagement';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
 import ScheduledPosts from '@/components/dashboard/ScheduledPosts';
 import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
+import TikTokConnection from '@/components/dashboard/TikTokConnection';
 
 interface Restaurant {
   id: string;
@@ -88,7 +89,20 @@ const UserDashboard = () => {
     if (tabFromUrl && ['overview', 'media', 'captions', 'schedule', 'notifications'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
-  }, [searchParams]);
+    
+    // Check for TikTok connection success
+    const tiktokConnected = searchParams.get('tiktok_connected');
+    const username = searchParams.get('username');
+    if (tiktokConnected === 'true' && username) {
+      toast({
+        title: "TikTok Connected!",
+        description: `Successfully connected @${username} to your ThinkPost account`,
+      });
+      
+      // Clean up URL parameters
+      navigate('/user-dashboard', { replace: true });
+    }
+  }, [searchParams, toast, navigate]);
 
   const fetchDashboardData = async () => {
     try {
@@ -221,6 +235,12 @@ const UserDashboard = () => {
 
           <TabsContent value="overview" className="space-y-6">
             <OverviewCards stats={stats} />
+            
+            {/* Social Media Connections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <TikTokConnection />
+              {/* Future social media connections can be added here */}
+            </div>
             
             {/* Quick Actions */}
             <Card>
