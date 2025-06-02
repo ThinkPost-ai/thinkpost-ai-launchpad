@@ -66,7 +66,7 @@ serve(async (req) => {
       )
     }
 
-    // Use the standard callback URI that matches what's shown in the UI
+    // Use the callback page route instead of the edge function URL
     const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
 
     console.log('Returning TikTok client key to user:', user.id)

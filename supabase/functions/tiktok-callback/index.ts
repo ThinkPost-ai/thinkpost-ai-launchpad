@@ -23,59 +23,111 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Parse URL parameters for GET request (TikTok callback)
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state');
-    const error = url.searchParams.get('error');
-    const errorDescription = url.searchParams.get('error_description');
+    let code, state, error, errorDescription;
+
+    // Handle both GET (direct callback) and POST (from frontend) requests
+    if (req.method === 'GET') {
+      // Parse URL parameters for GET request (direct TikTok callback)
+      const url = new URL(req.url);
+      code = url.searchParams.get('code');
+      state = url.searchParams.get('state');
+      error = url.searchParams.get('error');
+      errorDescription = url.searchParams.get('error_description');
+    } else if (req.method === 'POST') {
+      // Parse body for POST request (from frontend)
+      try {
+        const body = await req.json();
+        code = body.code;
+        state = body.state;
+        error = body.error;
+        errorDescription = body.error_description;
+      } catch (e) {
+        console.error('Error parsing POST body:', e);
+        return new Response(
+          JSON.stringify({ error: 'Invalid request body' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
 
     console.log('Callback parameters:', { code: !!code, state: !!state, error, errorDescription });
 
     if (error) {
       console.error('TikTok OAuth error:', error, errorDescription);
-      // Redirect to frontend with error
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=${encodeURIComponent(error)}`;
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': frontendUrl,
-        },
-      });
+      return new Response(
+        JSON.stringify({ 
+          error: `TikTok OAuth error: ${error}`,
+          description: errorDescription 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     if (!code || !state) {
       console.error('Missing code or state parameter');
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=missing_parameters`;
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': frontendUrl,
-        },
-      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing authorization parameters',
+          details: 'Code and state parameters are required'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // For now, we need to find the user associated with this state
-    // In a production app, you'd store the user_id with the state token
+    // Get user from authorization header for POST requests
+    if (req.method === 'POST') {
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: 'Authorization required' }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      
+      if (userError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid authorization token' }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log('User verified:', user.id);
+    }
+
     console.log('Processing callback with code:', code, 'and state:', state);
 
     // Get TikTok configuration
     const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     const clientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
     
     if (!clientKey || !clientSecret) {
       console.error('TikTok credentials not configured')
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=server_config`;
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': frontendUrl,
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: 'TikTok configuration error' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
     
     console.log('Exchanging code for access token...')
@@ -100,14 +152,16 @@ serve(async (req) => {
     
     if (!tokenResponse.ok || !tokenData.access_token) {
       console.error('Token exchange failed:', tokenData)
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=token_exchange_failed`;
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': frontendUrl,
-        },
-      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Token exchange failed',
+          details: tokenData.error_description || 'Failed to get access token'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Get user info from TikTok
@@ -124,42 +178,49 @@ serve(async (req) => {
     
     if (!userResponse.ok || !userData.data?.user) {
       console.error('Failed to get user info:', userData)
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=user_info_failed`;
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': frontendUrl,
-        },
-      });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to get TikTok user info',
+          details: userData.error?.message || 'Unknown error'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    const tiktokUser = userData.data.user
+    const tiktokUser = userData.data.user;
     
-    // For now, redirect to frontend with success and let the frontend handle the storage
-    // In a production app, you'd properly associate the state with a user_id
-    const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_connected=true&username=${encodeURIComponent(tiktokUser.display_name)}&access_token=${encodeURIComponent(tokenData.access_token)}&tiktok_user_id=${encodeURIComponent(tiktokUser.open_id)}`;
+    console.log('TikTok connection successful');
     
-    console.log('TikTok connection successful, redirecting to:', frontendUrl);
-    
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        'Location': frontendUrl,
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        user: {
+          tiktok_user_id: tiktokUser.open_id,
+          tiktok_username: tiktokUser.display_name,
+          access_token: tokenData.access_token
+        }
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
     
   } catch (error) {
     console.error('TikTok callback error:', error)
     
-    const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'https://thinkpost.co'}/user-dashboard?tiktok_error=server_error`;
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        'Location': frontendUrl,
-      },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 })
