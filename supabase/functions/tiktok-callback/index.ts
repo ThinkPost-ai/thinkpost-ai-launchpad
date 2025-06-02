@@ -24,6 +24,8 @@ serve(async (req) => {
     const state = url.searchParams.get('state')
     const error = url.searchParams.get('error')
     
+    console.log('TikTok callback received:', { code: !!code, state, error })
+    
     // Handle OAuth errors
     if (error) {
       console.error('TikTok OAuth error:', error)
@@ -38,6 +40,7 @@ serve(async (req) => {
     }
 
     if (!code || !state) {
+      console.error('Missing required parameters:', { code: !!code, state: !!state })
       throw new Error('Missing authorization code or state parameter')
     }
 

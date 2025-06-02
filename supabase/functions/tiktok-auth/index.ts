@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('TikTok auth request received')
+    
     // Get the authorization header to identify the user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
