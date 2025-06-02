@@ -1,74 +1,198 @@
 
-import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { TikTokConnection } from '../components/dashboard/types/tiktok';
 
-export const useTikTokConnection = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+export const useTikTokConnectionData = () => {
+  const { user, session } = useAuth();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [connection, setConnection] = useState<TikTokConnection | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
-    // Check for TikTok connection success
-    const tiktokConnected = searchParams.get('tiktok_connected');
-    const username = searchParams.get('username');
-    const accessToken = searchParams.get('access_token');
-    const tiktokUserId = searchParams.get('tiktok_user_id');
-    const tiktokError = searchParams.get('tiktok_error');
+    if (user) {
+      fetchConnection();
+      // Check for stored TikTok callback parameters after login
+      checkStoredTikTokCallback();
+    }
+  }, [user]);
+
+  const checkStoredTikTokCallback = async () => {
+    const storedCode = localStorage.getItem('tiktok_callback_code');
+    const storedState = localStorage.getItem('tiktok_callback_state');
     
-    if (tiktokError) {
+    if (storedCode && storedState && session?.access_token) {
+      console.log('Found stored TikTok callback parameters, processing...');
+      
+      try {
+        const { data, error: functionError } = await supabase.functions.invoke('tiktok-callback', {
+          body: { code: storedCode, state: storedState },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (functionError) {
+          throw new Error(functionError.message);
+        }
+
+        console.log('TikTok connection successful:', data);
+        
+        toast({
+          title: "TikTok Connected!",
+          description: `Successfully connected your TikTok account`,
+        });
+        
+        // Clear stored parameters
+        localStorage.removeItem('tiktok_callback_code');
+        localStorage.removeItem('tiktok_callback_state');
+        
+        // Refresh connection status
+        fetchConnection();
+        
+      } catch (error: any) {
+        console.error('Error processing stored TikTok callback:', error);
+        toast({
+          title: "Connection Failed",
+          description: error.message || "Failed to complete TikTok connection",
+          variant: "destructive"
+        });
+        
+        // Clear stored parameters even on error
+        localStorage.removeItem('tiktok_callback_code');
+        localStorage.removeItem('tiktok_callback_state');
+      }
+    }
+  };
+
+  const fetchConnection = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tiktok_connections')
+        .select('id, tiktok_user_id, tiktok_username, created_at')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setConnection(data);
+    } catch (error: any) {
+      console.error('Error fetching TikTok connection:', error);
       toast({
-        title: "TikTok Connection Failed",
-        description: `Failed to connect TikTok: ${tiktokError}`,
+        title: "Error",
+        description: "Failed to load TikTok connection status",
         variant: "destructive"
       });
-      navigate('/user-dashboard', { replace: true });
-    } else if (tiktokConnected === 'true' && username && accessToken && tiktokUserId && user) {
-      // Store the TikTok connection in the database
-      const storeTikTokConnection = async () => {
-        try {
-          const expiresAt = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString(); // 24 hours from now
-          
-          const { error } = await supabase
-            .from('tiktok_connections')
-            .upsert({
-              user_id: user.id,
-              tiktok_user_id: decodeURIComponent(tiktokUserId),
-              tiktok_username: decodeURIComponent(username),
-              access_token: decodeURIComponent(accessToken),
-              token_expires_at: expiresAt,
-              scope: 'user.info.basic',
-            }, { onConflict: 'user_id' });
-
-          if (error) {
-            console.error('Error storing TikTok connection:', error);
-            toast({
-              title: "Warning",
-              description: "TikTok connected but failed to save connection details",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "TikTok Connected!",
-              description: `Successfully connected @${decodeURIComponent(username)} to your ThinkPost account`,
-            });
-          }
-        } catch (error) {
-          console.error('Error storing TikTok connection:', error);
-          toast({
-            title: "Warning",
-            description: "TikTok connected but failed to save connection details",
-            variant: "destructive"
-          });
-        }
-      };
-
-      storeTikTokConnection();
-      // Clean up URL parameters
-      navigate('/user-dashboard', { replace: true });
+    } finally {
+      setLoading(false);
     }
-  }, [searchParams, toast, navigate, user]);
+  };
+
+  const getTikTokConfig = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error: any) {
+      console.error('Error getting TikTok config:', error);
+      throw new Error('Failed to get TikTok configuration');
+    }
+  };
+
+  const handleConnect = async () => {
+    if (!session?.access_token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to connect your TikTok account",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setConnecting(true);
+    console.log('Starting TikTok connection process...');
+    
+    try {
+      // Get TikTok configuration from backend
+      const config = await getTikTokConfig();
+      
+      if (!config || !config.clientKey) {
+        throw new Error('TikTok client key not available');
+      }
+      
+      // Generate state token for CSRF protection
+      const state = crypto.randomUUID();
+      
+      // Store state token in localStorage for verification after redirect
+      localStorage.setItem('tiktok_oauth_state', state);
+      localStorage.setItem('tiktok_user_token', session.access_token);
+      
+      // Build TikTok OAuth URL according to Login Kit specs
+      const tiktokAuthUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
+        '?client_key=' + encodeURIComponent(config.clientKey) +
+        '&response_type=code' +
+        '&scope=' + encodeURIComponent('user.info.basic') +
+        '&redirect_uri=' + encodeURIComponent(config.redirectUri) +
+        '&state=' + encodeURIComponent(state);
+      
+      console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
+      
+      // Force redirect in top-level window to avoid CORS issues
+      if (window.top) {
+        window.top.location.href = tiktokAuthUrl;
+      } else {
+        window.location.href = tiktokAuthUrl;
+      }
+      
+    } catch (error: any) {
+      console.error('Error connecting to TikTok:', error);
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to initiate TikTok connection",
+        variant: "destructive"
+      });
+      setConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      const { error } = await supabase
+        .from('tiktok_connections')
+        .delete()
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setConnection(null);
+      toast({
+        title: "Disconnected",
+        description: "TikTok account has been disconnected successfully",
+      });
+    } catch (error: any) {
+      console.error('Error disconnecting TikTok:', error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect TikTok account",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return {
+    connection,
+    loading,
+    connecting,
+    handleConnect,
+    handleDisconnect,
+    fetchConnection
+  };
 };

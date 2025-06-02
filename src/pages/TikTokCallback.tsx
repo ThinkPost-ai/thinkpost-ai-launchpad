@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 const TikTokCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState(true);
 
@@ -44,8 +44,18 @@ const TikTokCallback = () => {
         return;
       }
 
+      // Wait for auth to be loaded if it's still loading
+      if (authLoading) {
+        console.log('Waiting for auth to load...');
+        return;
+      }
+
       if (!session?.access_token) {
         console.error('No user session available');
+        // Store the callback parameters and redirect to login
+        localStorage.setItem('tiktok_callback_code', code);
+        localStorage.setItem('tiktok_callback_state', state);
+        
         toast({
           title: "Authentication Required",
           description: "Please log in to connect your TikTok account",
@@ -93,7 +103,7 @@ const TikTokCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, session, navigate, toast]);
+  }, [searchParams, session, authLoading, navigate, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
