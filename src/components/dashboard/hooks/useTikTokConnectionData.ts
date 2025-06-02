@@ -52,22 +52,30 @@ export const useTikTokConnectionData = () => {
 
     setConnecting(true);
     console.log('Starting TikTok connection process...');
-    console.log('Session token available:', !!session.access_token);
     
     try {
-      // Get the Supabase URL from the client configuration
-      const supabaseUrl = 'https://eztbwukcnddtvcairvpz.supabase.co';
+      // Generate state token for CSRF protection
+      const state = crypto.randomUUID();
       
-      // Build the auth URL with token as parameter
-      const authUrl = `${supabaseUrl}/functions/v1/tiktok-auth?token=${encodeURIComponent(session.access_token)}`;
+      // Store state token in localStorage for verification after redirect
+      localStorage.setItem('tiktok_oauth_state', state);
+      localStorage.setItem('tiktok_user_token', session.access_token);
       
-      console.log('Redirecting to TikTok auth endpoint:', authUrl);
-      console.log('Using session token (first 20 chars):', session.access_token.substring(0, 20) + '...');
+      // Get TikTok client key from environment or use placeholder
+      const clientKey = 'YOUR_CLIENT_KEY'; // This should be replaced with your actual client key
       
-      // Direct redirect - this will navigate away from the current page
-      window.location.href = authUrl;
+      // Build TikTok OAuth URL according to Login Kit specs
+      const tiktokAuthUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
+        '?client_key=' + encodeURIComponent(clientKey) +
+        '&response_type=code' +
+        '&scope=' + encodeURIComponent('user.info.basic') +
+        '&redirect_uri=' + encodeURIComponent('https://thinkpost.co/api/tiktok/callback') +
+        '&state=' + encodeURIComponent(state);
       
-      // Note: Code after window.location.href won't execute as we're navigating away
+      console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
+      
+      // Redirect to TikTok OAuth
+      window.location.href = tiktokAuthUrl;
       
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);

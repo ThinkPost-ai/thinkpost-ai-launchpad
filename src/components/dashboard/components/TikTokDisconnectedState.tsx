@@ -33,7 +33,7 @@ const TikTokDisconnectedState = ({ connecting, onConnect }: TikTokDisconnectedSt
       </Button>
       <div className="text-xs text-muted-foreground mt-2">
         <p>Note: You'll be redirected to TikTok to authorize the connection</p>
-        <p>Redirect URI: https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback</p>
+        <p>Redirect URI: https://thinkpost.co/api/tiktok/callback</p>
       </div>
     </div>
   );
