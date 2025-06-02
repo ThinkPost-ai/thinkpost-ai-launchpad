@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -146,31 +145,31 @@ const RestaurantSetup = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-4">
         <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-12">
-      <div className="container mx-auto px-4 max-w-2xl">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-deep-blue dark:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-4 px-4 sm:py-8 sm:px-6 lg:py-12">
+      <div className="container mx-auto max-w-lg sm:max-w-xl lg:max-w-2xl">
+        <Card className="shadow-lg">
+          <CardHeader className="text-center px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white leading-tight">
               {isEditing ? 'Update Restaurant Profile' : 'Complete Your Restaurant Profile'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm sm:text-base mt-2">
               {isEditing 
                 ? 'Update your restaurant information'
                 : 'Tell us about your restaurant to get started with ThinkPost'
               }
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-4 sm:px-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Restaurant Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium">Restaurant Name *</Label>
                 <Input
                   id="name"
                   type="text"
@@ -178,11 +177,12 @@ const RestaurantSetup = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter your restaurant name"
                   required
+                  className="h-11 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location *</Label>
+                <Label htmlFor="location" className="text-sm font-medium">Location *</Label>
                 <Input
                   id="location"
                   type="text"
@@ -190,21 +190,26 @@ const RestaurantSetup = () => {
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Riyadh, Saudi Arabia"
                   required
+                  className="h-11 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(value: RestaurantCategory) => setFormData({ ...formData, category: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 text-base">
                     <SelectValue placeholder="Select restaurant category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                     {restaurantCategories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
+                      <SelectItem 
+                        key={category.value} 
+                        value={category.value}
+                        className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
                         {category.label}
                       </SelectItem>
                     ))}
@@ -213,23 +218,24 @@ const RestaurantSetup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="vision">Restaurant Vision</Label>
+                <Label htmlFor="vision" className="text-sm font-medium">Restaurant Vision</Label>
                 <Textarea
                   id="vision"
                   value={formData.vision}
                   onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
                   placeholder="Describe your restaurant's vision, style, and what makes it special..."
                   rows={4}
+                  className="resize-none text-base min-h-[100px]"
                 />
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 {isEditing && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => navigate('/dashboard')}
-                    className="flex-1"
+                    className="w-full sm:flex-1 h-11 text-base"
                   >
                     Cancel
                   </Button>
@@ -237,7 +243,7 @@ const RestaurantSetup = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 bg-gradient-primary hover:opacity-90"
+                  className="w-full sm:flex-1 h-11 text-base bg-gradient-primary hover:opacity-90"
                 >
                   {isSubmitting ? (
                     <>

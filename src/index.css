@@ -83,32 +83,77 @@
     @apply border-border;
   }
 
+  html {
+    /* Prevent zoom on iOS when focusing inputs */
+    -webkit-text-size-adjust: 100%;
+    /* Enable smooth scrolling */
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-corbel;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+    /* Improve touch scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Improve button touch targets on mobile */
+  button, input, select, textarea {
+    @apply touch-manipulation;
+  }
+
+  /* Ensure minimum touch target size */
+  button {
+    min-height: 44px;
+  }
+
+  /* Mobile-first responsive typography */
+  @media (max-width: 640px) {
+    html {
+      font-size: 16px; /* Prevent zoom on iOS */
+    }
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Custom scrollbar - hide on mobile for better UX */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #5F29B4;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #011D4C;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #5F29B4;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #011D4C;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Hide scrollbars on mobile */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Improve tap targets */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Reduce motion for better mobile performance */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
 }
 
 /* Animation delays */
@@ -122,4 +167,15 @@ html {
 
 .animate-delay-600 {
   animation-delay: 0.6s;
+}
+
+/* Mobile-friendly focus states */
+@media (max-width: 768px) {
+  input:focus, 
+  textarea:focus, 
+  select:focus,
+  button:focus {
+    outline: 2px solid #5F29B4;
+    outline-offset: 2px;
+  }
 }
