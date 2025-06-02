@@ -17,6 +17,7 @@ serve(async (req) => {
     // Get the authorization header to identify the user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       throw new Error('Authorization header is required')
     }
 
@@ -27,35 +28,48 @@ serve(async (req) => {
 
     // Verify the user token and get user ID
     const token = authHeader.replace('Bearer ', '')
+    console.log('Verifying user token...')
+    
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
+      console.error('User verification failed:', userError)
       throw new Error('Invalid user token')
     }
+
+    console.log('User verified:', user.id)
 
     const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
     
     if (!clientId) {
+      console.error('TikTok Client ID not configured')
       throw new Error('TikTok Client ID not configured')
     }
     
     const scope = 'user.info.basic'
     const state = crypto.randomUUID() // Generate random state for security
     
+    console.log('Generated state token:', state)
+    console.log('Attempting to store state token for user:', user.id)
+    
     // Store the state token temporarily for validation (expires in 10 minutes)
-    const { error: stateError } = await supabase
+    const { data: insertData, error: stateError } = await supabase
       .from('tiktok_oauth_states')
       .insert({
         state_token: state,
         user_id: user.id,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
       })
+      .select()
 
     if (stateError) {
       console.error('Failed to store state token:', stateError)
-      throw new Error('Failed to initialize OAuth flow')
+      console.error('Error details:', JSON.stringify(stateError, null, 2))
+      throw new Error(`Failed to initialize OAuth flow: ${stateError.message}`)
     }
+
+    console.log('State token stored successfully:', insertData)
     
     const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
       `?client_key=${clientId}` +
