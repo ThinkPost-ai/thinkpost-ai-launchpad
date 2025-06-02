@@ -21,8 +21,8 @@ const Hero = () => {
       return; // Wait for auth to complete
     }
 
-    // Always navigate to dashboard which will handle the redirection
-    navigate('/dashboard');
+    // Always navigate to user-dashboard directly
+    navigate('/user-dashboard');
   };
 
   const getButtonText = () => {
