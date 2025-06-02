@@ -6,7 +6,7 @@ import { Calendar, Image, MessageSquare, TrendingUp } from 'lucide-react';
 interface DashboardStats {
   totalPosts: number;
   upcomingPosts: number;
-  captionQuotaUsed: number;
+  captionCredits: number;
   captionQuotaTotal: number;
   totalImages: number;
 }
@@ -16,7 +16,7 @@ interface OverviewCardsProps {
 }
 
 const OverviewCards = ({ stats }: OverviewCardsProps) => {
-  const quotaPercentage = (stats.captionQuotaUsed / stats.captionQuotaTotal) * 100;
+  const quotaPercentage = ((stats.captionQuotaTotal - stats.captionCredits) / stats.captionQuotaTotal) * 100;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -52,16 +52,16 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Caption Quota</CardTitle>
+          <CardTitle className="text-sm font-medium">Caption Credits</CardTitle>
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-deep-blue dark:text-white">
-            {stats.captionQuotaUsed}/{stats.captionQuotaTotal}
+            {stats.captionCredits}/{stats.captionQuotaTotal}
           </div>
-          <Progress value={quotaPercentage} className="mt-2" />
+          <Progress value={100 - quotaPercentage} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
-            {Math.round(quotaPercentage)}% used this month
+            {stats.captionCredits} credits remaining
           </p>
         </CardContent>
       </Card>

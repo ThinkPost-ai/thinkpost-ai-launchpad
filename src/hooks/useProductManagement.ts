@@ -227,6 +227,13 @@ export const useProductManagement = () => {
 
           if (captionError) {
             console.error('Caption generation error:', captionError);
+            if (captionError.message?.includes('Insufficient caption credits')) {
+              toast({
+                title: "Caption Credits Exhausted",
+                description: "You have reached your monthly caption limit. Products saved without captions.",
+                variant: "destructive"
+              });
+            }
             return product;
           }
 

@@ -78,6 +78,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          caption_credits: number
           display_name: string | null
           full_name: string | null
           id: string
@@ -85,6 +86,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          caption_credits?: number
           display_name?: string | null
           full_name?: string | null
           id: string
@@ -92,6 +94,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          caption_credits?: number
           display_name?: string | null
           full_name?: string | null
           id?: string
@@ -191,7 +194,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement_caption_credits: {
+        Args: { user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       restaurant_category:

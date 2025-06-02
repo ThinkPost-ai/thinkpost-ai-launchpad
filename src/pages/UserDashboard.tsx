@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -43,7 +42,7 @@ interface Restaurant {
 interface DashboardStats {
   totalPosts: number;
   upcomingPosts: number;
-  captionQuotaUsed: number;
+  captionCredits: number;
   captionQuotaTotal: number;
   totalImages: number;
   totalProducts: number;
@@ -58,8 +57,8 @@ const UserDashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalPosts: 0,
     upcomingPosts: 0,
-    captionQuotaUsed: 15,
-    captionQuotaTotal: 100,
+    captionCredits: 15,
+    captionQuotaTotal: 15,
     totalImages: 0,
     totalProducts: 0
   });
@@ -95,6 +94,17 @@ const UserDashboard = () => {
 
       setRestaurant(restaurantData);
 
+      // Fetch user profile with caption credits
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('caption_credits')
+        .eq('id', user?.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+      }
+
       // Fetch images count
       const { count: imagesCount } = await supabase
         .from('images')
@@ -109,6 +119,7 @@ const UserDashboard = () => {
 
       setStats(prev => ({
         ...prev,
+        captionCredits: profileData?.caption_credits || 0,
         totalImages: imagesCount || 0,
         totalProducts: productsCount || 0
       }));
@@ -188,12 +199,12 @@ const UserDashboard = () => {
                     Start & add products
                   </Button>
                   <Button 
-                    onClick={() => navigate('/images')}
                     variant="outline"
                     className="h-20 flex flex-col gap-2"
+                    onClick={() => setActiveTab('captions')}
                   >
                     <MessageSquare className="h-6 w-6" />
-                    Generate Captions
+                    View Captions
                   </Button>
                   <Button 
                     variant="outline"

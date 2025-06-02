@@ -12,7 +12,6 @@ import UserDashboard from "./pages/UserDashboard";
 import RestaurantSetup from "./pages/RestaurantSetup";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
-import ImageGallery from "./pages/ImageGallery";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +31,6 @@ const App = () => (
               <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/restaurant-setup" element={<RestaurantSetup />} />
               <Route path="/upload" element={<ProductCreation />} />
-              <Route path="/images" element={<ImageGallery />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
