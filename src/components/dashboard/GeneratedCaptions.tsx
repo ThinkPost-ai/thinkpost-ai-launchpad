@@ -56,14 +56,34 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const [loading, setLoading] = useState(true);
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
   const [mealNames, setMealNames] = useState<{[key: string]: string}>({});
+  const [userCredits, setUserCredits] = useState<number>(0);
 
   useEffect(() => {
     fetchCaptions();
+    fetchUserCredits();
   }, [user]);
+
+  const fetchUserCredits = async () => {
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('caption_credits')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user credits:', error);
+        return;
+      }
+
+      setUserCredits(profileData?.caption_credits || 0);
+    } catch (error) {
+      console.error('Failed to fetch user credits:', error);
+    }
+  };
 
   const fetchCaptions = async () => {
     try {
-      // Fetch images with captions
       const { data: images, error: imagesError } = await supabase
         .from('images')
         .select('*')
@@ -174,6 +194,16 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   };
 
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
+    // Check credits before attempting to generate
+    if (userCredits <= 0) {
+      toast({
+        title: "No Remaining Credits",
+        description: "You have 0 caption credits remaining. You've reached your monthly limit.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setGeneratingCaption(itemId);
     
     try {
@@ -197,12 +227,14 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       });
 
       if (error) {
-        if (error.message?.includes('Insufficient caption credits')) {
+        if (error.message?.includes('Insufficient caption credits') || error.message?.includes('402')) {
           toast({
-            title: "Caption Credits Exhausted",
-            description: "You have reached your monthly caption limit.",
+            title: "No Remaining Credits",
+            description: "You have 0 caption credits remaining. You've reached your monthly limit.",
             variant: "destructive"
           });
+          // Update local credits state
+          setUserCredits(0);
           // Trigger credits update in parent component
           onCreditsUpdate?.();
           return;
@@ -225,6 +257,9 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       setCaptions(prev => prev.map(caption => 
         caption.id === itemId ? { ...caption, caption: newCaption } : caption
       ));
+      
+      // Update credits count
+      setUserCredits(prev => Math.max(0, prev - 1));
       
       // Trigger credits update in parent component
       onCreditsUpdate?.();
@@ -394,7 +429,8 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                             size="sm" 
                             variant="outline"
                             onClick={() => regenerateCaption(caption.id, caption.type)}
-                            disabled={generatingCaption === caption.id}
+                            disabled={generatingCaption === caption.id || userCredits <= 0}
+                            title={userCredits <= 0 ? "No caption credits remaining" : "Regenerate caption"}
                           >
                             {generatingCaption === caption.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />

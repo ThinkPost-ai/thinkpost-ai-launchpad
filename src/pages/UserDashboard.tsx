@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -137,7 +136,6 @@ const UserDashboard = () => {
   };
 
   const handleCreditsUpdate = async () => {
-    // Refetch only the caption credits from the profile
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -150,10 +148,20 @@ const UserDashboard = () => {
         return;
       }
 
+      const newCredits = profileData?.caption_credits || 0;
       setStats(prev => ({
         ...prev,
-        captionCredits: profileData?.caption_credits || 0
+        captionCredits: newCredits
       }));
+
+      // Show message when credits reach 0
+      if (newCredits === 0) {
+        toast({
+          title: "No Remaining Credits",
+          description: "You have 0 caption credits remaining. You've reached your monthly limit.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('Failed to update credits:', error);
     }
