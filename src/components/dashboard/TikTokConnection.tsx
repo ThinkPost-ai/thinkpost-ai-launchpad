@@ -60,8 +60,8 @@ const TikTokConnection = () => {
         throw new Error('Not authenticated');
       }
 
-      // Redirect to TikTok OAuth using the correct Supabase URL
-      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth?action=connect`;
+      // Redirect to TikTok OAuth using the simplified auth endpoint
+      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth`;
       window.location.href = authUrl;
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
