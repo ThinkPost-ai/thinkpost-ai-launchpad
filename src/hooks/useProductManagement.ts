@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -161,7 +162,8 @@ export const useProductManagement = () => {
         description: `${products.length} product(s) saved successfully`
       });
 
-      navigate('/user-dashboard');
+      // Redirect to Media tab in user dashboard
+      navigate('/user-dashboard?tab=media');
     } catch (error: any) {
       console.error('Save error:', error);
       toast({
@@ -245,6 +247,25 @@ export const useProductManagement = () => {
             if (updateError) {
               console.error('Caption update error:', updateError);
             }
+
+            // Schedule the post with the generated caption
+            const scheduledDate = new Date();
+            scheduledDate.setHours(scheduledDate.getHours() + 24); // Schedule for 24 hours from now
+
+            const { error: scheduleError } = await supabase
+              .from('scheduled_posts')
+              .insert({
+                user_id: user.id,
+                product_id: product.id,
+                caption: caption,
+                platform: 'instagram', // Default platform
+                scheduled_date: scheduledDate.toISOString(),
+                status: 'scheduled'
+              });
+
+            if (scheduleError) {
+              console.error('Schedule error:', scheduleError);
+            }
           }
 
           return { ...product, caption };
@@ -258,10 +279,11 @@ export const useProductManagement = () => {
 
       toast({
         title: "Success!",
-        description: `${products.length} product(s) saved and captions generated successfully`
+        description: `${products.length} product(s) saved, captions generated, and posts scheduled successfully`
       });
 
-      navigate('/user-dashboard');
+      // Redirect to Schedule tab in user dashboard
+      navigate('/user-dashboard?tab=schedule');
     } catch (error: any) {
       console.error('Save with captions error:', error);
       toast({

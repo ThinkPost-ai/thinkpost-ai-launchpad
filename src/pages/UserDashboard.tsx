@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -52,6 +52,7 @@ const UserDashboard = () => {
   const { user, loading, hasRestaurant } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
@@ -80,6 +81,14 @@ const UserDashboard = () => {
       fetchDashboardData();
     }
   }, [user, loading, hasRestaurant, navigate]);
+
+  // Handle tab from URL parameters
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && ['overview', 'media', 'captions', 'schedule', 'notifications'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   const fetchDashboardData = async () => {
     try {
