@@ -566,7 +566,7 @@ const ScheduledPosts = () => {
                                 {getStatusBadge(post.status)}
                               </div>
                             </div>
-                            {post.status === 'scheduled' && (
+                            {(post.status === 'scheduled' || post.status === 'failed') && (
                               <div className="flex flex-col gap-2">
                                 {post.platform === 'tiktok' && (
                                   <Button 
@@ -583,7 +583,7 @@ const ScheduledPosts = () => {
                                     ) : (
                                       <>
                                         <Send className="h-3 w-3 mr-1" />
-                                        Post Now
+                                        {post.status === 'failed' ? 'Retry Post' : 'Post Now'}
                                       </>
                                     )}
                                   </Button>
