@@ -22,7 +22,21 @@ serve(async (req) => {
     const url = new URL(req.url)
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
+    const error = url.searchParams.get('error')
     
+    // Handle OAuth errors
+    if (error) {
+      console.error('TikTok OAuth error:', error)
+      const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent(error)}`
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': dashboardUrl,
+        },
+      })
+    }
+
     if (!code) {
       throw new Error('No authorization code received')
     }
@@ -52,7 +66,7 @@ serve(async (req) => {
     console.log('Token exchange response:', tokenData)
     
     if (!tokenData.access_token) {
-      throw new Error('Failed to get access token from TikTok')
+      throw new Error(`Failed to get access token from TikTok: ${JSON.stringify(tokenData)}`)
     }
 
     // Get user info from TikTok
@@ -67,42 +81,16 @@ serve(async (req) => {
     console.log('User data from TikTok:', userData)
     
     if (!userData.data?.user) {
-      throw new Error('Failed to get user data from TikTok')
+      throw new Error(`Failed to get user data from TikTok: ${JSON.stringify(userData)}`)
     }
 
     const tiktokUser = userData.data.user
     
-    // Get user from JWT token (if available)
-    const authHeader = req.headers.get('Authorization')
-    let userId = null
+    // For now, redirect to dashboard with success message
+    // The user will need to manually link their account or we'll implement a different linking strategy
+    const dashboardUrl = `${url.origin}/user-dashboard?tiktok_connected=true&username=${tiktokUser.display_name}&tiktok_user_id=${tiktokUser.open_id}`
     
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '')
-      const { data: { user } } = await supabase.auth.getUser(token)
-      userId = user?.id
-    }
-    
-    // For now, we'll redirect to the dashboard with the TikTok data
-    const dashboardUrl = `${url.origin}/user-dashboard?tiktok_connected=true&username=${tiktokUser.display_name}`
-    
-    if (userId) {
-      // Store TikTok connection in database
-      const { error } = await supabase
-        .from('tiktok_connections')
-        .upsert({
-          user_id: userId,
-          tiktok_user_id: tiktokUser.open_id,
-          tiktok_username: tiktokUser.display_name,
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-          scope: tokenData.scope,
-        })
-        
-      if (error) {
-        console.error('Error storing TikTok connection:', error)
-      }
-    }
+    console.log('Redirecting to dashboard with TikTok user data')
     
     return new Response(null, {
       status: 302,
@@ -114,12 +102,15 @@ serve(async (req) => {
   } catch (error) {
     console.error('TikTok callback error:', error)
     
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    const url = new URL(req.url)
+    const dashboardUrl = `${url.origin}/user-dashboard?tiktok_error=${encodeURIComponent(error.message)}`
+    
+    return new Response(null, {
+      status: 302,
+      headers: {
+        ...corsHeaders,
+        'Location': dashboardUrl,
+      },
+    })
   }
 })
