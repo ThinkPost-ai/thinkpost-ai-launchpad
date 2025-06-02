@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Table,
   TableBody,
@@ -21,7 +21,9 @@ import {
   Eye,
   Heart,
   Wand2,
-  Loader2
+  Loader2,
+  X,
+  Check
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -57,6 +59,8 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
   const [mealNames, setMealNames] = useState<{[key: string]: string}>({});
   const [userCredits, setUserCredits] = useState<number>(0);
+  const [editingCaption, setEditingCaption] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCaptions();
@@ -286,6 +290,45 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     }));
   };
 
+  const startEditing = (caption: CaptionData) => {
+    setEditingCaption(caption.caption || '');
+    setEditingItemId(caption.id);
+  };
+
+  const cancelEditing = () => {
+    setEditingCaption(null);
+    setEditingItemId(null);
+  };
+
+  const saveCaption = async (itemId: string, itemType: 'image' | 'product', newCaption: string) => {
+    try {
+      const table = itemType === 'product' ? 'products' : 'images';
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({ caption: newCaption })
+        .eq('id', itemId);
+
+      if (updateError) throw updateError;
+
+      setCaptions(prev => prev.map(caption =>
+        caption.id === itemId ? { ...caption, caption: newCaption } : caption
+      ));
+
+      toast({
+        title: "Success",
+        description: "Caption updated successfully"
+      });
+
+      cancelEditing();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update caption",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -369,13 +412,40 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-right line-clamp-3" dir="rtl">
-                          {caption.caption || (
-                            <span className="text-muted-foreground italic">
-                              No caption generated yet
-                            </span>
-                          )}
-                        </p>
+                        {editingItemId === caption.id ? (
+                          <div className="flex flex-col gap-2">
+                            <Textarea
+                              value={editingCaption}
+                              onChange={(e) => setEditingCaption(e.target.value)}
+                              className="text-right min-h-[100px]"
+                              dir="rtl"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelEditing}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => saveCaption(caption.id, caption.type, editingCaption || '')}
+                                className="bg-gradient-primary hover:opacity-90"
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-right line-clamp-3" dir="rtl">
+                            {caption.caption || (
+                              <span className="text-muted-foreground italic">
+                                No caption generated yet
+                              </span>
+                            )}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell>
                         {caption.type === 'product' ? (
@@ -422,7 +492,12 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => startEditing(caption)}
+                            disabled={editingItemId !== null}
+                          >
                             <Edit className="h-3 w-3" />
                           </Button>
                           <Button 
