@@ -95,8 +95,12 @@ export const useTikTokConnectionData = () => {
       
       console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
       
-      // Redirect to TikTok OAuth
-      window.location.href = tiktokAuthUrl;
+      // Force redirect in top-level window to avoid CORS issues
+      if (window.top) {
+        window.top.location.href = tiktokAuthUrl;
+      } else {
+        window.location.href = tiktokAuthUrl;
+      }
       
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
