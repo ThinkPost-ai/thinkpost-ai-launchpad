@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -135,6 +136,29 @@ const UserDashboard = () => {
     }
   };
 
+  const handleCreditsUpdate = async () => {
+    // Refetch only the caption credits from the profile
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('caption_credits')
+        .eq('id', user?.id)
+        .single();
+
+      if (profileError) {
+        console.error('Credits update fetch error:', profileError);
+        return;
+      }
+
+      setStats(prev => ({
+        ...prev,
+        captionCredits: profileData?.caption_credits || 0
+      }));
+    } catch (error) {
+      console.error('Failed to update credits:', error);
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
@@ -144,7 +168,7 @@ const UserDashboard = () => {
   }
 
   if (!restaurant) {
-    return null; // Will redirect to setup
+    return null;
   }
 
   return (
@@ -224,7 +248,7 @@ const UserDashboard = () => {
           </TabsContent>
 
           <TabsContent value="captions">
-            <GeneratedCaptions />
+            <GeneratedCaptions onCreditsUpdate={handleCreditsUpdate} />
           </TabsContent>
 
           <TabsContent value="schedule">

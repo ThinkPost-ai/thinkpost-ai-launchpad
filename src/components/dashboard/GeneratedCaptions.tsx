@@ -45,7 +45,11 @@ interface CaptionData {
   };
 }
 
-const GeneratedCaptions = () => {
+interface GeneratedCaptionsProps {
+  onCreditsUpdate?: () => void;
+}
+
+const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [captions, setCaptions] = useState<CaptionData[]>([]);
@@ -69,7 +73,6 @@ const GeneratedCaptions = () => {
 
       if (imagesError) throw imagesError;
 
-      // Fetch products (with or without captions)
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('*')
@@ -78,7 +81,6 @@ const GeneratedCaptions = () => {
 
       if (productsError) throw productsError;
 
-      // Transform and combine data
       const transformedImages = (images || []).map(image => {
         const randomValue = Math.random();
         let status: 'draft' | 'scheduled' | 'posted';
@@ -137,7 +139,6 @@ const GeneratedCaptions = () => {
         };
       });
 
-      // Combine and sort by creation date
       const allCaptions = [...transformedImages, ...transformedProducts].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -195,7 +196,19 @@ const GeneratedCaptions = () => {
         body: requestBody
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('Insufficient caption credits')) {
+          toast({
+            title: "Caption Credits Exhausted",
+            description: "You have reached your monthly caption limit.",
+            variant: "destructive"
+          });
+          // Trigger credits update in parent component
+          onCreditsUpdate?.();
+          return;
+        }
+        throw error;
+      }
 
       const newCaption = data.caption;
       
@@ -212,6 +225,9 @@ const GeneratedCaptions = () => {
       setCaptions(prev => prev.map(caption => 
         caption.id === itemId ? { ...caption, caption: newCaption } : caption
       ));
+      
+      // Trigger credits update in parent component
+      onCreditsUpdate?.();
       
       toast({
         title: "Success!",
