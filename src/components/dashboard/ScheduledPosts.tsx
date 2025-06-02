@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -14,10 +15,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Calendar as CalendarIcon, 
   Plus, 
@@ -67,7 +70,8 @@ const ScheduledPosts = () => {
   const [editingPost, setEditingPost] = useState<string | null>(null);
   const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [selectedHour, setSelectedHour] = useState<string>('12');
+  const [selectedMinute, setSelectedMinute] = useState<string>('00');
 
   useEffect(() => {
     if (user) {
@@ -319,18 +323,25 @@ const ScheduledPosts = () => {
 
   const startEditDate = (post: ScheduledPost) => {
     setEditingPost(post.id);
-    setNewScheduleDate(new Date(post.scheduled_date));
+    const postDate = new Date(post.scheduled_date);
+    setNewScheduleDate(postDate);
+    setSelectedHour(postDate.getHours().toString().padStart(2, '0'));
+    setSelectedMinute(postDate.getMinutes().toString().padStart(2, '0'));
     setEditDialogOpen(true);
   };
 
   const updatePostDate = async () => {
     if (!editingPost || !newScheduleDate) return;
 
+    // Create the final date with selected time
+    const finalDate = new Date(newScheduleDate);
+    finalDate.setHours(parseInt(selectedHour), parseInt(selectedMinute), 0, 0);
+
     try {
       const { error } = await supabase
         .from('scheduled_posts')
         .update({ 
-          scheduled_date: newScheduleDate.toISOString(),
+          scheduled_date: finalDate.toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', editingPost);
@@ -346,6 +357,8 @@ const ScheduledPosts = () => {
       setEditDialogOpen(false);
       setEditingPost(null);
       setNewScheduleDate(undefined);
+      setSelectedHour('12');
+      setSelectedMinute('00');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -619,35 +632,39 @@ const ScheduledPosts = () => {
             
             <div>
               <label className="text-sm font-medium mb-2 block">Time</label>
-              <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !newScheduleDate && "text-muted-foreground"
-                    )}
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    {newScheduleDate ? format(newScheduleDate, "HH:mm") : "Pick a time"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-4" align="start">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[9, 12, 15, 18, 21].map((hour) => (
-                      <Button
-                        key={hour}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTimeForDate(hour, 0)}
-                        className="text-xs"
-                      >
-                        {hour}:00
-                      </Button>
+              <div className="flex gap-2 items-center">
+                <Select value={selectedHour} onValueChange={setSelectedHour}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue placeholder="Hour" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                        {i.toString().padStart(2, '0')}
+                      </SelectItem>
                     ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </SelectContent>
+                </Select>
+                
+                <span className="text-muted-foreground">:</span>
+                
+                <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue placeholder="Min" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 60 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                        {i.toString().padStart(2, '0')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="text-xs text-muted-foreground mt-1">
+                Selected time: {selectedHour}:{selectedMinute}
+              </div>
             </div>
             
             <div className="flex justify-end gap-2">
