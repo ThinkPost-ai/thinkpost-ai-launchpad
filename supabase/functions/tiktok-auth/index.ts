@@ -15,27 +15,38 @@ serve(async (req) => {
 
   try {
     console.log('TikTok auth request received')
+    console.log('Request method:', req.method)
+    console.log('Request URL:', req.url)
     
-    // Get the authorization from either header or URL parameter
     const url = new URL(req.url)
+    console.log('URL search params:', url.searchParams.toString())
+    
+    // Get the authorization token from URL parameter (primary method for this flow)
     const tokenFromUrl = url.searchParams.get('token')
+    console.log('Token from URL:', tokenFromUrl ? 'present' : 'missing')
+    
+    // Also check Authorization header as fallback
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header:', authHeader ? 'present' : 'missing')
     
     let token = null;
-    if (authHeader) {
-      token = authHeader.replace('Bearer ', '')
-      console.log('Token from Authorization header')
-    } else if (tokenFromUrl) {
+    if (tokenFromUrl) {
       token = tokenFromUrl
-      console.log('Token from URL parameter')
+      console.log('Using token from URL parameter')
+    } else if (authHeader) {
+      token = authHeader.replace('Bearer ', '')
+      console.log('Using token from Authorization header')
     }
     
-    console.log('Token exists:', !!token)
+    console.log('Final token exists:', !!token)
     
     if (!token) {
-      console.error('No authorization token provided')
+      console.error('No authorization token provided in URL parameter or header')
       return new Response(
-        JSON.stringify({ error: 'Authorization token is required' }),
+        JSON.stringify({ 
+          error: 'Authorization token is required',
+          details: 'Token must be provided as ?token=<your_token> URL parameter'
+        }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,20 +54,44 @@ serve(async (req) => {
       )
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Initialize Supabase client with service role key
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    console.log('Supabase URL configured:', !!supabaseUrl)
+    console.log('Service role key configured:', !!supabaseServiceKey)
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing')
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Verify the user token and get user ID
     console.log('Verifying user token...')
     
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
+    console.log('User verification result:', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      error: userError?.message 
+    })
+    
     if (userError || !user) {
       console.error('User verification failed:', userError)
       return new Response(
-        JSON.stringify({ error: 'Invalid user token' }),
+        JSON.stringify({ 
+          error: 'Invalid user token',
+          details: userError?.message || 'Token verification failed'
+        }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -64,10 +99,11 @@ serve(async (req) => {
       )
     }
 
-    console.log('User verified:', user.id)
+    console.log('User verified successfully:', user.id)
 
-    const clientKey = Deno.env.get('TIKTOK_CLIENT_ID') // Note: TikTok calls this client_key
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    // Get TikTok configuration
+    const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
+    const redirectUri = `${supabaseUrl}/functions/v1/tiktok-callback`
     
     console.log('TikTok Client Key configured:', !!clientKey)
     console.log('Redirect URI:', redirectUri)
@@ -133,9 +169,13 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('TikTok auth error:', error)
+    console.error('Error stack:', error.stack)
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

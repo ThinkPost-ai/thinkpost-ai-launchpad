@@ -52,15 +52,19 @@ export const useTikTokConnectionData = () => {
 
     setConnecting(true);
     console.log('Starting TikTok connection process...');
+    console.log('Session token available:', !!session.access_token);
     
     try {
-      // Redirect directly to the TikTok auth endpoint with the token
-      const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth?token=${encodeURIComponent(session.access_token)}`;
+      // Get the Supabase URL from the client configuration
+      const supabaseUrl = 'https://eztbwukcnddtvcairvpz.supabase.co';
+      
+      // Build the auth URL with token as parameter
+      const authUrl = `${supabaseUrl}/functions/v1/tiktok-auth?token=${encodeURIComponent(session.access_token)}`;
       
       console.log('Redirecting to TikTok auth endpoint:', authUrl);
-      console.log('Using session token:', session.access_token.substring(0, 20) + '...');
+      console.log('Using session token (first 20 chars):', session.access_token.substring(0, 20) + '...');
       
-      // Direct redirect - no need to handle response since we're leaving the page
+      // Direct redirect - this will navigate away from the current page
       window.location.href = authUrl;
       
       // Note: Code after window.location.href won't execute as we're navigating away
