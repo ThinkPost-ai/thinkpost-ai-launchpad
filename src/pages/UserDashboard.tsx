@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -14,7 +15,7 @@ import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import QuickActions from '@/components/dashboard/QuickActions';
 
 const UserDashboard = () => {
-  const { user, loading, hasRestaurant } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
@@ -28,12 +29,7 @@ const UserDashboard = () => {
       navigate('/');
       return;
     }
-
-    if (!loading && !hasRestaurant) {
-      navigate('/restaurant-setup');
-      return;
-    }
-  }, [user, loading, hasRestaurant, navigate]);
+  }, [user, loading, navigate]);
 
   // Handle tab from URL parameters
   useEffect(() => {
@@ -49,10 +45,6 @@ const UserDashboard = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-purple"></div>
       </div>
     );
-  }
-
-  if (!restaurant) {
-    return null;
   }
 
   return (
