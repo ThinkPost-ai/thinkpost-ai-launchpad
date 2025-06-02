@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +7,7 @@ import { useState } from 'react';
 import AuthDialog from '@/components/auth/AuthDialog';
 
 const Hero = () => {
-  const { user, checkingProfile } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
@@ -16,8 +17,8 @@ const Hero = () => {
       return;
     }
 
-    if (checkingProfile) {
-      return; // Wait for profile check to complete
+    if (loading) {
+      return; // Wait for auth to complete
     }
 
     // Always navigate to dashboard which will handle the redirection
@@ -26,7 +27,7 @@ const Hero = () => {
 
   const getButtonText = () => {
     if (!user) return 'Start Creating Free';
-    if (checkingProfile) return 'Loading...';
+    if (loading) return 'Loading...';
     return 'Go to Dashboard';
   };
 
@@ -66,7 +67,7 @@ const Hero = () => {
                   size="lg" 
                   className="bg-gradient-primary hover:opacity-90 text-white text-lg px-8 py-4 h-auto"
                   onClick={handleStartCreating}
-                  disabled={checkingProfile}
+                  disabled={loading}
                 >
                   {getButtonText()}
                   <ArrowRight className="ml-2 h-5 w-5" />
