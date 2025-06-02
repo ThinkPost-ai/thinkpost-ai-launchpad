@@ -24,16 +24,23 @@ serve(async (req) => {
     let token = null;
     if (authHeader) {
       token = authHeader.replace('Bearer ', '')
+      console.log('Token from Authorization header')
     } else if (tokenFromUrl) {
       token = tokenFromUrl
+      console.log('Token from URL parameter')
     }
     
-    console.log('Token source:', authHeader ? 'header' : 'url_param')
     console.log('Token exists:', !!token)
     
     if (!token) {
       console.error('No authorization token provided')
-      throw new Error('Authorization token is required')
+      return new Response(
+        JSON.stringify({ error: 'Authorization token is required' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     const supabase = createClient(
@@ -48,7 +55,13 @@ serve(async (req) => {
     
     if (userError || !user) {
       console.error('User verification failed:', userError)
-      throw new Error('Invalid user token')
+      return new Response(
+        JSON.stringify({ error: 'Invalid user token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     console.log('User verified:', user.id)
@@ -61,7 +74,13 @@ serve(async (req) => {
     
     if (!clientId) {
       console.error('TikTok Client ID not configured')
-      throw new Error('TikTok Client ID not configured')
+      return new Response(
+        JSON.stringify({ error: 'TikTok Client ID not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
     
     const scope = 'user.info.basic'
@@ -83,7 +102,13 @@ serve(async (req) => {
     if (stateError) {
       console.error('Failed to store state token:', stateError)
       console.error('Error details:', JSON.stringify(stateError, null, 2))
-      throw new Error(`Failed to initialize OAuth flow: ${stateError.message}`)
+      return new Response(
+        JSON.stringify({ error: `Failed to initialize OAuth flow: ${stateError.message}` }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     console.log('State token stored successfully:', insertData)
