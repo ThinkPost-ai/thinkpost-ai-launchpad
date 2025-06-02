@@ -37,11 +37,37 @@ serve(async (req) => {
       })
     }
 
-    if (!code) {
-      throw new Error('No authorization code received')
+    if (!code || !state) {
+      throw new Error('Missing authorization code or state parameter')
     }
 
-    console.log('Received OAuth callback with code:', code)
+    console.log('Validating state token:', state)
+    
+    // Validate state token and get associated user
+    const { data: stateData, error: stateError } = await supabase
+      .from('tiktok_oauth_states')
+      .select('user_id, expires_at')
+      .eq('state_token', state)
+      .single()
+
+    if (stateError || !stateData) {
+      console.error('Invalid state token:', stateError)
+      throw new Error('Invalid or expired state token')
+    }
+
+    // Check if state token is expired
+    if (new Date(stateData.expires_at) < new Date()) {
+      console.error('State token expired')
+      throw new Error('State token has expired')
+    }
+
+    // Clean up the used state token
+    await supabase
+      .from('tiktok_oauth_states')
+      .delete()
+      .eq('state_token', state)
+
+    console.log('State validated, exchanging code for tokens for user:', stateData.user_id)
     
     // Exchange code for access token
     const clientId = Deno.env.get('TIKTOK_CLIENT_ID')
@@ -86,11 +112,35 @@ serve(async (req) => {
 
     const tiktokUser = userData.data.user
     
-    // For now, redirect to dashboard with success message
-    // The user will need to manually link their account or we'll implement a different linking strategy
-    const dashboardUrl = `${url.origin}/user-dashboard?tiktok_connected=true&username=${tiktokUser.display_name}&tiktok_user_id=${tiktokUser.open_id}`
+    // Calculate token expiration time
+    const expiresAt = tokenData.expires_in 
+      ? new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString()
+      : null
+
+    // Store the TikTok connection with real tokens
+    const { error: connectionError } = await supabase
+      .from('tiktok_connections')
+      .upsert({
+        user_id: stateData.user_id,
+        tiktok_user_id: tiktokUser.open_id,
+        tiktok_username: tiktokUser.display_name,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || null,
+        scope: tokenData.scope || 'user.info.basic',
+        token_expires_at: expiresAt,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+    if (connectionError) {
+      console.error('Failed to store TikTok connection:', connectionError)
+      throw new Error('Failed to save TikTok connection')
+    }
     
-    console.log('Redirecting to dashboard with TikTok user data')
+    // Redirect to dashboard with success message
+    const dashboardUrl = `${url.origin}/user-dashboard?tiktok_connected=true&username=${encodeURIComponent(tiktokUser.display_name)}`
+    
+    console.log('TikTok connection successful for user:', stateData.user_id)
     
     return new Response(null, {
       status: 302,

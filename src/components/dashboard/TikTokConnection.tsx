@@ -16,7 +16,7 @@ interface TikTokConnection {
 }
 
 const TikTokConnection = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [connection, setConnection] = useState<TikTokConnection | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,11 +51,38 @@ const TikTokConnection = () => {
   };
 
   const handleConnect = async () => {
+    if (!session?.access_token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to connect your TikTok account",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setConnecting(true);
     try {
-      // Simply redirect to the TikTok auth endpoint
+      // Call the TikTok auth endpoint with user authentication
       const authUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-auth`;
-      window.location.href = authUrl;
+      
+      const response = await fetch(authUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        redirect: 'manual'
+      });
+
+      if (response.status === 302) {
+        const location = response.headers.get('Location');
+        if (location) {
+          window.location.href = location;
+        } else {
+          throw new Error('No redirect location provided');
+        }
+      } else {
+        throw new Error('Failed to initiate TikTok authentication');
+      }
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
       toast({
