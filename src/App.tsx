@@ -13,6 +13,7 @@ import RestaurantSetup from "./pages/RestaurantSetup";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
 import TikTokCallback from "./pages/TikTokCallback";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/restaurant-setup" element={<RestaurantSetup />} />
               <Route path="/upload" element={<ProductCreation />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/api/tiktok/callback" element={<TikTokCallback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
