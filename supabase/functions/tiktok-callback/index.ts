@@ -134,12 +134,11 @@ serve(async (req) => {
     
     console.log('Exchanging code for access token...')
     
-    // Exchange code for access token with enhanced error handling
+    // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cache-Control': 'no-cache',
       },
       body: new URLSearchParams({
         client_key: clientKey,
@@ -151,35 +150,14 @@ serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log('Token exchange response:', tokenResponse.status, {
-      ...tokenData,
-      access_token: tokenData.access_token ? '[REDACTED]' : undefined,
-      refresh_token: tokenData.refresh_token ? '[REDACTED]' : undefined
-    })
+    console.log('Token exchange response:', tokenResponse.status, tokenData)
     
     if (!tokenResponse.ok || !tokenData.access_token) {
       console.error('Token exchange failed:', tokenData)
-      
-      // Handle specific error cases
-      if (tokenData.error === 'invalid_grant') {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Authorization code expired or invalid',
-            details: 'Please try connecting your TikTok account again. The authorization window may have timed out.',
-            code: 'AUTH_CODE_EXPIRED'
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-      
       return new Response(
         JSON.stringify({ 
           error: 'Token exchange failed',
-          details: tokenData.error_description || 'Failed to get access token',
-          tiktok_error: tokenData.error
+          details: tokenData.error_description || 'Failed to get access token'
         }),
         {
           status: 400,
@@ -188,30 +166,7 @@ serve(async (req) => {
       );
     }
 
-    // Validate that we have the required scopes
-    const scopes = tokenData.scope ? tokenData.scope.split(',') : [];
-    console.log('Granted scopes:', scopes);
-    
-    const requiredScopes = ['user.info.basic', 'video.publish'];
-    const missingScopes = requiredScopes.filter(scope => !scopes.includes(scope));
-    
-    if (missingScopes.length > 0) {
-      console.error('Missing required scopes:', missingScopes);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Insufficient permissions',
-          details: `Missing required scopes: ${missingScopes.join(', ')}. Please reconnect and authorize all permissions.`,
-          missing_scopes: missingScopes,
-          granted_scopes: scopes
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Get user info from TikTok
+    // Get user info from TikTok with correct scope
     console.log('Fetching user info from TikTok...')
     const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,username', {
       method: 'GET',
@@ -221,16 +176,7 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
-    console.log('User info response:', userResponse.status, {
-      ...userData,
-      data: userData.data ? {
-        ...userData.data,
-        user: userData.data.user ? {
-          ...userData.data.user,
-          open_id: userData.data.user.open_id ? '[REDACTED]' : undefined
-        } : undefined
-      } : undefined
-    })
+    console.log('User info response:', userResponse.status, userData)
     
     if (!userResponse.ok || !userData.data?.user) {
       console.error('Failed to get user info:', userData)
@@ -260,21 +206,19 @@ serve(async (req) => {
         .eq('tiktok_user_id', tiktokUser.open_id)
         .maybeSingle();
 
-      const connectionData = {
-        user_id: userId,
-        tiktok_user_id: tiktokUser.open_id,
-        tiktok_username: tiktokUser.display_name || tiktokUser.username,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-        scope: tokenData.scope
-      };
-
       if (!existingConnection) {
         // Insert new connection
         const { error: insertError } = await supabase
           .from('tiktok_connections')
-          .insert(connectionData);
+          .insert({
+            user_id: userId,
+            tiktok_user_id: tiktokUser.open_id,
+            tiktok_username: tiktokUser.display_name || tiktokUser.username,
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+            scope: tokenData.scope
+          });
 
         if (insertError) {
           console.error('Failed to store connection:', insertError);
@@ -293,7 +237,13 @@ serve(async (req) => {
         // Update existing connection
         const { error: updateError } = await supabase
           .from('tiktok_connections')
-          .update(connectionData)
+          .update({
+            tiktok_username: tiktokUser.display_name || tiktokUser.username,
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+            scope: tokenData.scope
+          })
           .eq('user_id', userId)
           .eq('tiktok_user_id', tiktokUser.open_id);
 
@@ -321,7 +271,7 @@ serve(async (req) => {
         user: {
           tiktok_user_id: tiktokUser.open_id,
           tiktok_username: tiktokUser.display_name || tiktokUser.username,
-          granted_scopes: scopes
+          access_token: tokenData.access_token
         }
       }),
       {
