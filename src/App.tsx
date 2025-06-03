@@ -13,11 +13,20 @@ import RestaurantSetup from "./pages/RestaurantSetup";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
 import TikTokCallback from "./pages/TikTokCallback";
+import Sandbox from "./pages/Sandbox";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const TikTokVerification = () => {
+  return (
+    <div style={{ fontFamily: 'monospace', whiteSpace: 'pre' }}>
+      tiktok-developers-site-verification=E0EDytwSmUSdkrdVkyRbpFtJS6UFaLZe
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,6 +46,8 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/api/tiktok/callback" element={<TikTokCallback />} />
+              <Route path="/sandbox" element={<Sandbox />} />
+              <Route path="/sandbox/tiktokE0EDytwSmUSdkrdVkyRbpFtJS6UFaLZe.txt" element={<TikTokVerification />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
