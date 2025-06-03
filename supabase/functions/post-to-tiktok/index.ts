@@ -74,7 +74,7 @@ serve(async (req) => {
         .eq('id', scheduledPostId);
 
       return new Response(
-        JSON.stringify({ error: 'TikTok connection not found' }),
+        JSON.stringify({ error: 'TikTok connection not found. Please reconnect your TikTok account.' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -152,6 +152,20 @@ serve(async (req) => {
         .from('scheduled_posts')
         .update({ status: 'failed' })
         .eq('id', scheduledPostId);
+
+      // Check for scope authorization error specifically
+      if (initData.error?.code === 'scope_not_authorized') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'TikTok authorization expired or insufficient permissions. Please reconnect your TikTok account with the required permissions.',
+            details: 'The video.publish scope is required but not authorized. Please disconnect and reconnect your TikTok account.'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
 
       return new Response(
         JSON.stringify({ 
