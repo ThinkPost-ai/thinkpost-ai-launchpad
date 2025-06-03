@@ -26,7 +26,7 @@ const Footer = () => {
     ],
     legal: [
       { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms of Service', href: '#' },
+      { name: 'Terms of Service', href: '/terms' },
       { name: 'Cookie Policy', href: '#' },
       { name: 'GDPR', href: '#' }
     ]
@@ -127,7 +127,7 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  {link.name === 'Privacy Policy' ? (
+                  {link.name === 'Privacy Policy' || link.name === 'Terms of Service' ? (
                     <Link to={link.href} className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 transition-colors">
                       {link.name}
                     </Link>
@@ -153,9 +153,9 @@ const Footer = () => {
             <Link to="/privacy" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
               Privacy
             </Link>
-            <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
+            <Link to="/terms" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
               Terms
-            </a>
+            </Link>
             <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
               Cookies
             </a>
