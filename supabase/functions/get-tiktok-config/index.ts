@@ -72,6 +72,22 @@ serve(async (req) => {
       )
     }
 
+    // Validate client key format (TikTok production keys should be longer)
+    if (clientKey.length < 20) {
+      console.error('TikTok Client ID appears to be a test/sandbox key')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid TikTok Client ID',
+          details: 'The provided Client ID appears to be a test/sandbox key. Please use a production Client ID from your TikTok Developer Console.',
+          client_key_length: clientKey.length
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Use the frontend callback page instead of edge function
     const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
 

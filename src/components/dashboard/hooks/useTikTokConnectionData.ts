@@ -110,6 +110,14 @@ export const useTikTokConnectionData = () => {
 
       if (error) {
         console.error('TikTok config error:', error);
+        
+        // Handle specific error cases
+        if (error.message?.includes('test/sandbox key')) {
+          throw new Error('TikTok Client ID is a test key. Please use a production Client ID from your TikTok Developer Console.');
+        } else if (error.message?.includes('not configured')) {
+          throw new Error('TikTok Client ID not configured. Please add it to Supabase secrets.');
+        }
+        
         throw new Error(error.message || 'Failed to get TikTok configuration');
       }
       
@@ -203,7 +211,9 @@ export const useTikTokConnectionData = () => {
       let userMessage = error.message || "Failed to initiate TikTok connection";
       
       // Provide more specific error messages
-      if (error.message?.includes('client key not available')) {
+      if (error.message?.includes('test key') || error.message?.includes('production Client ID')) {
+        userMessage = "TikTok setup issue: Please use a production Client ID from your TikTok Developer Console, not a test/sandbox key.";
+      } else if (error.message?.includes('client key not available')) {
         userMessage = "TikTok is not properly configured. Please contact support.";
       } else if (error.message?.includes('configuration')) {
         userMessage = "TikTok configuration error. Please try again later.";
