@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -139,14 +138,24 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Build TikTok OAuth URL with correct scope for video publishing
-      const tiktokAuthUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
-        '?client_key=' + encodeURIComponent(config.clientKey) +
-        '&response_type=code' +
-        '&scope=' + encodeURIComponent('user.info.basic,video.publish') +
-        '&redirect_uri=' + encodeURIComponent(config.redirectUri) +
-        '&state=' + encodeURIComponent(state);
+      // Build TikTok OAuth URL with video.publish scope (separate parameters for better compatibility)
+      const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
+      const params = new URLSearchParams({
+        client_key: config.clientKey,
+        response_type: 'code',
+        scope: 'user.info.basic,video.publish',
+        redirect_uri: config.redirectUri,
+        state: state
+      });
       
+      const tiktokAuthUrl = baseUrl + '?' + params.toString();
+      
+      console.log('TikTok OAuth URL parameters:', {
+        client_key: config.clientKey,
+        scope: 'user.info.basic,video.publish',
+        redirect_uri: config.redirectUri,
+        state: state
+      });
       console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
       
       // Force redirect in top-level window to avoid CORS issues
