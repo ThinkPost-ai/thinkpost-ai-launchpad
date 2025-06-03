@@ -7,6 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
+const MIN_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB minimum
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -65,6 +68,11 @@ serve(async (req) => {
 
     if (connectionError || !connection) {
       console.error('TikTok connection not found:', connectionError);
+      await supabase
+        .from('scheduled_posts')
+        .update({ status: 'failed' })
+        .eq('id', scheduledPostId);
+
       return new Response(
         JSON.stringify({ error: 'TikTok connection not found' }),
         {
@@ -76,8 +84,41 @@ serve(async (req) => {
 
     console.log('Posting to TikTok for user:', connection.tiktok_user_id);
 
-    // Step 1: Create post
-    const createPostResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
+    // Download the video to get its size
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      throw new Error('Failed to download video');
+    }
+
+    const videoBuffer = await videoResponse.arrayBuffer();
+    const videoSize = videoBuffer.byteLength;
+    
+    console.log('Video size:', videoSize, 'bytes');
+
+    // Calculate chunk configuration
+    let chunkSize = CHUNK_SIZE;
+    let totalChunkCount = Math.ceil(videoSize / chunkSize);
+
+    // For videos less than 5MB, upload as whole
+    if (videoSize < MIN_CHUNK_SIZE) {
+      chunkSize = videoSize;
+      totalChunkCount = 1;
+    }
+
+    // Ensure we don't exceed 1000 chunks
+    if (totalChunkCount > 1000) {
+      chunkSize = Math.ceil(videoSize / 1000);
+      totalChunkCount = Math.ceil(videoSize / chunkSize);
+    }
+
+    console.log('Upload configuration:', {
+      videoSize,
+      chunkSize,
+      totalChunkCount
+    });
+
+    // Step 1: Initialize video upload
+    const initResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${connection.access_token}`,
@@ -94,20 +135,19 @@ serve(async (req) => {
         },
         source_info: {
           source: "FILE_UPLOAD",
-          video_size: 0, // Will be updated after upload
-          chunk_size: 10000000,
-          total_chunk_count: 1
+          video_size: videoSize,
+          chunk_size: chunkSize,
+          total_chunk_count: totalChunkCount
         }
       }),
     });
 
-    const createPostData = await createPostResponse.json();
-    console.log('Create post response:', createPostData);
+    const initData = await initResponse.json();
+    console.log('Init response:', initData);
 
-    if (!createPostResponse.ok || createPostData.error?.code !== 'ok') {
-      console.error('Failed to create TikTok post:', createPostData);
+    if (!initResponse.ok || initData.error?.code !== 'ok') {
+      console.error('Failed to initialize TikTok upload:', initData);
       
-      // Update scheduled post status to failed
       await supabase
         .from('scheduled_posts')
         .update({ status: 'failed' })
@@ -115,8 +155,8 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to create TikTok post',
-          details: createPostData.error?.message || 'Unknown error'
+          error: 'Failed to initialize TikTok upload',
+          details: initData.error?.message || 'Unknown error'
         }),
         {
           status: 400,
@@ -125,59 +165,118 @@ serve(async (req) => {
       );
     }
 
-    const publishId = createPostData.data.publish_id;
-    const uploadUrl = createPostData.data.upload_url;
+    const publishId = initData.data.publish_id;
+    const uploadUrl = initData.data.upload_url;
 
-    console.log('TikTok post created successfully with publish_id:', publishId);
+    console.log('Upload initialized with publish_id:', publishId);
 
-    // Step 2: Upload video (simplified - assuming video is accessible via URL)
-    const videoResponse = await fetch(videoUrl);
-    const videoBuffer = await videoResponse.arrayBuffer();
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Range': `bytes 0-${videoBuffer.byteLength - 1}/${videoBuffer.byteLength}`,
-      },
-      body: videoBuffer,
-    });
-
-    if (!uploadResponse.ok) {
-      console.error('Failed to upload video:', uploadResponse.status, uploadResponse.statusText);
+    // Step 2: Upload video in chunks
+    const videoUint8Array = new Uint8Array(videoBuffer);
+    
+    for (let chunkIndex = 0; chunkIndex < totalChunkCount; chunkIndex++) {
+      const startByte = chunkIndex * chunkSize;
+      let endByte = startByte + chunkSize - 1;
       
-      await supabase
-        .from('scheduled_posts')
-        .update({ status: 'failed' })
-        .eq('id', scheduledPostId);
+      // For the last chunk, include any remaining bytes
+      if (chunkIndex === totalChunkCount - 1) {
+        endByte = videoSize - 1;
+      }
+      
+      const actualChunkSize = endByte - startByte + 1;
+      const chunkData = videoUint8Array.slice(startByte, endByte + 1);
+      
+      console.log(`Uploading chunk ${chunkIndex + 1}/${totalChunkCount}:`, {
+        startByte,
+        endByte,
+        actualChunkSize,
+        totalSize: videoSize
+      });
 
-      return new Response(
-        JSON.stringify({ error: 'Failed to upload video to TikTok' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+      const chunkUploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'video/mp4',
+          'Content-Length': actualChunkSize.toString(),
+          'Content-Range': `bytes ${startByte}-${endByte}/${videoSize}`,
+        },
+        body: chunkData,
+      });
+
+      console.log(`Chunk ${chunkIndex + 1} upload status:`, chunkUploadResponse.status);
+
+      if (!chunkUploadResponse.ok) {
+        const errorText = await chunkUploadResponse.text();
+        console.error(`Failed to upload chunk ${chunkIndex + 1}:`, {
+          status: chunkUploadResponse.status,
+          statusText: chunkUploadResponse.statusText,
+          error: errorText
+        });
+        
+        await supabase
+          .from('scheduled_posts')
+          .update({ status: 'failed' })
+          .eq('id', scheduledPostId);
+
+        return new Response(
+          JSON.stringify({ 
+            error: `Failed to upload video chunk ${chunkIndex + 1}`,
+            details: `HTTP ${chunkUploadResponse.status}: ${errorText}`
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Check if this was the final chunk (status 201) or partial (status 206)
+      if (chunkUploadResponse.status === 201) {
+        console.log('All chunks uploaded successfully');
+        break;
+      } else if (chunkUploadResponse.status === 206) {
+        console.log(`Chunk ${chunkIndex + 1} uploaded, continuing...`);
+      } else {
+        console.warn(`Unexpected status code ${chunkUploadResponse.status} for chunk ${chunkIndex + 1}`);
+      }
     }
 
-    console.log('Video uploaded successfully');
+    console.log('Video upload completed, checking publish status...');
 
-    // Step 3: Confirm and publish
-    const publishResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        publish_id: publishId
-      }),
-    });
+    // Step 3: Check publish status
+    const checkStatus = async (retries = 0): Promise<any> => {
+      const statusResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${connection.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          publish_id: publishId
+        }),
+      });
 
-    const publishData = await publishResponse.json();
-    console.log('Publish status response:', publishData);
+      const statusData = await statusResponse.json();
+      console.log('Publish status response:', statusData);
 
-    if (publishResponse.ok && publishData.data?.status === 'PROCESSING_UPLOAD') {
+      if (!statusResponse.ok) {
+        throw new Error(`Status check failed: ${statusData.error?.message || 'Unknown error'}`);
+      }
+
+      const status = statusData.data?.status;
+      
+      // If still processing and we haven't retried too many times, wait and try again
+      if ((status === 'PROCESSING_UPLOAD' || status === 'PROCESSING_PUBLISH') && retries < 10) {
+        console.log(`Status is ${status}, waiting before retry ${retries + 1}/10...`);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        return checkStatus(retries + 1);
+      }
+      
+      return statusData;
+    };
+
+    const finalStatus = await checkStatus();
+
+    if (finalStatus.data?.status === 'PUBLISH_COMPLETE') {
       // Update scheduled post status to posted
       await supabase
         .from('scheduled_posts')
@@ -193,7 +292,8 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           publish_id: publishId,
-          status: publishData.data?.status || 'posted'
+          status: finalStatus.data?.status || 'posted',
+          share_url: finalStatus.data?.publiclyAvailable?.share_url
         }),
         {
           status: 200,
@@ -201,6 +301,8 @@ serve(async (req) => {
         }
       );
     } else {
+      console.error('Publish failed or timed out:', finalStatus);
+      
       await supabase
         .from('scheduled_posts')
         .update({ status: 'failed' })
@@ -209,7 +311,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to publish TikTok post',
-          details: publishData.error?.message || 'Unknown publish error'
+          details: finalStatus.data?.status || 'Unknown publish status',
+          status: finalStatus.data?.status
         }),
         {
           status: 400,
