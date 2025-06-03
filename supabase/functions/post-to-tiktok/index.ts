@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
-const MIN_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB minimum
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -62,7 +61,7 @@ serve(async (req) => {
     // Get TikTok connection for the user
     const { data: connection, error: connectionError } = await supabase
       .from('tiktok_connections')
-      .select('access_token, tiktok_user_id')
+      .select('access_token, refresh_token, tiktok_user_id, token_expires_at, scope')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -82,20 +81,96 @@ serve(async (req) => {
       );
     }
 
-    console.log('Posting to TikTok for user:', connection.tiktok_user_id);
+    // Check if token needs refresh
+    const expiresAt = new Date(connection.token_expires_at);
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
-    // Step 1: Query creator info (following official API docs)
-    console.log('Querying creator info...');
+    let accessToken = connection.access_token;
+
+    if (expiresAt <= oneHourFromNow) {
+      console.log('Token expires soon, refreshing...');
+      
+      try {
+        const refreshResult = await supabase.functions.invoke('refresh-tiktok-token', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (refreshResult.error) {
+          throw new Error(refreshResult.error.message);
+        }
+
+        // Get updated connection
+        const { data: updatedConnection } = await supabase
+          .from('tiktok_connections')
+          .select('access_token')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (updatedConnection) {
+          accessToken = updatedConnection.access_token;
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        await supabase
+          .from('scheduled_posts')
+          .update({ status: 'failed' })
+          .eq('id', scheduledPostId);
+
+        return new Response(
+          JSON.stringify({ 
+            error: 'Token refresh failed. Please reconnect your TikTok account.',
+            requires_reconnection: true
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
+    // Verify scope permissions
+    if (!connection.scope || !connection.scope.includes('video.publish')) {
+      console.error('Missing video.publish scope');
+      await supabase
+        .from('scheduled_posts')
+        .update({ status: 'failed' })
+        .eq('id', scheduledPostId);
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'TikTok connection missing video publishing permissions. Please reconnect your account.',
+          missing_scope: 'video.publish',
+          current_scopes: connection.scope
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Starting TikTok post workflow for user:', connection.tiktok_user_id);
+
+    // Step 1: Query creator info to validate account and get posting capabilities
+    console.log('Step 1: Querying creator info...');
     const creatorInfoResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json; charset=UTF-8',
       },
     });
 
     const creatorInfo = await creatorInfoResponse.json();
-    console.log('Creator info response:', creatorInfo);
+    console.log('Creator info response:', {
+      status: creatorInfoResponse.status,
+      error_code: creatorInfo.error?.code,
+      privacy_levels: creatorInfo.data?.privacy_level_options
+    });
 
     if (!creatorInfoResponse.ok || creatorInfo.error?.code !== 'ok') {
       console.error('Failed to get creator info:', creatorInfo);
@@ -108,7 +183,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to get TikTok creator info',
-          details: creatorInfo.error?.message || 'Unknown error'
+          details: creatorInfo.error?.message || 'Account may not be eligible for Content Posting API',
+          tiktok_error: creatorInfo.error?.code
         }),
         {
           status: 400,
@@ -117,31 +193,52 @@ serve(async (req) => {
       );
     }
 
-    // Download the video to get its size
+    // Download and validate the video
+    console.log('Downloading video from:', videoUrl);
     const videoResponse = await fetch(videoUrl);
     if (!videoResponse.ok) {
-      throw new Error('Failed to download video');
+      throw new Error(`Failed to download video: ${videoResponse.status}`);
     }
 
     const videoBuffer = await videoResponse.arrayBuffer();
     const videoSize = videoBuffer.byteLength;
     
-    console.log('Video size:', videoSize, 'bytes');
+    console.log('Video downloaded, size:', videoSize, 'bytes');
+
+    // Validate video size (TikTok has limits)
+    const maxVideoSize = 4 * 1024 * 1024 * 1024; // 4GB limit
+    if (videoSize > maxVideoSize) {
+      await supabase
+        .from('scheduled_posts')
+        .update({ status: 'failed' })
+        .eq('id', scheduledPostId);
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Video file too large',
+          details: `Video size (${Math.round(videoSize / 1024 / 1024)}MB) exceeds TikTok's limit`
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // Calculate chunk configuration
     let chunkSize = CHUNK_SIZE;
     let totalChunkCount = Math.ceil(videoSize / chunkSize);
 
-    // For videos less than 5MB, upload as whole
-    if (videoSize < MIN_CHUNK_SIZE) {
-      chunkSize = videoSize;
-      totalChunkCount = 1;
-    }
-
-    // Ensure we don't exceed 1000 chunks
+    // Ensure we don't exceed 1000 chunks (TikTok limit)
     if (totalChunkCount > 1000) {
       chunkSize = Math.ceil(videoSize / 1000);
       totalChunkCount = Math.ceil(videoSize / chunkSize);
+    }
+
+    // For small videos, upload as single chunk
+    if (videoSize <= chunkSize) {
+      chunkSize = videoSize;
+      totalChunkCount = 1;
     }
 
     console.log('Upload configuration:', {
@@ -150,17 +247,18 @@ serve(async (req) => {
       totalChunkCount
     });
 
-    // Step 2: Initialize video upload (following official API docs)
+    // Step 2: Initialize video upload
+    console.log('Step 2: Initializing video upload...');
     const initResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify({
         post_info: {
           title: caption.substring(0, 150), // TikTok title limit
-          privacy_level: "SELF_ONLY", // Start with private posts for safety
+          privacy_level: "SELF_ONLY", // Start with private for safety
           disable_duet: false,
           disable_comment: false,
           disable_stitch: false,
@@ -176,7 +274,11 @@ serve(async (req) => {
     });
 
     const initData = await initResponse.json();
-    console.log('Init response:', initData);
+    console.log('Init response:', {
+      status: initResponse.status,
+      error_code: initData.error?.code,
+      publish_id: initData.data?.publish_id ? '[REDACTED]' : undefined
+    });
 
     if (!initResponse.ok || initData.error?.code !== 'ok') {
       console.error('Failed to initialize TikTok upload:', initData);
@@ -186,12 +288,12 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', scheduledPostId);
 
-      // Check for scope authorization error specifically
       if (initData.error?.code === 'scope_not_authorized') {
         return new Response(
           JSON.stringify({ 
-            error: 'TikTok authorization expired or insufficient permissions. Please reconnect your TikTok account with the video.publish scope.',
-            details: 'The video.publish scope is required but not authorized. Please disconnect and reconnect your TikTok account.'
+            error: 'TikTok authorization insufficient. Please reconnect your account with video publishing permissions.',
+            requires_reconnection: true,
+            missing_scope: 'video.publish'
           }),
           {
             status: 400,
@@ -203,7 +305,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to initialize TikTok upload',
-          details: initData.error?.message || 'Unknown error'
+          details: initData.error?.message || 'Unknown error',
+          tiktok_error: initData.error?.code
         }),
         {
           status: 400,
@@ -215,9 +318,10 @@ serve(async (req) => {
     const publishId = initData.data.publish_id;
     const uploadUrl = initData.data.upload_url;
 
-    console.log('Upload initialized with publish_id:', publishId);
+    console.log('Upload initialized with publish_id');
 
     // Step 3: Upload video in chunks
+    console.log('Step 3: Uploading video in chunks...');
     const videoUint8Array = new Uint8Array(videoBuffer);
     
     for (let chunkIndex = 0; chunkIndex < totalChunkCount; chunkIndex++) {
@@ -232,12 +336,7 @@ serve(async (req) => {
       const actualChunkSize = endByte - startByte + 1;
       const chunkData = videoUint8Array.slice(startByte, endByte + 1);
       
-      console.log(`Uploading chunk ${chunkIndex + 1}/${totalChunkCount}:`, {
-        startByte,
-        endByte,
-        actualChunkSize,
-        totalSize: videoSize
-      });
+      console.log(`Uploading chunk ${chunkIndex + 1}/${totalChunkCount}: ${actualChunkSize} bytes`);
 
       const chunkUploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
@@ -249,13 +348,10 @@ serve(async (req) => {
         body: chunkData,
       });
 
-      console.log(`Chunk ${chunkIndex + 1} upload status:`, chunkUploadResponse.status);
-
       if (!chunkUploadResponse.ok) {
         const errorText = await chunkUploadResponse.text();
         console.error(`Failed to upload chunk ${chunkIndex + 1}:`, {
           status: chunkUploadResponse.status,
-          statusText: chunkUploadResponse.statusText,
           error: errorText
         });
         
@@ -276,25 +372,19 @@ serve(async (req) => {
         );
       }
 
-      // Check if this was the final chunk (status 201) or partial (status 206)
-      if (chunkUploadResponse.status === 201) {
-        console.log('All chunks uploaded successfully');
-        break;
-      } else if (chunkUploadResponse.status === 206) {
-        console.log(`Chunk ${chunkIndex + 1} uploaded, continuing...`);
-      } else {
-        console.warn(`Unexpected status code ${chunkUploadResponse.status} for chunk ${chunkIndex + 1}`);
-      }
+      console.log(`Chunk ${chunkIndex + 1} uploaded successfully (status: ${chunkUploadResponse.status})`);
     }
 
-    console.log('Video upload completed, checking publish status...');
+    console.log('Video upload completed');
 
-    // Step 4: Check publish status (following official API docs)
+    // Step 4: Check publish status with retry logic
+    console.log('Step 4: Checking publish status...');
+    
     const checkStatus = async (retries = 0): Promise<any> => {
       const statusResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${connection.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: JSON.stringify({
@@ -303,7 +393,11 @@ serve(async (req) => {
       });
 
       const statusData = await statusResponse.json();
-      console.log('Publish status response:', statusData);
+      console.log(`Status check ${retries + 1}:`, {
+        status: statusResponse.status,
+        publish_status: statusData.data?.status,
+        error_code: statusData.error?.code
+      });
 
       if (!statusResponse.ok || statusData.error?.code !== 'ok') {
         throw new Error(`Status check failed: ${statusData.error?.message || 'Unknown error'}`);
@@ -312,9 +406,9 @@ serve(async (req) => {
       const status = statusData.data?.status;
       
       // If still processing and we haven't retried too many times, wait and try again
-      if ((status === 'PROCESSING_UPLOAD' || status === 'PROCESSING_PUBLISH') && retries < 10) {
-        console.log(`Status is ${status}, waiting before retry ${retries + 1}/10...`);
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      if ((status === 'PROCESSING_UPLOAD' || status === 'PROCESSING_PUBLISH') && retries < 15) {
+        console.log(`Status is ${status}, waiting before retry ${retries + 1}/15...`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
         return checkStatus(retries + 1);
       }
       
@@ -339,7 +433,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           publish_id: publishId,
-          status: finalStatus.data?.status || 'posted',
+          status: finalStatus.data?.status,
           share_url: finalStatus.data?.publiclyAvailable?.share_url
         }),
         {
@@ -348,7 +442,7 @@ serve(async (req) => {
         }
       );
     } else {
-      console.error('Publish failed or timed out:', finalStatus);
+      console.error('Publish failed or timed out:', finalStatus.data?.status);
       
       await supabase
         .from('scheduled_posts')
@@ -358,8 +452,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to publish TikTok post',
-          details: finalStatus.data?.status || 'Unknown publish status',
-          status: finalStatus.data?.status
+          details: `Final status: ${finalStatus.data?.status}`,
+          publish_status: finalStatus.data?.status,
+          fail_reason: finalStatus.data?.fail_reason
         }),
         {
           status: 400,

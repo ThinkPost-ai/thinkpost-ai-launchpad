@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +43,7 @@ export const useTikTokConnectionData = () => {
         
         toast({
           title: "TikTok Connected!",
-          description: `Successfully connected your TikTok account`,
+          description: `Successfully connected your TikTok account with video publishing permissions`,
         });
         
         // Clear stored parameters
@@ -54,9 +55,17 @@ export const useTikTokConnectionData = () => {
         
       } catch (error: any) {
         console.error('Error processing stored TikTok callback:', error);
+        
+        let errorMessage = "Failed to complete TikTok connection";
+        if (error.message?.includes('insufficient permissions')) {
+          errorMessage = "Please reconnect and authorize all required permissions including video publishing";
+        } else if (error.message?.includes('expired')) {
+          errorMessage = "Authorization expired. Please try connecting again";
+        }
+        
         toast({
           title: "Connection Failed",
-          description: error.message || "Failed to complete TikTok connection",
+          description: errorMessage,
           variant: "destructive"
         });
         
@@ -71,7 +80,7 @@ export const useTikTokConnectionData = () => {
     try {
       const { data, error } = await supabase
         .from('tiktok_connections')
-        .select('id, tiktok_user_id, tiktok_username, created_at')
+        .select('id, tiktok_user_id, tiktok_username, created_at, scope, token_expires_at')
         .eq('user_id', user?.id)
         .maybeSingle();
 
@@ -138,12 +147,12 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Build TikTok OAuth URL with video.publish scope (separate parameters for better compatibility)
+      // Build TikTok OAuth URL with required scopes for video publishing
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
       const params = new URLSearchParams({
         client_key: config.clientKey,
         response_type: 'code',
-        scope: 'user.info.basic,video.publish',
+        scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
         state: state
       });
@@ -152,11 +161,17 @@ export const useTikTokConnectionData = () => {
       
       console.log('TikTok OAuth URL parameters:', {
         client_key: config.clientKey,
-        scope: 'user.info.basic,video.publish',
+        scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
         state: state
       });
       console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
+      
+      // Show user what permissions they need to grant
+      toast({
+        title: "Redirecting to TikTok",
+        description: "Please authorize all permissions including video publishing when prompted",
+      });
       
       // Force redirect in top-level window to avoid CORS issues
       if (window.top) {
@@ -200,12 +215,40 @@ export const useTikTokConnectionData = () => {
     }
   };
 
+  const checkTokenHealth = async () => {
+    if (!connection || !session?.access_token) return null;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('refresh-tiktok-token', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error && error.message?.includes('requires_reconnection')) {
+        toast({
+          title: "TikTok Connection Expired",
+          description: "Please reconnect your TikTok account",
+          variant: "destructive"
+        });
+        setConnection(null);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Token health check failed:', error);
+      return null;
+    }
+  };
+
   return {
     connection,
     loading,
     connecting,
     handleConnect,
     handleDisconnect,
-    fetchConnection
+    fetchConnection,
+    checkTokenHealth
   };
 };
