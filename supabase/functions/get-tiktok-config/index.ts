@@ -55,10 +55,16 @@ serve(async (req) => {
     // Get TikTok client key from environment
     const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     
+    console.log('TikTok Client Key configured:', !!clientKey)
+    console.log('TikTok Client Key length:', clientKey?.length || 0)
+    
     if (!clientKey) {
       console.error('TikTok Client ID not configured')
       return new Response(
-        JSON.stringify({ error: 'TikTok Client ID not configured' }),
+        JSON.stringify({ 
+          error: 'TikTok Client ID not configured',
+          details: 'Please configure TIKTOK_CLIENT_ID in Supabase secrets'
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -66,10 +72,11 @@ serve(async (req) => {
       )
     }
 
-    // Use the callback page route instead of the edge function URL
+    // Use the frontend callback page instead of edge function
     const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
 
-    console.log('Returning TikTok client key to user:', user.id)
+    console.log('Returning TikTok config to user:', user.id)
+    console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
     console.log('Using redirect URI:', redirectUri)
     
     return new Response(

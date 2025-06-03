@@ -100,18 +100,29 @@ export const useTikTokConnectionData = () => {
 
   const getTikTokConfig = async () => {
     try {
+      console.log('Getting TikTok config...');
+      
       const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('TikTok config error:', error);
+        throw new Error(error.message || 'Failed to get TikTok configuration');
+      }
+      
+      console.log('TikTok config received:', { hasClientKey: !!data?.clientKey, redirectUri: data?.redirectUri });
+      
+      if (!data || !data.clientKey) {
+        throw new Error('TikTok client key not available. Please check configuration.');
+      }
       
       return data;
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
-      throw new Error('Failed to get TikTok configuration');
+      throw new Error(error.message || 'Failed to get TikTok configuration');
     }
   };
 
@@ -140,6 +151,12 @@ export const useTikTokConnectionData = () => {
         throw new Error('TikTok client key not available');
       }
       
+      console.log('TikTok config validated:', {
+        hasClientKey: !!config.clientKey,
+        clientKeyLength: config.clientKey?.length || 0,
+        redirectUri: config.redirectUri
+      });
+      
       // Generate state token for CSRF protection
       const state = crypto.randomUUID();
       
@@ -160,12 +177,12 @@ export const useTikTokConnectionData = () => {
       const tiktokAuthUrl = baseUrl + '?' + params.toString();
       
       console.log('TikTok OAuth URL parameters:', {
-        client_key: config.clientKey,
+        client_key: config.clientKey.substring(0, 10) + '...',
         scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
         state: state
       });
-      console.log('Redirecting to TikTok OAuth:', tiktokAuthUrl);
+      console.log('Full TikTok OAuth URL:', tiktokAuthUrl);
       
       // Show user what permissions they need to grant
       toast({
@@ -182,9 +199,19 @@ export const useTikTokConnectionData = () => {
       
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
+      
+      let userMessage = error.message || "Failed to initiate TikTok connection";
+      
+      // Provide more specific error messages
+      if (error.message?.includes('client key not available')) {
+        userMessage = "TikTok is not properly configured. Please contact support.";
+      } else if (error.message?.includes('configuration')) {
+        userMessage = "TikTok configuration error. Please try again later.";
+      }
+      
       toast({
         title: "Connection Failed",
-        description: error.message || "Failed to initiate TikTok connection",
+        description: userMessage,
         variant: "destructive"
       });
       setConnecting(false);
