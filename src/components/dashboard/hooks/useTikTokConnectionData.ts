@@ -139,11 +139,11 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Build TikTok OAuth URL with correct scope format
+      // Build TikTok OAuth URL with correct scope for video publishing
       const tiktokAuthUrl = 'https://www.tiktok.com/v2/auth/authorize/' +
         '?client_key=' + encodeURIComponent(config.clientKey) +
         '&response_type=code' +
-        '&scope=' + encodeURIComponent('user.info.basic,user.info.profile') +
+        '&scope=' + encodeURIComponent('user.info.basic,video.publish') +
         '&redirect_uri=' + encodeURIComponent(config.redirectUri) +
         '&state=' + encodeURIComponent(state);
       

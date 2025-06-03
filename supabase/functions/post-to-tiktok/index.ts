@@ -84,6 +84,39 @@ serve(async (req) => {
 
     console.log('Posting to TikTok for user:', connection.tiktok_user_id);
 
+    // Step 1: Query creator info (following official API docs)
+    console.log('Querying creator info...');
+    const creatorInfoResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${connection.access_token}`,
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    });
+
+    const creatorInfo = await creatorInfoResponse.json();
+    console.log('Creator info response:', creatorInfo);
+
+    if (!creatorInfoResponse.ok || creatorInfo.error?.code !== 'ok') {
+      console.error('Failed to get creator info:', creatorInfo);
+      
+      await supabase
+        .from('scheduled_posts')
+        .update({ status: 'failed' })
+        .eq('id', scheduledPostId);
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to get TikTok creator info',
+          details: creatorInfo.error?.message || 'Unknown error'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Download the video to get its size
     const videoResponse = await fetch(videoUrl);
     if (!videoResponse.ok) {
@@ -117,12 +150,12 @@ serve(async (req) => {
       totalChunkCount
     });
 
-    // Step 1: Initialize video upload
+    // Step 2: Initialize video upload (following official API docs)
     const initResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${connection.access_token}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify({
         post_info: {
@@ -157,7 +190,7 @@ serve(async (req) => {
       if (initData.error?.code === 'scope_not_authorized') {
         return new Response(
           JSON.stringify({ 
-            error: 'TikTok authorization expired or insufficient permissions. Please reconnect your TikTok account with the required permissions.',
+            error: 'TikTok authorization expired or insufficient permissions. Please reconnect your TikTok account with the video.publish scope.',
             details: 'The video.publish scope is required but not authorized. Please disconnect and reconnect your TikTok account.'
           }),
           {
@@ -184,7 +217,7 @@ serve(async (req) => {
 
     console.log('Upload initialized with publish_id:', publishId);
 
-    // Step 2: Upload video in chunks
+    // Step 3: Upload video in chunks
     const videoUint8Array = new Uint8Array(videoBuffer);
     
     for (let chunkIndex = 0; chunkIndex < totalChunkCount; chunkIndex++) {
@@ -256,13 +289,13 @@ serve(async (req) => {
 
     console.log('Video upload completed, checking publish status...');
 
-    // Step 3: Check publish status
+    // Step 4: Check publish status (following official API docs)
     const checkStatus = async (retries = 0): Promise<any> => {
       const statusResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${connection.access_token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
         },
         body: JSON.stringify({
           publish_id: publishId
@@ -272,7 +305,7 @@ serve(async (req) => {
       const statusData = await statusResponse.json();
       console.log('Publish status response:', statusData);
 
-      if (!statusResponse.ok) {
+      if (!statusResponse.ok || statusData.error?.code !== 'ok') {
         throw new Error(`Status check failed: ${statusData.error?.message || 'Unknown error'}`);
       }
 
