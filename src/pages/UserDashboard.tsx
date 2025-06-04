@@ -14,6 +14,7 @@ import ScheduledPosts from '@/components/dashboard/ScheduledPosts';
 import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
 import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import QuickActions from '@/components/dashboard/QuickActions';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const UserDashboard = () => {
   const { user, loading } = useAuth();
@@ -54,6 +55,11 @@ const UserDashboard = () => {
       <DashboardHeader restaurant={restaurant} />
 
       <div className="container mx-auto px-4 py-6">
+        {/* Language Toggle - positioned in the top right */}
+        <div className="flex justify-end mb-4">
+          <LanguageToggle />
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
             <TabsTrigger value="overview">{t('dashboard.tabs.overview')}</TabsTrigger>
