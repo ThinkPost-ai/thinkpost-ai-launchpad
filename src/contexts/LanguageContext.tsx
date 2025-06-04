@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'ar';
@@ -7,7 +6,7 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
   isRTL: boolean;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, any>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -39,10 +38,19 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     }
   }, [language, isRTL]);
 
-  // Simple translation function - will be enhanced with actual translations
-  const t = (key: string): string => {
+  // Enhanced translation function with parameter support
+  const t = (key: string, params?: Record<string, any>): string => {
     const translations = getTranslations();
-    return translations[language]?.[key] || key;
+    let translation = translations[language]?.[key] || key;
+    
+    // Replace parameters in translation if provided
+    if (params) {
+      Object.keys(params).forEach(param => {
+        translation = translation.replace(`{${param}}`, params[param]);
+      });
+    }
+    
+    return translation;
   };
 
   const value = {
@@ -223,6 +231,39 @@ const getTranslations = () => {
       'footer.bottomLinks.privacy': 'Privacy',
       'footer.bottomLinks.terms': 'Terms',
       'footer.bottomLinks.cookies': 'Cookies',
+      
+      // Dashboard
+      'dashboard.tabs.overview': 'Overview',
+      'dashboard.tabs.media': 'Media',
+      'dashboard.tabs.captions': 'Captions',
+      'dashboard.tabs.schedule': 'Schedule',
+      'dashboard.tabs.notifications': 'Notifications',
+      
+      // Overview Cards
+      'dashboard.overview.totalPosts': 'Total Posts',
+      'dashboard.overview.totalPostsSubtext': '+12% from last month',
+      'dashboard.overview.upcomingPosts': 'Upcoming Posts',
+      'dashboard.overview.upcomingPostsSubtext': 'Scheduled this week',
+      'dashboard.overview.captionCredits': 'Caption Credits',
+      'dashboard.overview.captionCreditsSubtext': '{credits} credits remaining',
+      'dashboard.overview.mediaLibrary': 'Media Library',
+      'dashboard.overview.mediaLibrarySubtext': 'Images uploaded',
+      
+      // Quick Actions
+      'dashboard.quickActions.title': 'Quick Actions',
+      'dashboard.quickActions.addProducts': 'Start & add products',
+      'dashboard.quickActions.viewCaptions': 'View Captions',
+      'dashboard.quickActions.schedulePost': 'Schedule Post',
+      
+      // TikTok Connection
+      'dashboard.tiktok.title': 'TikTok Connection',
+      'dashboard.tiktok.description': 'Connect your TikTok account to schedule and post content directly',
+      
+      // User Profile
+      'dashboard.profile.owner': 'Owner',
+      'dashboard.profile.profileSettings': 'Profile Settings',
+      'dashboard.profile.accountSettings': 'Account Settings',
+      'dashboard.profile.signOut': 'Sign Out',
     },
     ar: {
       // Header
@@ -377,6 +418,39 @@ const getTranslations = () => {
       'footer.bottomLinks.privacy': 'الخصوصية',
       'footer.bottomLinks.terms': 'الشروط',
       'footer.bottomLinks.cookies': 'ملفات تعريف الارتباط',
+      
+      // Dashboard
+      'dashboard.tabs.overview': 'نظرة عامة',
+      'dashboard.tabs.media': 'الوسائط',
+      'dashboard.tabs.captions': 'التسميات التوضيحية',
+      'dashboard.tabs.schedule': 'الجدولة',
+      'dashboard.tabs.notifications': 'الإشعارات',
+      
+      // Overview Cards
+      'dashboard.overview.totalPosts': 'إجمالي المنشورات',
+      'dashboard.overview.totalPostsSubtext': '+12% من الشهر الماضي',
+      'dashboard.overview.upcomingPosts': 'المنشورات القادمة',
+      'dashboard.overview.upcomingPostsSubtext': 'مجدولة هذا الأسبوع',
+      'dashboard.overview.captionCredits': 'رصيد التسميات التوضيحية',
+      'dashboard.overview.captionCreditsSubtext': '{credits} رصيد متبقي',
+      'dashboard.overview.mediaLibrary': 'مكتبة الوسائط',
+      'dashboard.overview.mediaLibrarySubtext': 'صور مرفوعة',
+      
+      // Quick Actions
+      'dashboard.quickActions.title': 'إجراءات سريعة',
+      'dashboard.quickActions.addProducts': 'ابدأ وأضف منتجات',
+      'dashboard.quickActions.viewCaptions': 'عرض التسميات التوضيحية',
+      'dashboard.quickActions.schedulePost': 'جدولة منشور',
+      
+      // TikTok Connection
+      'dashboard.tiktok.title': 'اتصال TikTok',
+      'dashboard.tiktok.description': 'اربط حساب TikTok الخاص بك لجدولة ونشر المحتوى مباشرة',
+      
+      // User Profile
+      'dashboard.profile.owner': 'المالك',
+      'dashboard.profile.profileSettings': 'إعدادات الملف الشخصي',
+      'dashboard.profile.accountSettings': 'إعدادات الحساب',
+      'dashboard.profile.signOut': 'تسجيل الخروج',
     }
   };
 };

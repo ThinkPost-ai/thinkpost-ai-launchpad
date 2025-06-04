@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Image, MessageSquare, TrendingUp } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DashboardStats {
   totalPosts: number;
@@ -16,13 +17,14 @@ interface OverviewCardsProps {
 }
 
 const OverviewCards = ({ stats }: OverviewCardsProps) => {
+  const { t } = useLanguage();
   const quotaPercentage = ((stats.captionQuotaTotal - stats.captionCredits) / stats.captionQuotaTotal) * 100;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.overview.totalPosts')}</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -30,14 +32,14 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
             {stats.totalPosts}
           </div>
           <p className="text-xs text-muted-foreground">
-            +12% from last month
+            {t('dashboard.overview.totalPostsSubtext')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Upcoming Posts</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.overview.upcomingPosts')}</CardTitle>
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -45,14 +47,14 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
             {stats.upcomingPosts}
           </div>
           <p className="text-xs text-muted-foreground">
-            Scheduled this week
+            {t('dashboard.overview.upcomingPostsSubtext')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Caption Credits</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.overview.captionCredits')}</CardTitle>
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -61,14 +63,14 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
           </div>
           <Progress value={100 - quotaPercentage} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
-            {stats.captionCredits} credits remaining
+            {t('dashboard.overview.captionCreditsSubtext', { credits: stats.captionCredits })}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Media Library</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.overview.mediaLibrary')}</CardTitle>
           <Image className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -76,7 +78,7 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
             {stats.totalImages}
           </div>
           <p className="text-xs text-muted-foreground">
-            Images uploaded
+            {t('dashboard.overview.mediaLibrarySubtext')}
           </p>
         </CardContent>
       </Card>

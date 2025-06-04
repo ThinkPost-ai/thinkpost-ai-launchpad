@@ -1,10 +1,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTikTokConnectionData } from './hooks/useTikTokConnectionData';
+import { useLanguage } from '@/contexts/LanguageContext';
 import TikTokConnectedState from './components/TikTokConnectedState';
 import TikTokDisconnectedState from './components/TikTokDisconnectedState';
 
 const TikTokConnection = () => {
+  const { t } = useLanguage();
   const { connection, loading, connecting, handleConnect, handleDisconnect } = useTikTokConnectionData();
 
   if (loading) {
@@ -24,10 +26,10 @@ const TikTokConnection = () => {
           <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
             <span className="text-white text-xs font-bold">T</span>
           </div>
-          TikTok Connection
+          {t('dashboard.tiktok.title')}
         </CardTitle>
         <CardDescription>
-          Connect your TikTok account to schedule and post content directly
+          {t('dashboard.tiktok.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

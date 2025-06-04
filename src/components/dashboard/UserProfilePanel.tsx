@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ interface UserProfilePanelProps {
 
 const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [notifications] = useState(3); // Mock notification count
 
@@ -67,7 +69,7 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
               <p className="text-sm font-medium text-deep-blue dark:text-white">
                 {user?.user_metadata?.full_name || restaurant.name}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Owner</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.profile.owner')}</p>
             </div>
           </Button>
         </DropdownMenuTrigger>
@@ -85,16 +87,16 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => navigate('/restaurant-setup')}>
             <User className="mr-2 h-4 w-4" />
-            Profile Settings
+            {t('dashboard.profile.profileSettings')}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
-            Account Settings
+            {t('dashboard.profile.accountSettings')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
             <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
+            {t('dashboard.profile.signOut')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

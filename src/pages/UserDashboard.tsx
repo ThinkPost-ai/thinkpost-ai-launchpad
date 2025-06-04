@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTikTokConnectionData } from '@/hooks/useTikTokConnection';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useLanguage } from '@/contexts/LanguageContext';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
 import MediaManagement from '@/components/dashboard/MediaManagement';
@@ -16,6 +17,7 @@ import QuickActions from '@/components/dashboard/QuickActions';
 
 const UserDashboard = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
@@ -54,11 +56,11 @@ const UserDashboard = () => {
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
-            <TabsTrigger value="captions">Captions</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="media">{t('dashboard.tabs.media')}</TabsTrigger>
+            <TabsTrigger value="captions">{t('dashboard.tabs.captions')}</TabsTrigger>
+            <TabsTrigger value="schedule">{t('dashboard.tabs.schedule')}</TabsTrigger>
+            <TabsTrigger value="notifications">{t('dashboard.tabs.notifications')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">

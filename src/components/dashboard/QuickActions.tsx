@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuickActionsProps {
   onCaptionsClick: () => void;
@@ -10,6 +11,7 @@ interface QuickActionsProps {
 }
 
 const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   return (
@@ -17,7 +19,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-vibrant-purple" />
-          Quick Actions
+          {t('dashboard.quickActions.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -27,7 +29,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
             className="h-20 bg-gradient-primary hover:opacity-90 flex flex-col gap-2"
           >
             <Plus className="h-6 w-6" />
-            Start & add products
+            {t('dashboard.quickActions.addProducts')}
           </Button>
           <Button 
             variant="outline"
@@ -35,7 +37,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
             onClick={onCaptionsClick}
           >
             <MessageSquare className="h-6 w-6" />
-            View Captions
+            {t('dashboard.quickActions.viewCaptions')}
           </Button>
           <Button 
             variant="outline"
@@ -43,7 +45,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
             onClick={onScheduleClick}
           >
             <CalendarIcon className="h-6 w-6" />
-            Schedule Post
+            {t('dashboard.quickActions.schedulePost')}
           </Button>
         </div>
       </CardContent>
