@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PenTool, Sparkles, Download, ArrowRight } from 'lucide-react';
@@ -8,20 +7,20 @@ const HowItWorks = () => {
     {
       icon: PenTool,
       step: "01",
-      title: "Describe Your Needs",
-      description: "Tell us what type of content you need, your target audience, and key messaging points."
+      title: "Upload Your Products",
+      description: "Add your product photo and name with a simple upload."
     },
     {
       icon: Sparkles,
       step: "02", 
-      title: "AI Creates Content",
-      description: "Our advanced AI analyzes your requirements and generates high-quality, engaging content."
+      title: "AI Generates Content",
+      description: "Our advanced AI creates high-quality, engaging content for each product."
     },
     {
       icon: Download,
       step: "03",
-      title: "Review & Use",
-      description: "Review the generated content, make any adjustments, and publish across your channels."
+      title: "Review and Publish",
+      description: "Review the generated content, make any edits, then schedule and publish it across your channels."
     }
   ];
 
