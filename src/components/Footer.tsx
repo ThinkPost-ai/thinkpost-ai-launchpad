@@ -1,11 +1,12 @@
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const Footer = () => {
+const Footer: React.FC = () => {
   const { t, isRTL } = useLanguage();
 
   const footerLinks = {
@@ -74,7 +75,6 @@ const Footer = () => {
               {t('footer.description')}
             </p>
             <div className={`flex space-x-4 ${isRTL ? 'flex-row-reverse space-x-reverse justify-end' : ''}`}>
-              {/* Social Media Icons */}
               <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 transition-colors">
                 <span className="sr-only">Twitter</span>
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ const Footer = () => {
           <p className="text-gray-300 dark:text-gray-400 text-sm">
             {t('footer.copyright')}
           </p>
-          <div className={`flex space-x-6 mt-4 md:mt-0 ${isRTL ? 'flex-row-reverse space-x-reverse'}`}>
+          <div className={`flex space-x-6 mt-4 md:mt-0 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
             <Link to="/privacy" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
               {t('footer.bottomLinks.privacy')}
             </Link>
