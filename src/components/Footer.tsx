@@ -3,32 +3,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer = () => {
+  const { t, isRTL } = useLanguage();
+
   const footerLinks = {
     product: [
-      { name: 'Features', href: '#features' },
-      { name: 'Pricing', href: '#pricing' },
-      { name: 'API', href: '#' },
-      { name: 'Documentation', href: '#' }
+      { name: t('footer.product.features'), href: '#features' },
+      { name: t('footer.product.pricing'), href: '#pricing' },
+      { name: t('footer.product.api'), href: '#' },
+      { name: t('footer.product.documentation'), href: '#' }
     ],
     company: [
-      { name: 'About Us', href: '#' },
-      { name: 'Careers', href: '#' },
-      { name: 'Press', href: '#' },
-      { name: 'Contact', href: '#contact' }
+      { name: t('footer.company.about'), href: '#' },
+      { name: t('footer.company.careers'), href: '#' },
+      { name: t('footer.company.press'), href: '#' },
+      { name: t('footer.company.contact'), href: '#contact' }
     ],
     support: [
-      { name: 'Help Center', href: '#' },
-      { name: 'Community', href: '#' },
-      { name: 'Status', href: '#' },
-      { name: 'Security', href: '#' }
+      { name: t('footer.support.helpCenter'), href: '#' },
+      { name: t('footer.support.community'), href: '#' },
+      { name: t('footer.support.status'), href: '#' },
+      { name: t('footer.support.security'), href: '#' }
     ],
     legal: [
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms of Service', href: '/terms' },
-      { name: 'Cookie Policy', href: '#' },
-      { name: 'GDPR', href: '#' }
+      { name: t('footer.legal.privacy'), href: '/privacy' },
+      { name: t('footer.legal.terms'), href: '/terms' },
+      { name: t('footer.legal.cookies'), href: '#' },
+      { name: t('footer.legal.gdpr'), href: '#' }
     ]
   };
 
@@ -38,18 +41,18 @@ const Footer = () => {
         {/* Newsletter Section */}
         <div className="bg-gradient-primary/10 dark:bg-gradient-primary/20 rounded-2xl p-8 mb-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold mb-4">Stay Updated with ThinkPost</h3>
+            <h3 className="text-2xl font-bold mb-4">{t('footer.newsletter.title')}</h3>
             <p className="text-gray-300 dark:text-gray-400 mb-6">
-              Get the latest updates, tips, and exclusive content creation strategies delivered to your inbox.
+              {t('footer.newsletter.description')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <div className={`flex flex-col sm:flex-row gap-4 max-w-md mx-auto ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('footer.newsletter.placeholder')}
                 className="bg-white/10 dark:bg-gray-800/50 border-white/20 dark:border-gray-600 text-white dark:text-gray-300 placeholder:text-gray-300 dark:placeholder:text-gray-400"
               />
               <Button className="bg-white text-deep-blue hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
-                Subscribe
+                {t('footer.newsletter.buttonText')}
               </Button>
             </div>
           </div>
@@ -58,8 +61,8 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-8">
           {/* Logo and Description */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
+          <div className={`lg:col-span-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`flex items-center mb-4 ${isRTL ? 'flex-row-reverse space-x-reverse space-x-2' : 'space-x-2'}`}>
               <img 
                 src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
                 alt="ThinkPost Logo" 
@@ -68,10 +71,9 @@ const Footer = () => {
               <span className="text-xl font-bold">ThinkPost</span>
             </div>
             <p className="text-gray-300 dark:text-gray-400 mb-6 max-w-sm">
-              Revolutionizing content creation with AI-powered tools that help you create engaging, 
-              high-quality content in seconds.
+              {t('footer.description')}
             </p>
-            <div className="flex space-x-4">
+            <div className={`flex space-x-4 ${isRTL ? 'flex-row-reverse space-x-reverse justify-end' : ''}`}>
               {/* Social Media Icons */}
               <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 transition-colors">
                 <span className="sr-only">Twitter</span>
@@ -83,8 +85,8 @@ const Footer = () => {
           </div>
 
           {/* Links Sections */}
-          <div>
-            <h4 className="font-semibold mb-4">Product</h4>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
+            <h4 className="font-semibold mb-4">{t('footer.sections.product')}</h4>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
@@ -96,8 +98,8 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Company</h4>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
+            <h4 className="font-semibold mb-4">{t('footer.sections.company')}</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
@@ -109,8 +111,8 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
+            <h4 className="font-semibold mb-4">{t('footer.sections.support')}</h4>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
@@ -122,12 +124,12 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
+            <h4 className="font-semibold mb-4">{t('footer.sections.legal')}</h4>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  {link.name === 'Privacy Policy' || link.name === 'Terms of Service' ? (
+                  {link.name === t('footer.legal.privacy') || link.name === t('footer.legal.terms') ? (
                     <Link to={link.href} className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 transition-colors">
                       {link.name}
                     </Link>
@@ -145,19 +147,19 @@ const Footer = () => {
         <Separator className="my-8 bg-white/20 dark:bg-gray-700" />
 
         {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className={`flex flex-col md:flex-row justify-between items-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
           <p className="text-gray-300 dark:text-gray-400 text-sm">
-            © 2024 ThinkPost. All rights reserved.
+            {t('footer.copyright')}
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className={`flex space-x-6 mt-4 md:mt-0 ${isRTL ? 'flex-row-reverse space-x-reverse'}`}>
             <Link to="/privacy" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
-              Privacy
+              {t('footer.bottomLinks.privacy')}
             </Link>
             <Link to="/terms" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
-              Terms
+              {t('footer.bottomLinks.terms')}
             </Link>
             <a href="#" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-sm transition-colors">
-              Cookies
+              {t('footer.bottomLinks.cookies')}
             </a>
           </div>
         </div>
