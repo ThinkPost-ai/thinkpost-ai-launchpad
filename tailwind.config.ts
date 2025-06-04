@@ -69,6 +69,7 @@ export default {
 			},
 			fontFamily: {
 				'corbel': ['Corbel', 'Arial', 'sans-serif'],
+				'arabic': ['Amiri', 'Arial', 'sans-serif'],
 			},
 			backgroundImage: {
 				'gradient-primary': 'linear-gradient(135deg, #011D4C 0%, #5F29B4 100%)',
@@ -131,8 +132,73 @@ export default {
 				'fade-in': 'fade-in 0.6s ease-out',
 				'scale-in': 'scale-in 0.5s ease-out',
 				'float': 'float 3s ease-in-out infinite'
+			},
+			spacing: {
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-bottom': 'env(safe-area-inset-bottom)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }: { addUtilities: any }) {
+			const newUtilities = {
+				'.rtl': {
+					direction: 'rtl',
+				},
+				'.ltr': {
+					direction: 'ltr',
+				},
+				'.text-start': {
+					'text-align': 'start',
+				},
+				'.text-end': {
+					'text-align': 'end',
+				},
+				'.float-start': {
+					float: 'left',
+					'[dir="rtl"] &': {
+						float: 'right',
+					},
+				},
+				'.float-end': {
+					float: 'right',
+					'[dir="rtl"] &': {
+						float: 'left',
+					},
+				},
+				'.border-start': {
+					'border-left-width': '1px',
+					'[dir="rtl"] &': {
+						'border-left-width': '0',
+						'border-right-width': '1px',
+					},
+				},
+				'.border-end': {
+					'border-right-width': '1px',
+					'[dir="rtl"] &': {
+						'border-right-width': '0',
+						'border-left-width': '1px',
+					},
+				},
+				'.ms-auto': {
+					'margin-left': 'auto',
+					'[dir="rtl"] &': {
+						'margin-left': '0',
+						'margin-right': 'auto',
+					},
+				},
+				'.me-auto': {
+					'margin-right': 'auto',
+					'[dir="rtl"] &': {
+						'margin-right': '0',
+						'margin-left': 'auto',
+					},
+				},
+			}
+			addUtilities(newUtilities)
+		}
+	],
 } satisfies Config;

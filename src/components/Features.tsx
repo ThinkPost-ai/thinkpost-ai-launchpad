@@ -1,8 +1,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, Zap, Target, Shield, Globe, Rocket } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Features = () => {
+  const { t, isRTL } = useLanguage();
+  
   const features = [
     {
       icon: Bot,
@@ -41,13 +44,13 @@ const Features = () => {
       <div className="container mx-auto px-4 lg:px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-deep-blue dark:text-white mb-6">
-            Powerful Features for 
+            {t('features.title.powerful')} 
             <span className="block bg-gradient-primary bg-clip-text text-transparent">
-              Content Creators
+              {t('features.title.creators')}
             </span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Everything you need to create, optimize, and scale your content strategy with the power of AI.
+            {t('features.description')}
           </p>
         </div>
 

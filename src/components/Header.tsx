@@ -3,19 +3,22 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 import AuthDialog from '@/components/auth/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { t, isRTL } = useLanguage();
 
   const navLinks = [
-    { name: 'Features', href: '#features' },
-    { name: 'How It Works', href: '#how-it-works' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'Contact', href: '#contact' },
+    { name: t('nav.features'), href: '#features' },
+    { name: t('nav.howItWorks'), href: '#how-it-works' },
+    { name: t('nav.pricing'), href: '#pricing' },
+    { name: t('nav.contact'), href: '#contact' },
   ];
 
   const openAuthDialog = () => {
@@ -32,7 +35,7 @@ const Header = () => {
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+            <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
               <div className="p-1">
                 <img 
                   src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 
@@ -44,7 +47,7 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className={`hidden md:flex items-center space-x-8 ${isRTL ? 'space-x-reverse' : ''}`}>
               {navLinks.map((link) => (
                 <a
                   key={link.name}
@@ -57,19 +60,20 @@ const Header = () => {
             </nav>
 
             {/* Desktop Auth Buttons and Theme Toggle */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className={`hidden md:flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <LanguageToggle />
               <ThemeToggle />
               {user ? (
-                <div className="flex items-center space-x-4">
+                <div className={`flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
                   <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Welcome back!
+                    {t('header.welcomeBack')}
                   </span>
                   <Button 
                     variant="ghost" 
                     onClick={handleSignOut}
                     className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
                   >
-                    Sign Out
+                    {t('header.signOut')}
                   </Button>
                 </div>
               ) : (
@@ -77,13 +81,14 @@ const Header = () => {
                   onClick={openAuthDialog}
                   className="bg-gradient-primary hover:opacity-90 text-white"
                 >
-                  Get Started
+                  {t('header.getStarted')}
                 </Button>
               )}
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center space-x-2">
+            <div className={`md:hidden flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <LanguageToggle />
               <ThemeToggle />
               <button
                 className="p-2"
@@ -116,7 +121,7 @@ const Header = () => {
                   {user ? (
                     <>
                       <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
-                        Welcome back!
+                        {t('header.welcomeBack')}
                       </span>
                       <Button 
                         variant="ghost" 
@@ -126,7 +131,7 @@ const Header = () => {
                         }}
                         className="text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 w-full"
                       >
-                        Sign Out
+                        {t('header.signOut')}
                       </Button>
                     </>
                   ) : (
@@ -137,7 +142,7 @@ const Header = () => {
                       }}
                       className="bg-gradient-primary hover:opacity-90 text-white w-full"
                     >
-                      Get Started
+                      {t('header.getStarted')}
                     </Button>
                   )}
                 </div>
