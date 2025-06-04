@@ -264,6 +264,23 @@ const getTranslations = () => {
       'dashboard.profile.profileSettings': 'Profile Settings',
       'dashboard.profile.accountSettings': 'Account Settings',
       'dashboard.profile.signOut': 'Sign Out',
+      
+      // Image Upload Page
+      'upload.backToDashboard': 'Back to Dashboard',
+      'upload.title': 'Upload Images',
+      'upload.description': 'Upload photos of your delicious dishes to generate AI-powered captions',
+      'upload.selectImages': 'Select Images',
+      'upload.selectImagesDescription': 'Choose multiple images to upload. Supported formats: JPG, PNG, WEBP',
+      'upload.clickToUpload': 'Click to upload images',
+      'upload.dragAndDrop': 'or drag and drop your files here',
+      'upload.selectedImages': 'Selected Images',
+      'upload.uploadButton': 'Upload {count} Image(s)',
+      'upload.uploading': 'Uploading...',
+      'upload.clearAll': 'Clear All',
+      'upload.uploadSuccess': 'Success!',
+      'upload.uploadSuccessDescription': '{count} image(s) uploaded successfully',
+      'upload.uploadFailed': 'Upload Failed',
+      'upload.uploadFailedDescription': 'Failed to upload images',
     },
     ar: {
       // Header
@@ -451,6 +468,23 @@ const getTranslations = () => {
       'dashboard.profile.profileSettings': 'إعدادات الملف الشخصي',
       'dashboard.profile.accountSettings': 'إعدادات الحساب',
       'dashboard.profile.signOut': 'تسجيل الخروج',
+      
+      // Image Upload Page
+      'upload.backToDashboard': 'العودة إلى لوحة التحكم',
+      'upload.title': 'رفع الصور',
+      'upload.description': 'ارفع صور أطباقك اللذيذة لإنتاج تسميات توضيحية بالذكاء الاصطناعي',
+      'upload.selectImages': 'اختر الصور',
+      'upload.selectImagesDescription': 'اختر عدة صور للرفع. التنسيقات المدعومة: JPG، PNG، WEBP',
+      'upload.clickToUpload': 'انقر لرفع الصور',
+      'upload.dragAndDrop': 'أو اسحب وأفلت ملفاتك هنا',
+      'upload.selectedImages': 'الصور المختارة',
+      'upload.uploadButton': 'رفع {count} صورة',
+      'upload.uploading': 'جارٍ الرفع...',
+      'upload.clearAll': 'مسح الكل',
+      'upload.uploadSuccess': 'نجح!',
+      'upload.uploadSuccessDescription': 'تم رفع {count} صورة بنجاح',
+      'upload.uploadFailed': 'فشل الرفع',
+      'upload.uploadFailedDescription': 'فشل في رفع الصور',
     }
   };
 };

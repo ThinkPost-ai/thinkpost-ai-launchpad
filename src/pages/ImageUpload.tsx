@@ -9,11 +9,13 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Loader2, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ImageUpload = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, isRTL } = useLanguage();
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -64,15 +66,15 @@ const ImageUpload = () => {
       await Promise.all(uploadPromises);
 
       toast({
-        title: "Success!",
-        description: `${selectedFiles.length} image(s) uploaded successfully`
+        title: t('upload.uploadSuccess'),
+        description: t('upload.uploadSuccessDescription', { count: selectedFiles.length })
       });
 
       navigate('/images');
     } catch (error: any) {
       toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload images",
+        title: t('upload.uploadFailed'),
+        description: error.message || t('upload.uploadFailedDescription'),
         variant: "destructive"
       });
     } finally {
@@ -83,28 +85,28 @@ const ImageUpload = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="mb-6">
+        <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
-            className="mb-4"
+            className={`mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 mr-0 rotate-180' : 'mr-2'}`} />
+            {t('upload.backToDashboard')}
           </Button>
           <h1 className="text-3xl font-bold text-deep-blue dark:text-white mb-2">
-            Upload Images
+            {t('upload.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Upload photos of your delicious dishes to generate AI-powered captions
+            {t('upload.description')}
           </p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Select Images</CardTitle>
+          <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+            <CardTitle>{t('upload.selectImages')}</CardTitle>
             <CardDescription>
-              Choose multiple images to upload. Supported formats: JPG, PNG, WEBP
+              {t('upload.selectImagesDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -112,10 +114,10 @@ const ImageUpload = () => {
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <Label htmlFor="file-upload" className="cursor-pointer">
                 <span className="text-lg font-medium text-deep-blue dark:text-white">
-                  Click to upload images
+                  {t('upload.clickToUpload')}
                 </span>
                 <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  or drag and drop your files here
+                  {t('upload.dragAndDrop')}
                 </p>
               </Label>
               <Input
@@ -130,8 +132,8 @@ const ImageUpload = () => {
 
             {selectedFiles.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-deep-blue dark:text-white">
-                  Selected Images ({selectedFiles.length})
+                <h3 className={`text-lg font-semibold text-deep-blue dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t('upload.selectedImages')} ({selectedFiles.length})
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {selectedFiles.map((file, index) => (
@@ -143,18 +145,20 @@ const ImageUpload = () => {
                       />
                       <button
                         onClick={() => removeFile(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className={`absolute top-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                          isRTL ? 'left-2' : 'right-2'
+                        }`}
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
+                      <p className={`text-sm text-gray-600 dark:text-gray-400 mt-1 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
                         {file.name}
                       </p>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex gap-4">
+                <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Button
                     onClick={uploadImages}
                     disabled={uploading}
@@ -162,11 +166,11 @@ const ImageUpload = () => {
                   >
                     {uploading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
+                        <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('upload.uploading')}
                       </>
                     ) : (
-                      `Upload ${selectedFiles.length} Image(s)`
+                      t('upload.uploadButton', { count: selectedFiles.length })
                     )}
                   </Button>
                   <Button
@@ -174,7 +178,7 @@ const ImageUpload = () => {
                     onClick={() => setSelectedFiles([])}
                     disabled={uploading}
                   >
-                    Clear All
+                    {t('upload.clearAll')}
                   </Button>
                 </div>
               </div>
