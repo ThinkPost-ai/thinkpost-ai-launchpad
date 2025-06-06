@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Use anon key client to verify the user's session
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -39,8 +40,14 @@ Deno.serve(async (req) => {
     const state = crypto.randomUUID()
     const redirectUri = `${req.url.split('/supabase/functions')[0]}/tiktok-login-callback`
 
+    // Use service role client to insert state (bypasses RLS)
+    const serviceRoleClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
+
     // Store state in database for validation
-    const { error: stateError } = await supabaseClient
+    const { error: stateError } = await serviceRoleClient
       .from('tiktok_oauth_states')
       .insert({
         user_id: user.id,
