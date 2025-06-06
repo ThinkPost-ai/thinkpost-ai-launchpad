@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTikTokConnectionData } from '@/hooks/useTikTokConnection';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -12,7 +11,6 @@ import MediaManagement from '@/components/dashboard/MediaManagement';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
 import ScheduledPosts from '@/components/dashboard/ScheduledPosts';
 import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
-import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import QuickActions from '@/components/dashboard/QuickActions';
 
 const UserDashboard = () => {
@@ -24,7 +22,6 @@ const UserDashboard = () => {
 
   // Use custom hooks for data management
   const { restaurant, stats, isLoading, handleCreditsUpdate } = useDashboardData();
-  useTikTokConnectionData();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -65,12 +62,6 @@ const UserDashboard = () => {
 
           <TabsContent value="overview" className="space-y-6">
             <OverviewCards stats={stats} />
-            
-            {/* Social Media Connections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TikTokConnection />
-              {/* Future social media connections can be added here */}
-            </div>
             
             <QuickActions 
               onCaptionsClick={() => setActiveTab('captions')}
