@@ -52,9 +52,9 @@ serve(async (req) => {
 
     console.log('User verified:', user.id)
 
-    // TikTok OAuth configuration
+    // TikTok OAuth configuration - using exact values you specified
     const clientKey = "sbawdyn4l42rz2ceyq"
-    const redirectUri = "https://thinkpost.co/tiktok-callback"
+    const redirectUri = "https://thinkpost.co/tiktok-login-callback"
     const scope = "user.info.basic user.info.profile user.info.stats video.upload video.publish"
     
     // Generate state token for CSRF protection
@@ -80,19 +80,17 @@ serve(async (req) => {
       )
     }
 
-    // Build TikTok OAuth URL
-    const tiktokAuthUrl = `https://www.tiktok.com/v2/auth/authorize?` +
-      `client_key=${encodeURIComponent(clientKey)}&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `response_type=code&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `state=${encodeURIComponent(state)}`
+    // Build TikTok OAuth URL using the EXACT format you specified
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize?client_key=${clientKey}&scope=${encodeURIComponent(scope)}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
     console.log('Generated TikTok auth URL for user:', user.id)
+    console.log('Using client_key:', clientKey)
+    console.log('Using redirect_uri:', redirectUri)
+    console.log('Auth URL preview:', authUrl.substring(0, 150) + '...')
     
     return new Response(
       JSON.stringify({ 
-        auth_url: tiktokAuthUrl,
+        auth_url: authUrl,
         state: state
       }),
       {
