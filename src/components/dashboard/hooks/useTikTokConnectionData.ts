@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,7 +116,7 @@ export const useTikTokConnectionData = () => {
       console.log('Redirect URI:', data?.redirectUri);
       console.log('Debug info:', data?.debug);
       
-      // Frontend validation
+      // Enhanced frontend validation
       if (!data?.clientKey) {
         throw new Error('No client key received from configuration');
       }
@@ -127,15 +126,23 @@ export const useTikTokConnectionData = () => {
         throw new Error('Client key is empty');
       }
       
-      // Strict validation
-      if (!/^[a-zA-Z0-9]+$/.test(clientKey)) {
-        console.error('Frontend validation failed: Invalid characters in client key');
-        console.error('Client key characters:', clientKey.split('').map((c, i) => `${i}: "${c}" (${c.charCodeAt(0)})`));
-        throw new Error('Client key contains invalid characters. Only letters and numbers are allowed.');
+      // Aggressive validation - ensure only alphanumeric characters
+      const cleanKey = clientKey.replace(/[^a-zA-Z0-9]/g, '');
+      if (cleanKey !== clientKey) {
+        console.error('Frontend: Client key contains non-alphanumeric characters');
+        console.error('Original key:', clientKey);
+        console.error('Clean key:', cleanKey);
+        throw new Error('Client key contains invalid characters. Configuration may be corrupted.');
       }
       
       if (clientKey.length < 10) {
         throw new Error('Client key appears to be too short');
+      }
+      
+      // Validate typical TikTok client key format (should be alphanumeric, 16-24 chars)
+      if (clientKey.length < 16 || clientKey.length > 30) {
+        console.warn('Frontend: Client key length is unusual for TikTok:', clientKey.length);
+        console.warn('Expected range: 16-30 characters');
       }
       
       console.log('Frontend validation passed');
@@ -143,13 +150,15 @@ export const useTikTokConnectionData = () => {
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
       
-      // Provide more specific error messages
+      // Enhanced error messaging
       if (error.message?.includes('not configured')) {
         throw new Error('TikTok integration is not properly configured. Please contact support.');
       } else if (error.message?.includes('Authorization required')) {
         throw new Error('Authentication failed. Please try logging in again.');
-      } else if (error.message?.includes('invalid characters')) {
-        throw new Error('TikTok configuration contains invalid characters. Please contact support.');
+      } else if (error.message?.includes('invalid characters') || error.message?.includes('corrupted')) {
+        throw new Error('TikTok configuration contains invalid characters. Please check your TikTok Client ID and Secret.');
+      } else if (error.message?.includes('too short')) {
+        throw new Error('TikTok Client ID appears to be incomplete. Please verify your configuration.');
       } else {
         throw new Error('Failed to get TikTok configuration. Please try again.');
       }
@@ -184,6 +193,7 @@ export const useTikTokConnectionData = () => {
       console.log('=== Frontend: Building OAuth URL ===');
       console.log('Using client key length:', config.clientKey.length);
       console.log('Using redirect URI:', config.redirectUri);
+      console.log('Debug info:', config.debug);
       
       // Generate state token for CSRF protection
       const state = crypto.randomUUID();
@@ -192,26 +202,17 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Final client key validation and cleaning
-      const cleanClientKey = String(config.clientKey).replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '');
-      console.log('Final clean client key length:', cleanClientKey.length);
-      console.log('Final clean client key preview:', cleanClientKey.substring(0, 8) + '...');
-      
-      if (!/^[a-zA-Z0-9]+$/.test(cleanClientKey)) {
-        throw new Error('Client key contains invalid characters after final cleaning');
-      }
-      
-      if (cleanClientKey.length < 10) {
-        throw new Error('Client key too short after cleaning');
-      }
+      // Use the validated client key directly (already cleaned by backend)
+      const clientKey = config.clientKey;
+      console.log('Final client key length:', clientKey.length);
+      console.log('Final client key preview:', clientKey.substring(0, 8) + '...');
       
       // Build TikTok OAuth URL following TikTok's exact specification
-      // Order matters for TikTok: client_key, response_type, scope, redirect_uri, state
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
       const scope = 'user.info.basic,video.upload,video.publish';
       
       const params = new URLSearchParams();
-      params.append('client_key', cleanClientKey);
+      params.append('client_key', clientKey);
       params.append('response_type', 'code');
       params.append('scope', scope);
       params.append('redirect_uri', config.redirectUri);
@@ -221,11 +222,12 @@ export const useTikTokConnectionData = () => {
       
       console.log('=== Frontend: Final OAuth URL ===');
       console.log('Base URL:', baseUrl);
-      console.log('Client Key (preview):', cleanClientKey.substring(0, 10) + '...');
+      console.log('Client Key (preview):', clientKey.substring(0, 10) + '...');
       console.log('Scope:', scope);
       console.log('Redirect URI:', config.redirectUri);
       console.log('State:', state);
       console.log('Full URL length:', tiktokAuthUrl.length);
+      console.log('URL preview:', tiktokAuthUrl.substring(0, 150) + '...');
       
       toast({
         title: "Redirecting to TikTok",

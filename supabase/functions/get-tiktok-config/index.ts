@@ -52,13 +52,15 @@ serve(async (req) => {
 
     console.log('User verified:', user.id)
 
-    // Get TikTok client key from environment
+    // Get TikTok configuration from environment
     const rawClientKey = Deno.env.get('TIKTOK_CLIENT_ID')
+    const rawClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
     
-    console.log('=== TikTok Client Key Debug ===')
+    console.log('=== TikTok Configuration Debug ===')
     console.log('Raw client key exists:', !!rawClientKey)
     console.log('Raw client key length:', rawClientKey?.length || 0)
-    console.log('Raw client key type:', typeof rawClientKey)
+    console.log('Raw client secret exists:', !!rawClientSecret)
+    console.log('Raw client secret length:', rawClientSecret?.length || 0)
     
     if (!rawClientKey) {
       console.error('TikTok Client ID not configured')
@@ -74,56 +76,37 @@ serve(async (req) => {
       )
     }
 
-    // Enhanced client key sanitization with detailed logging
+    if (!rawClientSecret) {
+      console.error('TikTok Client Secret not configured')
+      return new Response(
+        JSON.stringify({ 
+          error: 'TikTok Client Secret not configured',
+          details: 'Please configure TIKTOK_CLIENT_SECRET in Supabase secrets'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Validate and clean client key
     let cleanClientKey = String(rawClientKey)
-    console.log('Step 1 - Original key length:', cleanClientKey.length)
-    console.log('Step 1 - Original key preview:', cleanClientKey.substring(0, 10) + '...')
-    console.log('Step 1 - Has whitespace:', /\s/.test(cleanClientKey))
-    console.log('Step 1 - Has non-alphanumeric:', /[^a-zA-Z0-9]/.test(cleanClientKey))
+    console.log('=== Client Key Validation ===')
+    console.log('Original key length:', cleanClientKey.length)
+    console.log('Original key preview:', cleanClientKey.substring(0, 10) + '...')
     
-    // Remove all whitespace characters
-    cleanClientKey = cleanClientKey.replace(/\s/g, '')
-    console.log('Step 2 - After whitespace removal length:', cleanClientKey.length)
+    // Remove all whitespace and non-alphanumeric characters
+    cleanClientKey = cleanClientKey.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '')
+    console.log('Cleaned key length:', cleanClientKey.length)
+    console.log('Cleaned key preview:', cleanClientKey.substring(0, 10) + '...')
     
-    // Log each character for debugging
-    console.log('Step 3 - Character analysis:')
-    for (let i = 0; i < Math.min(cleanClientKey.length, 20); i++) {
-      const char = cleanClientKey[i]
-      const code = char.charCodeAt(0)
-      console.log(`  Char ${i}: "${char}" (code: ${code}) ${/[a-zA-Z0-9]/.test(char) ? 'VALID' : 'INVALID'}`)
-    }
-    
-    // Check for any remaining problematic characters
-    const problematicChars = cleanClientKey.match(/[^a-zA-Z0-9]/g)
-    if (problematicChars && problematicChars.length > 0) {
-      console.error('CRITICAL: Client key contains invalid characters:', problematicChars)
-      console.error('Invalid character codes:', problematicChars.map(c => c.charCodeAt(0)))
-      
-      return new Response(
-        JSON.stringify({ 
-          error: 'TikTok Client ID contains invalid characters',
-          details: `Client ID must contain only letters and numbers. Found invalid characters: ${problematicChars.join(', ')} (codes: ${problematicChars.map(c => c.charCodeAt(0)).join(', ')})`,
-          debug: {
-            originalLength: rawClientKey.length,
-            cleanedLength: cleanClientKey.length,
-            invalidChars: problematicChars,
-            invalidCodes: problematicChars.map(c => c.charCodeAt(0))
-          }
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
-
-    // Validate final client key
     if (cleanClientKey.length === 0) {
-      console.error('TikTok Client ID is empty after sanitization')
+      console.error('Client key is empty after cleaning')
       return new Response(
         JSON.stringify({ 
-          error: 'TikTok Client ID is empty',
-          details: 'Client key is empty after removing invalid characters'
+          error: 'Invalid TikTok Client ID',
+          details: 'Client ID contains only invalid characters'
         }),
         {
           status: 500,
@@ -132,13 +115,51 @@ serve(async (req) => {
       )
     }
 
-    // Validate minimum length
     if (cleanClientKey.length < 10) {
-      console.error('TikTok Client ID appears too short:', cleanClientKey.length)
+      console.error('Client key too short after cleaning:', cleanClientKey.length)
       return new Response(
         JSON.stringify({ 
-          error: 'TikTok Client ID appears invalid',
-          details: `Client ID length (${cleanClientKey.length}) is too short. Expected at least 10 characters.`
+          error: 'Invalid TikTok Client ID',
+          details: `Client ID too short (${cleanClientKey.length} characters)`
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Validate and clean client secret
+    let cleanClientSecret = String(rawClientSecret)
+    console.log('=== Client Secret Validation ===')
+    console.log('Original secret length:', cleanClientSecret.length)
+    console.log('Original secret preview:', cleanClientSecret.substring(0, 8) + '...')
+    
+    // Remove all whitespace and non-alphanumeric characters
+    cleanClientSecret = cleanClientSecret.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '')
+    console.log('Cleaned secret length:', cleanClientSecret.length)
+    console.log('Cleaned secret preview:', cleanClientSecret.substring(0, 8) + '...')
+    
+    if (cleanClientSecret.length === 0) {
+      console.error('Client secret is empty after cleaning')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid TikTok Client Secret',
+          details: 'Client Secret contains only invalid characters'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (cleanClientSecret.length < 10) {
+      console.error('Client secret too short after cleaning:', cleanClientSecret.length)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid TikTok Client Secret',
+          details: `Client Secret too short (${cleanClientSecret.length} characters)`
         }),
         {
           status: 500,
@@ -151,44 +172,37 @@ serve(async (req) => {
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://thinkpost.co'
     const redirectUri = `${origin}/tiktok-callback`
 
-    // Log final configuration
-    console.log('=== Final TikTok Config ===')
-    console.log('Clean client key length:', cleanClientKey.length)
-    console.log('Clean client key preview:', cleanClientKey.substring(0, 8) + '...')
+    // Test TikTok API compatibility by making a simple request to validate credentials
+    console.log('=== Testing TikTok API Compatibility ===')
+    console.log('Using cleaned client key length:', cleanClientKey.length)
+    console.log('Using cleaned client secret length:', cleanClientSecret.length)
     console.log('Redirect URI:', redirectUri)
-    console.log('Request origin:', origin)
     
-    // Additional validation: ensure the client key matches expected TikTok format
-    // TikTok client keys are typically alphanumeric and around 18-24 characters
-    if (cleanClientKey.length < 15 || cleanClientKey.length > 30) {
-      console.warn('WARNING: Client key length is unusual for TikTok:', cleanClientKey.length)
-    }
+    // Create a test authorization URL to validate the client_key format
+    const testParams = new URLSearchParams()
+    testParams.append('client_key', cleanClientKey)
+    testParams.append('response_type', 'code')
+    testParams.append('scope', 'user.info.basic')
+    testParams.append('redirect_uri', redirectUri)
+    testParams.append('state', 'test')
     
-    // Final character validation
-    if (!/^[a-zA-Z0-9]+$/.test(cleanClientKey)) {
-      console.error('FINAL VALIDATION FAILED: Client key still contains non-alphanumeric characters')
-      return new Response(
-        JSON.stringify({ 
-          error: 'Client key validation failed',
-          details: 'Client key contains characters that are not letters or numbers'
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
+    const testUrl = `https://www.tiktok.com/v2/auth/authorize/?${testParams.toString()}`
+    console.log('Generated test URL length:', testUrl.length)
+    console.log('Test URL preview:', testUrl.substring(0, 100) + '...')
     
-    console.log('SUCCESS: Client key passed all validations')
+    console.log('SUCCESS: All validations passed')
     
     return new Response(
       JSON.stringify({ 
         clientKey: cleanClientKey,
         redirectUri,
         debug: {
-          originalLength: rawClientKey.length,
-          cleanedLength: cleanClientKey.length,
-          origin: origin
+          originalClientKeyLength: rawClientKey.length,
+          cleanedClientKeyLength: cleanClientKey.length,
+          originalSecretLength: rawClientSecret.length,
+          cleanedSecretLength: cleanClientSecret.length,
+          origin: origin,
+          testUrlGenerated: true
         }
       }),
       {
