@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,6 +121,21 @@ export const useTikTokConnectionData = () => {
         throw new Error('No client key received from configuration');
       }
       
+      // Additional frontend validation
+      const clientKey = String(data.clientKey).trim();
+      if (clientKey.length === 0) {
+        throw new Error('Client key is empty');
+      }
+      
+      // Check for invalid characters
+      if (!/^[a-zA-Z0-9]+$/.test(clientKey)) {
+        throw new Error('Client key contains invalid characters. Only letters and numbers are allowed.');
+      }
+      
+      if (clientKey.length < 10) {
+        throw new Error('Client key appears to be too short');
+      }
+      
       return data;
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
@@ -131,6 +145,8 @@ export const useTikTokConnectionData = () => {
         throw new Error('TikTok integration is not properly configured. Please contact support.');
       } else if (error.message?.includes('Authorization required')) {
         throw new Error('Authentication failed. Please try logging in again.');
+      } else if (error.message?.includes('invalid characters')) {
+        throw new Error('TikTok configuration contains invalid characters. Please contact support.');
       } else {
         throw new Error('Failed to get TikTok configuration. Please try again.');
       }
@@ -176,10 +192,15 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Clean the client key - remove any whitespace and ensure it's a string
-      const cleanClientKey = String(config.clientKey).trim();
-      console.log('Clean client key:', cleanClientKey);
-      console.log('Clean client key length:', cleanClientKey.length);
+      // Enhanced client key cleaning - remove any remaining whitespace and validate
+      const cleanClientKey = String(config.clientKey).replace(/\s/g, '');
+      console.log('Final clean client key length:', cleanClientKey.length);
+      console.log('Final clean client key preview:', cleanClientKey.substring(0, 8) + '...');
+      
+      // Final validation before redirect
+      if (!/^[a-zA-Z0-9]+$/.test(cleanClientKey)) {
+        throw new Error('Client key contains invalid characters after cleaning');
+      }
       
       // Build TikTok OAuth URL with proper encoding - TikTok requires specific parameter order
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
@@ -198,7 +219,7 @@ export const useTikTokConnectionData = () => {
         scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
         state: state,
-        fullUrl: tiktokAuthUrl
+        fullUrl: tiktokAuthUrl.substring(0, 100) + '...'
       });
       
       toast({

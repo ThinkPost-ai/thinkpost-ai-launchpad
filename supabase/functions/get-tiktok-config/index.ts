@@ -53,13 +53,13 @@ serve(async (req) => {
     console.log('User verified:', user.id)
 
     // Get TikTok client key from environment
-    const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
+    const rawClientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     
-    console.log('TikTok Client Key configured:', !!clientKey)
-    console.log('TikTok Client Key length:', clientKey?.length || 0)
-    console.log('TikTok Client Key type:', typeof clientKey)
+    console.log('Raw TikTok Client Key configured:', !!rawClientKey)
+    console.log('Raw TikTok Client Key length:', rawClientKey?.length || 0)
+    console.log('Raw TikTok Client Key type:', typeof rawClientKey)
     
-    if (!clientKey) {
+    if (!rawClientKey) {
       console.error('TikTok Client ID not configured')
       return new Response(
         JSON.stringify({ 
@@ -73,14 +73,32 @@ serve(async (req) => {
       )
     }
 
-    // Validate client key format
-    const trimmedClientKey = clientKey.trim()
-    if (trimmedClientKey.length === 0) {
-      console.error('TikTok Client ID is empty after trimming')
+    // Enhanced client key sanitization
+    // 1. Convert to string and trim whitespace
+    let cleanClientKey = String(rawClientKey).trim()
+    
+    // 2. Remove all whitespace characters (spaces, tabs, newlines)
+    cleanClientKey = cleanClientKey.replace(/\s/g, '')
+    
+    // 3. Log detailed information about the key
+    console.log('After trimming - Client Key length:', cleanClientKey.length)
+    console.log('Client Key first 8 chars:', cleanClientKey.substring(0, 8))
+    console.log('Client Key last 8 chars:', cleanClientKey.substring(-8))
+    
+    // Check for any remaining problematic characters
+    const hasNonAlphanumeric = /[^a-zA-Z0-9]/.test(cleanClientKey)
+    console.log('Client key has non-alphanumeric characters:', hasNonAlphanumeric)
+    
+    if (hasNonAlphanumeric) {
+      console.warn('Client key contains non-alphanumeric characters, this will cause TikTok OAuth to fail')
+      // Log the problematic characters for debugging
+      const problematicChars = cleanClientKey.match(/[^a-zA-Z0-9]/g)
+      console.log('Problematic characters found:', problematicChars)
+      
       return new Response(
         JSON.stringify({ 
-          error: 'TikTok Client ID is empty',
-          details: 'Please check TIKTOK_CLIENT_ID configuration'
+          error: 'TikTok Client ID contains invalid characters',
+          details: 'Client ID must contain only letters and numbers. Found invalid characters: ' + (problematicChars?.join(', ') || 'unknown')
         }),
         {
           status: 500,
@@ -89,12 +107,34 @@ serve(async (req) => {
       )
     }
 
-    // Check if client key contains any problematic characters
-    const hasSpecialChars = /[^a-zA-Z0-9]/.test(trimmedClientKey)
-    console.log('Client key has special characters:', hasSpecialChars)
-    
-    if (hasSpecialChars) {
-      console.warn('Client key contains special characters, this might cause issues')
+    // Validate final client key
+    if (cleanClientKey.length === 0) {
+      console.error('TikTok Client ID is empty after sanitization')
+      return new Response(
+        JSON.stringify({ 
+          error: 'TikTok Client ID is empty',
+          details: 'Please check TIKTOK_CLIENT_ID configuration - key is empty after removing whitespace'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Final validation - ensure it looks like a valid TikTok client key
+    if (cleanClientKey.length < 10) {
+      console.error('TikTok Client ID appears too short:', cleanClientKey.length)
+      return new Response(
+        JSON.stringify({ 
+          error: 'TikTok Client ID appears invalid',
+          details: `Client ID length (${cleanClientKey.length}) is too short. Expected at least 10 characters.`
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     // Get the origin from the request headers and construct the redirect URI
@@ -104,14 +144,14 @@ serve(async (req) => {
     const redirectUri = `${origin}/tiktok-callback`
 
     console.log('Returning TikTok config to user:', user.id)
-    console.log('Client Key (sanitized):', trimmedClientKey.substring(0, 8) + '...')
-    console.log('Client Key length:', trimmedClientKey.length)
+    console.log('Final sanitized Client Key (first 8 chars):', cleanClientKey.substring(0, 8) + '...')
+    console.log('Final Client Key length:', cleanClientKey.length)
     console.log('Using redirect URI:', redirectUri)
     console.log('Request origin:', origin)
     
     return new Response(
       JSON.stringify({ 
-        clientKey: trimmedClientKey,
+        clientKey: cleanClientKey,
         redirectUri
       }),
       {
