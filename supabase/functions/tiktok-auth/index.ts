@@ -31,6 +31,10 @@ Deno.serve(async (req) => {
     const tiktokClientId = Deno.env.get('TIKTOK_CLIENT_ID')
     const redirectUri = Deno.env.get('TIKTOK_REDIRECT_URI')
     
+    // Debug logging
+    console.log("🔐 client_key:", tiktokClientId);
+    console.log("↩️ redirect_uri:", redirectUri);
+    
     if (!tiktokClientId) {
       return new Response(JSON.stringify({ error: 'TikTok client ID not configured' }), {
         status: 500,
@@ -77,6 +81,9 @@ Deno.serve(async (req) => {
     tiktokAuthUrl.searchParams.set('scope', 'user.info.basic')
     tiktokAuthUrl.searchParams.set('redirect_uri', redirectUri)
     tiktokAuthUrl.searchParams.set('state', state)
+
+    // Debug logging for final URL
+    console.log("📤 TikTok Auth URL:", tiktokAuthUrl.toString());
 
     return new Response(JSON.stringify({ authUrl: tiktokAuthUrl.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
