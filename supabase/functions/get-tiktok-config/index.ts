@@ -56,6 +56,7 @@ serve(async (req) => {
     const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     
     console.log('TikTok Client Key configured:', !!clientKey)
+    console.log('TikTok Client Key value:', clientKey)
     console.log('TikTok Client Key length:', clientKey?.length || 0)
     
     if (!clientKey) {
@@ -72,11 +73,26 @@ serve(async (req) => {
       )
     }
 
+    // Validate client key format (should be alphanumeric)
+    if (!/^[a-zA-Z0-9]+$/.test(clientKey)) {
+      console.error('TikTok Client ID has invalid format:', clientKey)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid TikTok Client ID format',
+          details: 'Client ID should only contain alphanumeric characters'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // The redirect URI should match what's configured in your TikTok app
     const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
 
     console.log('Returning TikTok config to user:', user.id)
-    console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
+    console.log('Client Key:', clientKey)
     console.log('Using redirect URI:', redirectUri)
     
     return new Response(

@@ -120,17 +120,20 @@ export const useTikTokConnectionData = () => {
       });
 
       if (configError) {
+        console.error('Config error:', configError);
         throw new Error(configError.message || 'Failed to get TikTok configuration');
       }
 
       if (!config || !config.clientKey) {
+        console.error('No client key in config:', config);
         throw new Error('TikTok client key not available');
       }
       
-      console.log('Using TikTok config from server:', {
+      console.log('TikTok config received:', {
         hasClientKey: !!config.clientKey,
         clientKeyLength: config.clientKey?.length || 0,
-        redirectUri: config.redirectUri
+        redirectUri: config.redirectUri,
+        clientKeyStart: config.clientKey?.substring(0, 10)
       });
       
       // Generate state token for CSRF protection
@@ -140,21 +143,21 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Build TikTok OAuth URL with required scopes for video publishing
-      const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
-      const params = new URLSearchParams({
+      // Build TikTok OAuth URL exactly as specified in TikTok docs
+      const authParams = new URLSearchParams({
         client_key: config.clientKey,
-        response_type: 'code',
         scope: 'user.info.basic,video.upload,video.publish',
+        response_type: 'code',
         redirect_uri: config.redirectUri,
         state: state
       });
       
-      const tiktokAuthUrl = baseUrl + '?' + params.toString();
+      const tiktokAuthUrl = `https://www.tiktok.com/v2/auth/authorize/?${authParams.toString()}`;
       
       console.log('TikTok OAuth URL parameters:', {
-        client_key: config.clientKey.substring(0, 10) + '...',
+        client_key: config.clientKey,
         scope: 'user.info.basic,video.upload,video.publish',
+        response_type: 'code',
         redirect_uri: config.redirectUri,
         state: state
       });
@@ -165,12 +168,15 @@ export const useTikTokConnectionData = () => {
         description: "Please authorize all permissions including video publishing when prompted",
       });
       
-      // Force redirect in top-level window to avoid CORS issues
-      if (window.top) {
-        window.top.location.href = tiktokAuthUrl;
-      } else {
-        window.location.href = tiktokAuthUrl;
-      }
+      // Small delay to ensure toast is visible
+      setTimeout(() => {
+        // Force redirect in top-level window to avoid CORS issues
+        if (window.top) {
+          window.top.location.href = tiktokAuthUrl;
+        } else {
+          window.location.href = tiktokAuthUrl;
+        }
+      }, 1000);
       
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
