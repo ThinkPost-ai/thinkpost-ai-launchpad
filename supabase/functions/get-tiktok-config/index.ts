@@ -88,13 +88,14 @@ serve(async (req) => {
       )
     }
 
-    // Use the correct redirect URI that points to your frontend callback page
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const redirectUri = `${window.location.origin}/api/tiktok/callback`
+    // Get the origin from the request headers instead of window.location
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:3000'
+    const redirectUri = `${origin}/api/tiktok/callback`
 
     console.log('Returning TikTok config to user:', user.id)
     console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
     console.log('Using redirect URI:', redirectUri)
+    console.log('Request origin:', origin)
     
     return new Response(
       JSON.stringify({ 
