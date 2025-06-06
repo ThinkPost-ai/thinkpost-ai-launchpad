@@ -54,10 +54,11 @@ export const useDashboardData = () => {
         .from('profiles')
         .select('caption_credits')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
+        // Don't throw error here, just log it since the user might not have a profile yet
       }
 
       // Fetch images count
@@ -80,6 +81,7 @@ export const useDashboardData = () => {
       }));
 
     } catch (error: any) {
+      console.error('Dashboard data fetch error:', error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",
