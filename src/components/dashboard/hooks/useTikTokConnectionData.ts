@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,7 +96,7 @@ export const useTikTokConnectionData = () => {
 
   const getTikTokConfig = async () => {
     try {
-      console.log('Fetching TikTok config from backend...');
+      console.log('=== Frontend: Fetching TikTok config ===');
       console.log('Session token available:', !!session?.access_token);
       
       const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
@@ -109,26 +110,27 @@ export const useTikTokConnectionData = () => {
         throw error;
       }
       
-      console.log('TikTok config received:', { 
-        hasClientKey: !!data?.clientKey, 
-        clientKeyLength: data?.clientKey?.length,
-        clientKeyStart: data?.clientKey?.substring(0, 8),
-        redirectUri: data?.redirectUri 
-      });
+      console.log('=== Frontend: TikTok config received ===');
+      console.log('Has client key:', !!data?.clientKey);
+      console.log('Client key length:', data?.clientKey?.length || 0);
+      console.log('Client key preview:', data?.clientKey?.substring(0, 8) + '...');
+      console.log('Redirect URI:', data?.redirectUri);
+      console.log('Debug info:', data?.debug);
       
-      // Validate the received config
+      // Frontend validation
       if (!data?.clientKey) {
         throw new Error('No client key received from configuration');
       }
       
-      // Additional frontend validation
       const clientKey = String(data.clientKey).trim();
       if (clientKey.length === 0) {
         throw new Error('Client key is empty');
       }
       
-      // Check for invalid characters
+      // Strict validation
       if (!/^[a-zA-Z0-9]+$/.test(clientKey)) {
+        console.error('Frontend validation failed: Invalid characters in client key');
+        console.error('Client key characters:', clientKey.split('').map((c, i) => `${i}: "${c}" (${c.charCodeAt(0)})`));
         throw new Error('Client key contains invalid characters. Only letters and numbers are allowed.');
       }
       
@@ -136,6 +138,7 @@ export const useTikTokConnectionData = () => {
         throw new Error('Client key appears to be too short');
       }
       
+      console.log('Frontend validation passed');
       return data;
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
@@ -154,8 +157,9 @@ export const useTikTokConnectionData = () => {
   };
 
   const handleConnect = async () => {
-    console.log('handleConnect called, checking session:', session?.access_token ? 'present' : 'missing');
-    console.log('User state:', user ? 'present' : 'missing');
+    console.log('=== Frontend: Starting TikTok connection ===');
+    console.log('Session available:', !!session?.access_token);
+    console.log('User available:', !!user);
     
     if (!session?.access_token || !user) {
       console.error('No valid session or user found');
@@ -168,7 +172,6 @@ export const useTikTokConnectionData = () => {
     }
 
     setConnecting(true);
-    console.log('Starting TikTok connection process...');
     
     try {
       // Get TikTok configuration from backend
@@ -178,12 +181,9 @@ export const useTikTokConnectionData = () => {
         throw new Error('TikTok client key not available');
       }
       
-      console.log('Using TikTok config:', {
-        hasClientKey: !!config.clientKey,
-        clientKeyLength: config.clientKey?.length || 0,
-        clientKeyStart: config.clientKey?.substring(0, 8),
-        redirectUri: config.redirectUri
-      });
+      console.log('=== Frontend: Building OAuth URL ===');
+      console.log('Using client key length:', config.clientKey.length);
+      console.log('Using redirect URI:', config.redirectUri);
       
       // Generate state token for CSRF protection
       const state = crypto.randomUUID();
@@ -192,42 +192,47 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Enhanced client key cleaning - remove any remaining whitespace and validate
-      const cleanClientKey = String(config.clientKey).replace(/\s/g, '');
+      // Final client key validation and cleaning
+      const cleanClientKey = String(config.clientKey).replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '');
       console.log('Final clean client key length:', cleanClientKey.length);
       console.log('Final clean client key preview:', cleanClientKey.substring(0, 8) + '...');
       
-      // Final validation before redirect
       if (!/^[a-zA-Z0-9]+$/.test(cleanClientKey)) {
-        throw new Error('Client key contains invalid characters after cleaning');
+        throw new Error('Client key contains invalid characters after final cleaning');
       }
       
-      // Build TikTok OAuth URL with proper encoding - TikTok requires specific parameter order
+      if (cleanClientKey.length < 10) {
+        throw new Error('Client key too short after cleaning');
+      }
+      
+      // Build TikTok OAuth URL following TikTok's exact specification
+      // Order matters for TikTok: client_key, response_type, scope, redirect_uri, state
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
-      const params = [
-        `client_key=${encodeURIComponent(cleanClientKey)}`,
-        'response_type=code',
-        `scope=${encodeURIComponent('user.info.basic,video.upload,video.publish')}`,
-        `redirect_uri=${encodeURIComponent(config.redirectUri)}`,
-        `state=${encodeURIComponent(state)}`
-      ];
+      const scope = 'user.info.basic,video.upload,video.publish';
       
-      const tiktokAuthUrl = `${baseUrl}?${params.join('&')}`;
+      const params = new URLSearchParams();
+      params.append('client_key', cleanClientKey);
+      params.append('response_type', 'code');
+      params.append('scope', scope);
+      params.append('redirect_uri', config.redirectUri);
+      params.append('state', state);
       
-      console.log('TikTok OAuth URL parameters:', {
-        client_key: cleanClientKey.substring(0, 10) + '...',
-        scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: config.redirectUri,
-        state: state,
-        fullUrl: tiktokAuthUrl.substring(0, 100) + '...'
-      });
+      const tiktokAuthUrl = `${baseUrl}?${params.toString()}`;
+      
+      console.log('=== Frontend: Final OAuth URL ===');
+      console.log('Base URL:', baseUrl);
+      console.log('Client Key (preview):', cleanClientKey.substring(0, 10) + '...');
+      console.log('Scope:', scope);
+      console.log('Redirect URI:', config.redirectUri);
+      console.log('State:', state);
+      console.log('Full URL length:', tiktokAuthUrl.length);
       
       toast({
         title: "Redirecting to TikTok",
         description: "Please authorize all permissions including video publishing when prompted",
       });
       
-      // Force redirect in top-level window to avoid CORS issues
+      // Force redirect in top-level window
       if (window.top) {
         window.top.location.href = tiktokAuthUrl;
       } else {
