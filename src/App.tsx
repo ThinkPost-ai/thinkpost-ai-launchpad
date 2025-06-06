@@ -14,6 +14,7 @@ import RestaurantSetup from "./pages/RestaurantSetup";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
 import TikTokCallback from "./pages/TikTokCallback";
+import TikTokLoginCallback from "./pages/TikTokLoginCallback";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
