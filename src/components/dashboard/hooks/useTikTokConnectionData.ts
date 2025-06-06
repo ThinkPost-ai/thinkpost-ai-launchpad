@@ -112,13 +112,25 @@ export const useTikTokConnectionData = () => {
     console.log('Starting TikTok connection process...');
     
     try {
-      const clientKey = 'aw07lO3hlng4i5HI';  // Your actual TikTok Client ID
-      const redirectUri = `${window.location.origin}/api/tiktok/callback`;
+      // Get TikTok configuration from our edge function
+      const { data: config, error: configError } = await supabase.functions.invoke('get-tiktok-config', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (configError) {
+        throw new Error(configError.message || 'Failed to get TikTok configuration');
+      }
+
+      if (!config || !config.clientKey) {
+        throw new Error('TikTok client key not available');
+      }
       
-      console.log('Using TikTok config:', {
-        hasClientKey: !!clientKey,
-        clientKeyLength: clientKey?.length || 0,
-        redirectUri: redirectUri
+      console.log('Using TikTok config from server:', {
+        hasClientKey: !!config.clientKey,
+        clientKeyLength: config.clientKey?.length || 0,
+        redirectUri: config.redirectUri
       });
       
       // Generate state token for CSRF protection
@@ -131,19 +143,19 @@ export const useTikTokConnectionData = () => {
       // Build TikTok OAuth URL with required scopes for video publishing
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
       const params = new URLSearchParams({
-        client_key: clientKey,
+        client_key: config.clientKey,
         response_type: 'code',
         scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: redirectUri,
+        redirect_uri: config.redirectUri,
         state: state
       });
       
       const tiktokAuthUrl = baseUrl + '?' + params.toString();
       
       console.log('TikTok OAuth URL parameters:', {
-        client_key: clientKey.substring(0, 10) + '...',
+        client_key: config.clientKey.substring(0, 10) + '...',
         scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: redirectUri,
+        redirect_uri: config.redirectUri,
         state: state
       });
       console.log('Full TikTok OAuth URL:', tiktokAuthUrl);
