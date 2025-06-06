@@ -44,7 +44,7 @@ const ProfileSettings = () => {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {t('common.back')}
+            Go Back
           </Button>
           <h1 className="text-3xl font-bold text-deep-blue dark:text-white">
             {t('dashboard.profile.profileSettings')}
