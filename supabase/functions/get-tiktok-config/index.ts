@@ -73,7 +73,7 @@ serve(async (req) => {
     }
 
     // The redirect URI should match what's configured in your TikTok app
-    const redirectUri = `${window.location.origin}/api/tiktok/callback`
+    const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
 
     console.log('Returning TikTok config to user:', user.id)
     console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
