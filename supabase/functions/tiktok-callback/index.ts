@@ -48,15 +48,14 @@ Deno.serve(async (req) => {
     // Exchange code for access token
     const tiktokClientId = Deno.env.get('TIKTOK_CLIENT_ID')
     const tiktokClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
+    const redirectUri = Deno.env.get('TIKTOK_REDIRECT_URI')
 
-    if (!tiktokClientId || !tiktokClientSecret) {
+    if (!tiktokClientId || !tiktokClientSecret || !redirectUri) {
       return new Response(JSON.stringify({ error: 'TikTok credentials not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    const redirectUri = `${req.url.split('/supabase/functions')[0]}/tiktok-login-callback`
 
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
@@ -126,11 +125,16 @@ Deno.serve(async (req) => {
       .eq('state_token', state)
 
     // Redirect to dashboard with success
+    const dashboardUrl = new URL(redirectUri)
+    dashboardUrl.pathname = '/user-dashboard'
+    dashboardUrl.searchParams.set('tab', 'overview')
+    dashboardUrl.searchParams.set('tiktok', 'connected')
+
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
-        'Location': `${req.url.split('/supabase/functions')[0]}/user-dashboard?tab=overview&tiktok=connected`,
+        'Location': dashboardUrl.toString(),
       },
     })
   } catch (error) {

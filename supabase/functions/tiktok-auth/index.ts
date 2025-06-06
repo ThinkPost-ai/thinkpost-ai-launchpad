@@ -29,6 +29,8 @@ Deno.serve(async (req) => {
     }
 
     const tiktokClientId = Deno.env.get('TIKTOK_CLIENT_ID')
+    const redirectUri = Deno.env.get('TIKTOK_REDIRECT_URI')
+    
     if (!tiktokClientId) {
       return new Response(JSON.stringify({ error: 'TikTok client ID not configured' }), {
         status: 500,
@@ -36,9 +38,15 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (!redirectUri) {
+      return new Response(JSON.stringify({ error: 'TikTok redirect URI not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Generate a secure state parameter
     const state = crypto.randomUUID()
-    const redirectUri = `${req.url.split('/supabase/functions')[0]}/tiktok-login-callback`
 
     // Use service role client to insert state (bypasses RLS)
     const serviceRoleClient = createClient(
