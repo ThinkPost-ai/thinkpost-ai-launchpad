@@ -18,11 +18,7 @@ const TikTokSignInButton = ({ onSuccess }: TikTokSignInButtonProps) => {
     
     try {
       // Get TikTok configuration from our edge function
-      const { data: config, error: configError } = await supabase.functions.invoke('get-tiktok-config', {
-        headers: {
-          Authorization: `Bearer ${supabase.supabaseKey}`,
-        },
-      });
+      const { data: config, error: configError } = await supabase.functions.invoke('get-tiktok-config');
 
       if (configError) {
         console.error('Config error:', configError);
