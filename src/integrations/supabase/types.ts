@@ -77,33 +77,27 @@ export type Database = {
       }
       profiles: {
         Row: {
-          auth_provider: string | null
           avatar_url: string | null
           caption_credits: number
           display_name: string | null
           full_name: string | null
           id: string
-          tiktok_open_id: string | null
           updated_at: string
         }
         Insert: {
-          auth_provider?: string | null
           avatar_url?: string | null
           caption_credits?: number
           display_name?: string | null
           full_name?: string | null
           id: string
-          tiktok_open_id?: string | null
           updated_at?: string
         }
         Update: {
-          auth_provider?: string | null
           avatar_url?: string | null
           caption_credits?: number
           display_name?: string | null
           full_name?: string | null
           id?: string
-          tiktok_open_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -255,48 +249,6 @@ export type Database = {
           id?: string
           state_token?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      tiktok_users: {
-        Row: {
-          access_token: string
-          avatar_url: string | null
-          created_at: string
-          display_name: string | null
-          id: string
-          refresh_token: string | null
-          scope: string | null
-          tiktok_open_id: string
-          token_expires_at: string | null
-          updated_at: string
-          username: string | null
-        }
-        Insert: {
-          access_token: string
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_open_id: string
-          token_expires_at?: string | null
-          updated_at?: string
-          username?: string | null
-        }
-        Update: {
-          access_token?: string
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_open_id?: string
-          token_expires_at?: string | null
-          updated_at?: string
-          username?: string | null
         }
         Relationships: []
       }

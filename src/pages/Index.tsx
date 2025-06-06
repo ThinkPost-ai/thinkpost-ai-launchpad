@@ -1,29 +1,24 @@
 
-import { useEffect } from 'react';
+import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
-import Pricing from '@/components/Pricing';
 import Testimonials from '@/components/Testimonials';
+import Pricing from '@/components/Pricing';
 import FAQ from '@/components/FAQ';
-import { useTikTokAuth } from '@/hooks/useTikTokAuth';
+import Footer from '@/components/Footer';
 
 const Index = () => {
-  const { checkTikTokAuthCallback } = useTikTokAuth();
-
-  useEffect(() => {
-    // Check for TikTok authentication callback when component mounts
-    checkTikTokAuthCallback();
-  }, [checkTikTokAuthCallback]);
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+      <Header />
       <Hero />
       <Features />
       <HowItWorks />
-      <Pricing />
       <Testimonials />
+      <Pricing />
       <FAQ />
+      <Footer />
     </div>
   );
 };

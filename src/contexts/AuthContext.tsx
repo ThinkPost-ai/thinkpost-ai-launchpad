@@ -1,18 +1,18 @@
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
-  signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signInWithTikTok: () => Promise<void>;
-  checkUserProfile: () => Promise<void>;
+  session: Session | null;
   loading: boolean;
+  hasRestaurant: boolean | null;
+  checkingProfile: boolean;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  checkUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,90 +26,138 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
+  const [checkingProfile, setCheckingProfile] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+  const checkUserProfile = async () => {
+    if (!user) {
+      setHasRestaurant(null);
+      return;
+    }
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    setCheckingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setHasRestaurant(!!data);
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+      setHasRestaurant(false);
+    } finally {
+      setCheckingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Check profile when user logs in
+        if (session?.user && event === 'SIGNED_IN') {
+          await checkUserProfile();
+        } else if (!session?.user) {
+          setHasRestaurant(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Get initial session
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await checkUserProfile();
+      }
+      
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: fullName
+          }
+        }
       });
-      
+
       if (error) {
         toast({
-          title: "Sign In Failed",
+          title: "Sign up failed",
           description: error.message,
           variant: "destructive"
         });
+        return { error };
       }
-      
-      return { error };
+
+      toast({
+        title: "Account created successfully!",
+        description: "Please check your email to confirm your account."
+      });
+
+      return { error: null };
     } catch (error: any) {
       toast({
-        title: "Sign In Failed",
-        description: "An unexpected error occurred",
+        title: "Sign up failed",
+        description: error.message,
         variant: "destructive"
       });
       return { error };
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-          }
-        }
+        password
       });
-      
+
       if (error) {
         toast({
-          title: "Sign Up Failed",
+          title: "Sign in failed",
           description: error.message,
           variant: "destructive"
         });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link",
-        });
+        return { error };
       }
-      
-      return { error };
+
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully."
+      });
+
+      return { error: null };
     } catch (error: any) {
       toast({
-        title: "Sign Up Failed", 
-        description: "An unexpected error occurred",
+        title: "Sign in failed",
+        description: error.message,
         variant: "destructive"
       });
       return { error };
@@ -117,51 +165,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Sign out failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        setHasRestaurant(null);
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully."
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Sign Out Failed",
+        title: "Sign out failed",
         description: error.message,
         variant: "destructive"
       });
-      throw error;
-    }
-  };
-
-  const signInWithTikTok = async () => {
-    // This is handled by the TikTokSignInButton component
-    // The actual OAuth flow redirects to TikTok and back
-    throw new Error('Use TikTokSignInButton component for TikTok authentication');
-  };
-
-  const checkUserProfile = async () => {
-    if (!user) return;
-    
-    try {
-      // This method can be used to refresh user profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      console.log('User profile checked:', profile);
-    } catch (error) {
-      console.error('Error checking user profile:', error);
     }
   };
 
   const value = {
-    session,
     user,
-    signOut,
-    signIn,
-    signUp,
-    signInWithTikTok,
-    checkUserProfile,
+    session,
     loading,
+    hasRestaurant,
+    checkingProfile,
+    signUp,
+    signIn,
+    signOut,
+    checkUserProfile
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

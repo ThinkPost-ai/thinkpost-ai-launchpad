@@ -2,10 +2,8 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
-import TikTokSignInButton from './TikTokSignInButton';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -33,22 +31,6 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
             <span className="text-lg font-bold text-deep-blue dark:text-white">ThinkPost</span>
           </div>
         </DialogHeader>
-
-        {/* TikTok Sign In Button */}
-        <div className="space-y-4">
-          <TikTokSignInButton onSuccess={handleAuthSuccess} />
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
-                Or continue with
-              </span>
-            </div>
-          </div>
-        </div>
 
         {/* Tab Switcher */}
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
