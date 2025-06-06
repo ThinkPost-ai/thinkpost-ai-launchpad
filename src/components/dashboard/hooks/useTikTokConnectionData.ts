@@ -96,18 +96,32 @@ export const useTikTokConnectionData = () => {
 
   const getTikTokConfig = async () => {
     try {
+      console.log('Fetching TikTok config from backend...');
+      
       const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
       
+      console.log('TikTok config received:', { hasClientKey: !!data?.clientKey, redirectUri: data?.redirectUri });
       return data;
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
-      throw new Error('Failed to get TikTok configuration');
+      
+      // Provide more specific error messages
+      if (error.message?.includes('not configured')) {
+        throw new Error('TikTok integration is not properly configured. Please contact support.');
+      } else if (error.message?.includes('Authorization required')) {
+        throw new Error('Authentication failed. Please try logging in again.');
+      } else {
+        throw new Error('Failed to get TikTok configuration. Please try again.');
+      }
     }
   };
 
