@@ -91,15 +91,18 @@ serve(async (req) => {
     // Build TikTok OAuth URL using the EXACT format specified in TikTok Login Kit docs
     const authUrl = `https://www.tiktok.com/v2/auth/authorize?client_key=${clientKey}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
-    console.log('Generated TikTok OAuth URL:')
-    console.log('Full URL:', authUrl)
-    console.log('URL Components:')
-    console.log('- Base URL: https://www.tiktok.com/v2/auth/authorize')
-    console.log('- client_key:', clientKey)
-    console.log('- scope (encoded):', encodeURIComponent(scope))
-    console.log('- response_type:', responseType)
-    console.log('- redirect_uri (encoded):', encodeURIComponent(redirectUri))
-    console.log('- state:', state)
+    console.log('=== FINAL OAUTH URL FOR MANUAL TESTING ===')
+    console.log('Complete OAuth URL:', authUrl)
+    console.log('=== URL BREAKDOWN ===')
+    console.log('Base:', 'https://www.tiktok.com/v2/auth/authorize')
+    console.log('client_key:', clientKey)
+    console.log('scope (original):', scope)
+    console.log('scope (encoded):', encodeURIComponent(scope))
+    console.log('response_type:', responseType)
+    console.log('redirect_uri (original):', redirectUri)
+    console.log('redirect_uri (encoded):', encodeURIComponent(redirectUri))
+    console.log('state:', state)
+    console.log('=== END URL BREAKDOWN ===')
     
     return new Response(
       JSON.stringify({ 
