@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import ProductCreation from "./pages/ProductCreation";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import TikTokLoginCallback from "./pages/TikTokLoginCallback";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +37,7 @@ const App = () => (
                 <Route path="/upload" element={<ProductCreation />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/tiktok-login-callback" element={<TikTokLoginCallback />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

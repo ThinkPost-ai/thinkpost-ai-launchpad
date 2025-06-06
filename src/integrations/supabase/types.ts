@@ -83,7 +83,11 @@ export type Database = {
           display_name: string | null
           full_name: string | null
           id: string
+          tiktok_avatar_url: string | null
+          tiktok_connected: boolean | null
           tiktok_open_id: string | null
+          tiktok_token: string | null
+          tiktok_username: string | null
           updated_at: string
         }
         Insert: {
@@ -93,7 +97,11 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id: string
+          tiktok_avatar_url?: string | null
+          tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_token?: string | null
+          tiktok_username?: string | null
           updated_at?: string
         }
         Update: {
@@ -103,7 +111,11 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id?: string
+          tiktok_avatar_url?: string | null
+          tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_token?: string | null
+          tiktok_username?: string | null
           updated_at?: string
         }
         Relationships: []
