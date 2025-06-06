@@ -15,7 +15,6 @@ export const useTikTokConnectionData = () => {
   useEffect(() => {
     if (user) {
       fetchConnection();
-      // Check for stored TikTok callback parameters after login
       checkStoredTikTokCallback();
     }
   }, [user, session]);
@@ -46,11 +45,9 @@ export const useTikTokConnectionData = () => {
           description: `Successfully connected your TikTok account with video publishing permissions`,
         });
         
-        // Clear stored parameters
         localStorage.removeItem('tiktok_callback_code');
         localStorage.removeItem('tiktok_callback_state');
         
-        // Refresh connection status
         fetchConnection();
         
       } catch (error: any) {
@@ -69,7 +66,6 @@ export const useTikTokConnectionData = () => {
           variant: "destructive"
         });
         
-        // Clear stored parameters even on error
         localStorage.removeItem('tiktok_callback_code');
         localStorage.removeItem('tiktok_callback_state');
       }
@@ -98,42 +94,6 @@ export const useTikTokConnectionData = () => {
     }
   };
 
-  const getTikTokConfig = async () => {
-    try {
-      console.log('Getting TikTok config...');
-      
-      const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('TikTok config error:', error);
-        
-        // Handle specific error cases
-        if (error.message?.includes('test/sandbox key')) {
-          throw new Error('TikTok Client ID is a test key. Please use a production Client ID from your TikTok Developer Console.');
-        } else if (error.message?.includes('not configured')) {
-          throw new Error('TikTok Client ID not configured. Please add it to Supabase secrets.');
-        }
-        
-        throw new Error(error.message || 'Failed to get TikTok configuration');
-      }
-      
-      console.log('TikTok config received:', { hasClientKey: !!data?.clientKey, redirectUri: data?.redirectUri });
-      
-      if (!data || !data.clientKey) {
-        throw new Error('TikTok client key not available. Please check configuration.');
-      }
-      
-      return data;
-    } catch (error: any) {
-      console.error('Error getting TikTok config:', error);
-      throw new Error(error.message || 'Failed to get TikTok configuration');
-    }
-  };
-
   const handleConnect = async () => {
     console.log('handleConnect called, checking session:', session?.access_token ? 'present' : 'missing');
     console.log('User state:', user ? 'present' : 'missing');
@@ -152,17 +112,13 @@ export const useTikTokConnectionData = () => {
     console.log('Starting TikTok connection process...');
     
     try {
-      // Get TikTok configuration from backend
-      const config = await getTikTokConfig();
+      const clientKey = 'aw07lO3hlng4i5HI';  // Your actual TikTok Client ID
+      const redirectUri = `${window.location.origin}/api/tiktok/callback`;
       
-      if (!config || !config.clientKey) {
-        throw new Error('TikTok client key not available');
-      }
-      
-      console.log('TikTok config validated:', {
-        hasClientKey: !!config.clientKey,
-        clientKeyLength: config.clientKey?.length || 0,
-        redirectUri: config.redirectUri
+      console.log('Using TikTok config:', {
+        hasClientKey: !!clientKey,
+        clientKeyLength: clientKey?.length || 0,
+        redirectUri: redirectUri
       });
       
       // Generate state token for CSRF protection
@@ -175,24 +131,23 @@ export const useTikTokConnectionData = () => {
       // Build TikTok OAuth URL with required scopes for video publishing
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
       const params = new URLSearchParams({
-        client_key: config.clientKey,
+        client_key: clientKey,
         response_type: 'code',
         scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: config.redirectUri,
+        redirect_uri: redirectUri,
         state: state
       });
       
       const tiktokAuthUrl = baseUrl + '?' + params.toString();
       
       console.log('TikTok OAuth URL parameters:', {
-        client_key: config.clientKey.substring(0, 10) + '...',
+        client_key: clientKey.substring(0, 10) + '...',
         scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: config.redirectUri,
+        redirect_uri: redirectUri,
         state: state
       });
       console.log('Full TikTok OAuth URL:', tiktokAuthUrl);
       
-      // Show user what permissions they need to grant
       toast({
         title: "Redirecting to TikTok",
         description: "Please authorize all permissions including video publishing when prompted",
@@ -208,20 +163,9 @@ export const useTikTokConnectionData = () => {
     } catch (error: any) {
       console.error('Error connecting to TikTok:', error);
       
-      let userMessage = error.message || "Failed to initiate TikTok connection";
-      
-      // Provide more specific error messages
-      if (error.message?.includes('test key') || error.message?.includes('production Client ID')) {
-        userMessage = "TikTok setup issue: Please use a production Client ID from your TikTok Developer Console, not a test/sandbox key.";
-      } else if (error.message?.includes('client key not available')) {
-        userMessage = "TikTok is not properly configured. Please contact support.";
-      } else if (error.message?.includes('configuration')) {
-        userMessage = "TikTok configuration error. Please try again later.";
-      }
-      
       toast({
         title: "Connection Failed",
-        description: userMessage,
+        description: error.message || "Failed to initiate TikTok connection",
         variant: "destructive"
       });
       setConnecting(false);

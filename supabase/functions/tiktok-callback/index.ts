@@ -119,7 +119,7 @@ serve(async (req) => {
     // Get TikTok configuration
     const clientKey = Deno.env.get('TIKTOK_CLIENT_ID')
     const clientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
-    const redirectUri = 'https://thinkpost.co/api/tiktok/callback'
+    const redirectUri = `${new URL(req.url).origin.replace('eztbwukcnddtvcairvpz.supabase.co', 'thinkpost.co')}/api/tiktok/callback`
     
     if (!clientKey || !clientSecret) {
       console.error('TikTok credentials not configured')
@@ -132,6 +132,7 @@ serve(async (req) => {
       );
     }
     
+    console.log('Using redirect URI for token exchange:', redirectUri)
     console.log('Exchanging code for access token...')
     
     // Exchange code for access token with enhanced error handling
@@ -192,7 +193,7 @@ serve(async (req) => {
     const scopes = tokenData.scope ? tokenData.scope.split(',') : [];
     console.log('Granted scopes:', scopes);
     
-    const requiredScopes = ['user.info.basic', 'video.publish'];
+    const requiredScopes = ['user.info.basic'];
     const missingScopes = requiredScopes.filter(scope => !scopes.includes(scope));
     
     if (missingScopes.length > 0) {
