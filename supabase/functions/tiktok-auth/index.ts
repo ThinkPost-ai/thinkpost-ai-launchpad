@@ -28,28 +28,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    const tiktokClientId = Deno.env.get('TIKTOK_CLIENT_ID')
-    const redirectUri = Deno.env.get('TIKTOK_REDIRECT_URI')
+    // Use the exact client key you specified
+    const tiktokClientId = 'sbawdyn4l42rz2ceyq'
+    const redirectUri = 'https://thinkpost.co/api/auth/tiktok/callback'
     
-    // Debug logging
     console.log("🔐 client_key:", tiktokClientId);
     console.log("↩️ redirect_uri:", redirectUri);
-    
-    if (!tiktokClientId) {
-      return new Response(JSON.stringify({ error: 'TikTok client ID not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
 
-    if (!redirectUri) {
-      return new Response(JSON.stringify({ error: 'TikTok redirect URI not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Generate a secure state parameter
+    // Generate a secure state parameter for CSRF protection
     const state = crypto.randomUUID()
 
     // Use service role client to insert state (bypasses RLS)
@@ -75,6 +61,7 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Build the exact TikTok OAuth URL as specified
     const tiktokAuthUrl = new URL('https://www.tiktok.com/v2/auth/authorize/')
     tiktokAuthUrl.searchParams.set('client_key', tiktokClientId)
     tiktokAuthUrl.searchParams.set('response_type', 'code')
@@ -82,7 +69,6 @@ Deno.serve(async (req) => {
     tiktokAuthUrl.searchParams.set('redirect_uri', redirectUri)
     tiktokAuthUrl.searchParams.set('state', state)
 
-    // Debug logging for final URL
     console.log("📤 TikTok Auth URL:", tiktokAuthUrl.toString());
 
     return new Response(JSON.stringify({ authUrl: tiktokAuthUrl.toString() }), {

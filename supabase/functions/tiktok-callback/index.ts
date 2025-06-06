@@ -16,7 +16,10 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
 
+    console.log('TikTok callback received:', { code: code?.slice(0, 10) + '...', state })
+
     if (!code || !state) {
+      console.error('Missing code or state parameter')
       return new Response(JSON.stringify({ error: 'Missing code or state parameter' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -28,7 +31,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Verify state and get user
+    // Verify state and get user (CSRF protection)
     const { data: stateData, error: stateError } = await supabaseClient
       .from('tiktok_oauth_states')
       .select('user_id')
@@ -37,6 +40,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (stateError || !stateData) {
+      console.error('Invalid or expired state:', stateError)
       return new Response(JSON.stringify({ error: 'Invalid or expired state' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -44,18 +48,14 @@ Deno.serve(async (req) => {
     }
 
     const userId = stateData.user_id
+    console.log('State validated for user:', userId)
 
-    // Exchange code for access token
-    const tiktokClientId = Deno.env.get('TIKTOK_CLIENT_ID')
-    const tiktokClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET')
-    const redirectUri = Deno.env.get('TIKTOK_REDIRECT_URI')
+    // Exchange code for access token using your exact credentials
+    const tiktokClientId = 'sbawdyn4l42rz2ceyq'
+    const tiktokClientSecret = 'YlXChnvcXTZ2N8kOMtFGZ2IDbPBH8ps3'
+    const redirectUri = 'https://thinkpost.co/api/auth/tiktok/callback'
 
-    if (!tiktokClientId || !tiktokClientSecret || !redirectUri) {
-      return new Response(JSON.stringify({ error: 'TikTok credentials not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    console.log('Exchanging code for token...')
 
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
@@ -72,16 +72,19 @@ Deno.serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
+    console.log('Token response status:', tokenResponse.status)
+    console.log('Token response:', { ...tokenData, access_token: tokenData.access_token?.slice(0, 10) + '...' })
 
     if (!tokenResponse.ok || tokenData.error) {
       console.error('TikTok token exchange error:', tokenData)
-      return new Response(JSON.stringify({ error: 'Failed to exchange code for token' }), {
+      return new Response(JSON.stringify({ error: 'Failed to exchange code for token', details: tokenData }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     // Get user info from TikTok
+    console.log('Fetching TikTok user info...')
     const userInfoResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -89,16 +92,19 @@ Deno.serve(async (req) => {
     })
 
     const userInfo = await userInfoResponse.json()
+    console.log('User info response status:', userInfoResponse.status)
+    console.log('User info:', userInfo)
 
     if (!userInfoResponse.ok || userInfo.error) {
       console.error('TikTok user info error:', userInfo)
-      return new Response(JSON.stringify({ error: 'Failed to get user info' }), {
+      return new Response(JSON.stringify({ error: 'Failed to get user info', details: userInfo }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     // Update user profile with TikTok data
+    console.log('Updating user profile with TikTok data...')
     const { error: updateError } = await supabaseClient
       .from('profiles')
       .update({
@@ -112,11 +118,13 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating profile:', updateError)
-      return new Response(JSON.stringify({ error: 'Failed to update profile' }), {
+      return new Response(JSON.stringify({ error: 'Failed to update profile', details: updateError }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    console.log('Profile updated successfully')
 
     // Clean up state
     await supabaseClient
@@ -125,10 +133,12 @@ Deno.serve(async (req) => {
       .eq('state_token', state)
 
     // Redirect to dashboard with success
-    const dashboardUrl = new URL(redirectUri)
+    const dashboardUrl = new URL('https://thinkpost.co')
     dashboardUrl.pathname = '/user-dashboard'
     dashboardUrl.searchParams.set('tab', 'overview')
     dashboardUrl.searchParams.set('tiktok', 'connected')
+
+    console.log('Redirecting to:', dashboardUrl.toString())
 
     return new Response(null, {
       status: 302,
@@ -139,7 +149,7 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('Error in tiktok-callback:', error)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
