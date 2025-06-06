@@ -57,6 +57,8 @@ serve(async (req) => {
     
     console.log('TikTok Client Key configured:', !!clientKey)
     console.log('TikTok Client Key length:', clientKey?.length || 0)
+    console.log('TikTok Client Key first 8 chars:', clientKey?.substring(0, 8) || 'none')
+    console.log('TikTok Client Key type:', typeof clientKey)
     
     if (!clientKey) {
       console.error('TikTok Client ID not configured')
@@ -72,6 +74,14 @@ serve(async (req) => {
       )
     }
 
+    // Check if client key contains any problematic characters
+    const hasSpecialChars = /[^a-zA-Z0-9]/.test(clientKey)
+    console.log('Client key has special characters:', hasSpecialChars)
+    
+    if (hasSpecialChars) {
+      console.warn('Client key contains special characters, this might cause issues')
+    }
+
     // Get the origin from the request headers instead of window.location
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:3000'
     const redirectUri = `${origin}/api/tiktok/callback`
@@ -80,6 +90,7 @@ serve(async (req) => {
     console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
     console.log('Using redirect URI:', redirectUri)
     console.log('Request origin:', origin)
+    console.log('Full client key for debugging:', clientKey) // Temporary debug log
     
     return new Response(
       JSON.stringify({ 

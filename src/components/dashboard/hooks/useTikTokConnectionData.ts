@@ -97,6 +97,7 @@ export const useTikTokConnectionData = () => {
   const getTikTokConfig = async () => {
     try {
       console.log('Fetching TikTok config from backend...');
+      console.log('Session token available:', !!session?.access_token);
       
       const { data, error } = await supabase.functions.invoke('get-tiktok-config', {
         headers: {
@@ -109,7 +110,18 @@ export const useTikTokConnectionData = () => {
         throw error;
       }
       
-      console.log('TikTok config received:', { hasClientKey: !!data?.clientKey, redirectUri: data?.redirectUri });
+      console.log('TikTok config received:', { 
+        hasClientKey: !!data?.clientKey, 
+        clientKeyLength: data?.clientKey?.length,
+        clientKeyStart: data?.clientKey?.substring(0, 8),
+        redirectUri: data?.redirectUri 
+      });
+      
+      // Validate the received config
+      if (!data?.clientKey) {
+        throw new Error('No client key received from configuration');
+      }
+      
       return data;
     } catch (error: any) {
       console.error('Error getting TikTok config:', error);
@@ -153,6 +165,7 @@ export const useTikTokConnectionData = () => {
       console.log('Using TikTok config:', {
         hasClientKey: !!config.clientKey,
         clientKeyLength: config.clientKey?.length || 0,
+        clientKeyStart: config.clientKey?.substring(0, 8),
         redirectUri: config.redirectUri
       });
       
@@ -165,8 +178,14 @@ export const useTikTokConnectionData = () => {
       
       // Build TikTok OAuth URL with required scopes for video publishing
       const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
+      
+      // Clean the client key - remove any whitespace
+      const cleanClientKey = config.clientKey.trim();
+      console.log('Clean client key:', cleanClientKey);
+      console.log('Clean client key length:', cleanClientKey.length);
+      
       const params = new URLSearchParams({
-        client_key: config.clientKey,
+        client_key: cleanClientKey,
         response_type: 'code',
         scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
@@ -176,7 +195,7 @@ export const useTikTokConnectionData = () => {
       const tiktokAuthUrl = baseUrl + '?' + params.toString();
       
       console.log('TikTok OAuth URL parameters:', {
-        client_key: config.clientKey.substring(0, 10) + '...',
+        client_key: cleanClientKey.substring(0, 10) + '...',
         scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
         state: state
