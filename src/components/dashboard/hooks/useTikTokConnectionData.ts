@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -175,29 +176,30 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Clean the client key - remove any whitespace
-      const cleanClientKey = config.clientKey.trim();
+      // Clean the client key - remove any whitespace and ensure it's a string
+      const cleanClientKey = String(config.clientKey).trim();
       console.log('Clean client key:', cleanClientKey);
       console.log('Clean client key length:', cleanClientKey.length);
       
-      // Build TikTok OAuth URL with the exact format expected by TikTok
-      const authParams = new URLSearchParams({
-        client_key: cleanClientKey,
-        response_type: 'code',
-        scope: 'user.info.basic,video.upload,video.publish',
-        redirect_uri: config.redirectUri,
-        state: state
-      });
+      // Build TikTok OAuth URL with proper encoding - TikTok requires specific parameter order
+      const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
+      const params = [
+        `client_key=${encodeURIComponent(cleanClientKey)}`,
+        'response_type=code',
+        `scope=${encodeURIComponent('user.info.basic,video.upload,video.publish')}`,
+        `redirect_uri=${encodeURIComponent(config.redirectUri)}`,
+        `state=${encodeURIComponent(state)}`
+      ];
       
-      const tiktokAuthUrl = `https://www.tiktok.com/v2/auth/authorize/?${authParams.toString()}`;
+      const tiktokAuthUrl = `${baseUrl}?${params.join('&')}`;
       
       console.log('TikTok OAuth URL parameters:', {
         client_key: cleanClientKey.substring(0, 10) + '...',
         scope: 'user.info.basic,video.upload,video.publish',
         redirect_uri: config.redirectUri,
-        state: state
+        state: state,
+        fullUrl: tiktokAuthUrl
       });
-      console.log('Full TikTok OAuth URL:', tiktokAuthUrl);
       
       toast({
         title: "Redirecting to TikTok",

@@ -57,7 +57,6 @@ serve(async (req) => {
     
     console.log('TikTok Client Key configured:', !!clientKey)
     console.log('TikTok Client Key length:', clientKey?.length || 0)
-    console.log('TikTok Client Key first 8 chars:', clientKey?.substring(0, 8) || 'none')
     console.log('TikTok Client Key type:', typeof clientKey)
     
     if (!clientKey) {
@@ -74,8 +73,24 @@ serve(async (req) => {
       )
     }
 
+    // Validate client key format
+    const trimmedClientKey = clientKey.trim()
+    if (trimmedClientKey.length === 0) {
+      console.error('TikTok Client ID is empty after trimming')
+      return new Response(
+        JSON.stringify({ 
+          error: 'TikTok Client ID is empty',
+          details: 'Please check TIKTOK_CLIENT_ID configuration'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     // Check if client key contains any problematic characters
-    const hasSpecialChars = /[^a-zA-Z0-9]/.test(clientKey)
+    const hasSpecialChars = /[^a-zA-Z0-9]/.test(trimmedClientKey)
     console.log('Client key has special characters:', hasSpecialChars)
     
     if (hasSpecialChars) {
@@ -85,18 +100,18 @@ serve(async (req) => {
     // Get the origin from the request headers and construct the redirect URI
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://thinkpost.co'
     
-    // Use the TikTok callback page as redirect URI instead of /api/tiktok/callback
+    // Use the correct TikTok callback page as redirect URI
     const redirectUri = `${origin}/tiktok-callback`
 
     console.log('Returning TikTok config to user:', user.id)
-    console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')
+    console.log('Client Key (sanitized):', trimmedClientKey.substring(0, 8) + '...')
+    console.log('Client Key length:', trimmedClientKey.length)
     console.log('Using redirect URI:', redirectUri)
     console.log('Request origin:', origin)
-    console.log('Full client key for debugging:', clientKey) // Temporary debug log
     
     return new Response(
       JSON.stringify({ 
-        clientKey,
+        clientKey: trimmedClientKey,
         redirectUri
       }),
       {
