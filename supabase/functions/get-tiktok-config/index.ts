@@ -82,9 +82,11 @@ serve(async (req) => {
       console.warn('Client key contains special characters, this might cause issues')
     }
 
-    // Get the origin from the request headers instead of window.location
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:3000'
-    const redirectUri = `${origin}/api/tiktok/callback`
+    // Get the origin from the request headers and construct the redirect URI
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://thinkpost.co'
+    
+    // Use the TikTok callback page as redirect URI instead of /api/tiktok/callback
+    const redirectUri = `${origin}/tiktok-callback`
 
     console.log('Returning TikTok config to user:', user.id)
     console.log('Client Key (first 10 chars):', clientKey.substring(0, 10) + '...')

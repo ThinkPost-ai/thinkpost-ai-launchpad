@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -176,15 +175,13 @@ export const useTikTokConnectionData = () => {
       localStorage.setItem('tiktok_oauth_state', state);
       localStorage.setItem('tiktok_user_token', session.access_token);
       
-      // Build TikTok OAuth URL with required scopes for video publishing
-      const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
-      
       // Clean the client key - remove any whitespace
       const cleanClientKey = config.clientKey.trim();
       console.log('Clean client key:', cleanClientKey);
       console.log('Clean client key length:', cleanClientKey.length);
       
-      const params = new URLSearchParams({
+      // Build TikTok OAuth URL with the exact format expected by TikTok
+      const authParams = new URLSearchParams({
         client_key: cleanClientKey,
         response_type: 'code',
         scope: 'user.info.basic,video.upload,video.publish',
@@ -192,7 +189,7 @@ export const useTikTokConnectionData = () => {
         state: state
       });
       
-      const tiktokAuthUrl = baseUrl + '?' + params.toString();
+      const tiktokAuthUrl = `https://www.tiktok.com/v2/auth/authorize/?${authParams.toString()}`;
       
       console.log('TikTok OAuth URL parameters:', {
         client_key: cleanClientKey.substring(0, 10) + '...',
