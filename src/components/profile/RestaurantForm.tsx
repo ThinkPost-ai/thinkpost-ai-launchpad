@@ -8,12 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Database } from '@/integrations/supabase/types';
+
+type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
 interface Restaurant {
   id: string;
   name: string;
   location: string;
-  category: string;
+  category: RestaurantCategory;
   vision?: string;
 }
 
@@ -28,7 +31,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
   const [restaurantData, setRestaurantData] = useState({
     name: '',
     location: '',
-    category: '',
+    category: '' as RestaurantCategory | '',
     vision: ''
   });
 
@@ -52,7 +55,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) return;
+    if (!user?.id || !restaurantData.category) return;
 
     setIsLoading(true);
 
@@ -64,7 +67,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
           .update({
             name: restaurantData.name,
             location: restaurantData.location,
-            category: restaurantData.category,
+            category: restaurantData.category as RestaurantCategory,
             vision: restaurantData.vision
           })
           .eq('id', restaurant.id);
@@ -83,7 +86,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
             owner_id: user.id,
             name: restaurantData.name,
             location: restaurantData.location,
-            category: restaurantData.category,
+            category: restaurantData.category as RestaurantCategory,
             vision: restaurantData.vision
           });
 
@@ -109,15 +112,21 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
     }
   };
 
-  const categories = [
-    'fast_food',
-    'casual_dining', 
-    'fine_dining',
-    'cafe',
-    'bakery',
-    'food_truck',
-    'bar',
-    'other'
+  const categories: { value: RestaurantCategory; label: string }[] = [
+    { value: 'fast_food', label: 'Fast Food' },
+    { value: 'casual_dining', label: 'Casual Dining' },
+    { value: 'fine_dining', label: 'Fine Dining' },
+    { value: 'cafe', label: 'Cafe' },
+    { value: 'bakery', label: 'Bakery' },
+    { value: 'pizza', label: 'Pizza' },
+    { value: 'seafood', label: 'Seafood' },
+    { value: 'middle_eastern', label: 'Middle Eastern' },
+    { value: 'asian', label: 'Asian' },
+    { value: 'italian', label: 'Italian' },
+    { value: 'american', label: 'American' },
+    { value: 'mexican', label: 'Mexican' },
+    { value: 'indian', label: 'Indian' },
+    { value: 'other', label: 'Other' }
   ];
 
   return (
@@ -155,15 +164,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         <Label htmlFor="category">Category</Label>
         <Select
           value={restaurantData.category}
-          onValueChange={(value) => handleInputChange('category', value)}
+          onValueChange={(value: RestaurantCategory) => handleInputChange('category', value)}
         >
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select restaurant category" />
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              <SelectItem key={category.value} value={category.value}>
+                {category.label}
               </SelectItem>
             ))}
           </SelectContent>
