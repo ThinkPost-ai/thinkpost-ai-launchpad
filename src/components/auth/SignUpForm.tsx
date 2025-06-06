@@ -6,6 +6,28 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Database } from '@/integrations/supabase/types';
+
+type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
+
+const restaurantCategories: { value: RestaurantCategory; label: string }[] = [
+  { value: 'fast_food', label: 'Fast Food' },
+  { value: 'casual_dining', label: 'Casual Dining' },
+  { value: 'fine_dining', label: 'Fine Dining' },
+  { value: 'cafe', label: 'Cafe' },
+  { value: 'bakery', label: 'Bakery' },
+  { value: 'pizza', label: 'Pizza' },
+  { value: 'seafood', label: 'Seafood' },
+  { value: 'middle_eastern', label: 'Middle Eastern' },
+  { value: 'asian', label: 'Asian' },
+  { value: 'italian', label: 'Italian' },
+  { value: 'american', label: 'American' },
+  { value: 'mexican', label: 'Mexican' },
+  { value: 'indian', label: 'Indian' },
+  { value: 'other', label: 'Other' }
+];
 
 interface SignUpFormProps {
   onSuccess?: () => void;
@@ -16,6 +38,10 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantLocation, setRestaurantLocation] = useState('');
+  const [restaurantCategory, setRestaurantCategory] = useState<RestaurantCategory | ''>('');
+  const [restaurantVision, setRestaurantVision] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,10 +54,20 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       alert('Passwords do not match');
       return;
     }
+
+    if (!restaurantCategory) {
+      alert('Please select a restaurant category');
+      return;
+    }
     
     setIsLoading(true);
     
-    const { error } = await signUp(email, password, name);
+    const { error } = await signUp(email, password, name, {
+      restaurantName,
+      restaurantLocation,
+      restaurantCategory,
+      restaurantVision
+    });
     
     setIsLoading(false);
     
@@ -47,7 +83,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           Join ThinkPost
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
-          Create your account and start creating amazing content
+          Create your account and restaurant profile
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -127,6 +163,72 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+            </div>
+          </div>
+
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="text-lg font-semibold text-deep-blue dark:text-white">Restaurant Information</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="restaurantName" className="text-deep-blue dark:text-white font-medium">
+                Restaurant Name *
+              </Label>
+              <Input
+                id="restaurantName"
+                type="text"
+                placeholder="Enter your restaurant name"
+                value={restaurantName}
+                onChange={(e) => setRestaurantName(e.target.value)}
+                required
+                className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="restaurantLocation" className="text-deep-blue dark:text-white font-medium">
+                Location *
+              </Label>
+              <Input
+                id="restaurantLocation"
+                type="text"
+                placeholder="e.g., Riyadh, Saudi Arabia"
+                value={restaurantLocation}
+                onChange={(e) => setRestaurantLocation(e.target.value)}
+                required
+                className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="restaurantCategory" className="text-deep-blue dark:text-white font-medium">
+                Category *
+              </Label>
+              <Select value={restaurantCategory} onValueChange={(value: RestaurantCategory) => setRestaurantCategory(value)}>
+                <SelectTrigger className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400">
+                  <SelectValue placeholder="Select restaurant category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {restaurantCategories.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="restaurantVision" className="text-deep-blue dark:text-white font-medium">
+                Restaurant Vision
+              </Label>
+              <Textarea
+                id="restaurantVision"
+                placeholder="Describe your restaurant's vision, style, and what makes it special..."
+                value={restaurantVision}
+                onChange={(e) => setRestaurantVision(e.target.value)}
+                rows={3}
+                className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 resize-none"
+              />
             </div>
           </div>
 

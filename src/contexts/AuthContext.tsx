@@ -2,6 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
+
+interface RestaurantData {
+  restaurantName: string;
+  restaurantLocation: string;
+  restaurantCategory: RestaurantCategory;
+  restaurantVision?: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   hasRestaurant: boolean | null;
   checkingProfile: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, restaurantData?: RestaurantData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   checkUserProfile: () => Promise<void>;
@@ -94,16 +104,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, restaurantData?: RestaurantData) => {
     try {
+      const metadata: any = {
+        full_name: fullName
+      };
+
+      // Add restaurant data to metadata if provided
+      if (restaurantData) {
+        metadata.restaurant_name = restaurantData.restaurantName;
+        metadata.restaurant_location = restaurantData.restaurantLocation;
+        metadata.restaurant_category = restaurantData.restaurantCategory;
+        metadata.restaurant_vision = restaurantData.restaurantVision;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName
-          }
+          data: metadata
         }
       });
 
