@@ -56,6 +56,10 @@ serve(async (req) => {
     const body = await req.json()
     const { code, state } = body
 
+    console.log('Callback parameters received:')
+    console.log('- code:', code ? '[PRESENT]' : '[MISSING]')
+    console.log('- state:', state ? state : '[MISSING]')
+
     if (!code || !state) {
       console.error('Missing code or state parameter')
       return new Response(
@@ -68,6 +72,7 @@ serve(async (req) => {
     }
 
     // Verify state token and get user ID
+    console.log('Verifying state token:', state)
     const { data: stateData, error: stateError } = await supabase
       .from('tiktok_oauth_states')
       .select('user_id, expires_at')
@@ -78,7 +83,7 @@ serve(async (req) => {
     if (stateError || !stateData) {
       console.error('Invalid state token:', stateError)
       return new Response(
-        JSON.stringify({ error: 'Invalid state token' }),
+        JSON.stringify({ error: 'Invalid state token - CSRF protection failed' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,14 +103,17 @@ serve(async (req) => {
       )
     }
 
-    // Exchange code for access token - using exact values you specified
+    console.log('State token verified successfully')
+
+    // Exchange code for access token - using exact values specified
     const clientKey = "sbawdyn4l42rz2ceyq"
     const clientSecret = "YlXChnvcXTZ2N8kOMtFG2ZlDbPBH8ps3"
     const redirectUri = "https://thinkpost.co/tiktok-login-callback"
 
-    console.log('Exchanging code for access token...')
-    console.log('Using client_key:', clientKey)
-    console.log('Using redirect_uri:', redirectUri)
+    console.log('Token exchange configuration:')
+    console.log('- client_key:', clientKey)
+    console.log('- redirect_uri:', redirectUri)
+    console.log('- grant_type: authorization_code')
     
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
       method: 'POST',
@@ -122,7 +130,8 @@ serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log('Token exchange response:', tokenResponse.status, {
+    console.log('Token exchange response status:', tokenResponse.status)
+    console.log('Token exchange response:', {
       ...tokenData,
       access_token: tokenData.access_token ? '[REDACTED]' : undefined,
       refresh_token: tokenData.refresh_token ? '[REDACTED]' : undefined
@@ -133,7 +142,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Token exchange failed',
-          details: tokenData.error_description || 'Unknown error'
+          details: tokenData.error_description || tokenData.error || 'Unknown error',
+          tiktok_error: tokenData.error
         }),
         {
           status: 400,
@@ -152,7 +162,8 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
-    console.log('User info response:', userResponse.status, {
+    console.log('User info response status:', userResponse.status)
+    console.log('User info response:', {
       ...userData,
       data: userData.data ? {
         ...userData.data,

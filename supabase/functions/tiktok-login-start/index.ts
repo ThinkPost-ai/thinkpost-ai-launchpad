@@ -52,13 +52,21 @@ serve(async (req) => {
 
     console.log('User verified:', user.id)
 
-    // TikTok OAuth configuration - using exact values you specified
+    // TikTok OAuth configuration - using exact values specified
     const clientKey = "sbawdyn4l42rz2ceyq"
     const redirectUri = "https://thinkpost.co/tiktok-login-callback"
-    const scope = "user.info.basic user.info.profile user.info.stats video.upload video.publish"
+    const scope = "user.info.basic,user.info.profile,user.info.stats,video.upload,video.publish"
+    const responseType = "code"
     
     // Generate state token for CSRF protection
     const state = crypto.randomUUID()
+    
+    console.log('TikTok OAuth Configuration:')
+    console.log('- client_key:', clientKey)
+    console.log('- redirect_uri:', redirectUri)
+    console.log('- scope:', scope)
+    console.log('- response_type:', responseType)
+    console.log('- state:', state)
     
     // Store the state token temporarily for validation (expires in 10 minutes)
     const { error: stateError } = await supabase
@@ -80,18 +88,25 @@ serve(async (req) => {
       )
     }
 
-    // Build TikTok OAuth URL using the EXACT format you specified
-    const authUrl = `https://www.tiktok.com/v2/auth/authorize?client_key=${clientKey}&scope=${encodeURIComponent(scope)}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+    // Build TikTok OAuth URL using the EXACT format specified in TikTok Login Kit docs
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize?client_key=${clientKey}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
-    console.log('Generated TikTok auth URL for user:', user.id)
-    console.log('Using client_key:', clientKey)
-    console.log('Using redirect_uri:', redirectUri)
-    console.log('Auth URL preview:', authUrl.substring(0, 150) + '...')
+    console.log('Generated TikTok OAuth URL:')
+    console.log('Full URL:', authUrl)
+    console.log('URL Components:')
+    console.log('- Base URL: https://www.tiktok.com/v2/auth/authorize')
+    console.log('- client_key:', clientKey)
+    console.log('- scope (encoded):', encodeURIComponent(scope))
+    console.log('- response_type:', responseType)
+    console.log('- redirect_uri (encoded):', encodeURIComponent(redirectUri))
+    console.log('- state:', state)
     
     return new Response(
       JSON.stringify({ 
         auth_url: authUrl,
-        state: state
+        state: state,
+        client_key: clientKey,
+        redirect_uri: redirectUri
       }),
       {
         status: 200,
