@@ -10,7 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import UserDashboard from "./pages/UserDashboard";
-import RestaurantSetup from "./pages/RestaurantSetup";
+import ProfileSettings from "./pages/ProfileSettings";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
 import Privacy from "./pages/Privacy";
@@ -37,7 +37,7 @@ const App = () => {
                   <Route path="/home" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/user-dashboard" element={<UserDashboard />} />
-                  <Route path="/restaurant-setup" element={<RestaurantSetup />} />
+                  <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/terms" element={<Terms />} />

@@ -99,7 +99,7 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate('/restaurant-setup')}>
+          <DropdownMenuItem onClick={() => navigate('/profile-settings')}>
             <User className="mr-2 h-4 w-4" />
             {t('dashboard.profile.profileSettings')}
           </DropdownMenuItem>
