@@ -3,12 +3,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
+
+type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
 interface Restaurant {
   id: string;
   name: string;
   location: string;
-  category: string;
+  category: RestaurantCategory;
   vision?: string;
 }
 
