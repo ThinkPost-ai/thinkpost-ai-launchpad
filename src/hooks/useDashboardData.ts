@@ -37,41 +37,52 @@ export const useDashboardData = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDashboardData = async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      console.log('Fetching dashboard data for user:', user.id);
+      
       // Fetch restaurant data
       const { data: restaurantData, error: restaurantError } = await supabase
         .from('restaurants')
         .select('*')
-        .eq('owner_id', user?.id)
+        .eq('owner_id', user.id)
         .maybeSingle();
 
-      if (restaurantError) throw restaurantError;
-
-      setRestaurant(restaurantData);
+      if (restaurantError) {
+        console.error('Restaurant fetch error:', restaurantError);
+      } else {
+        console.log('Restaurant data fetched:', restaurantData);
+        setRestaurant(restaurantData);
+      }
 
       // Fetch user profile with caption credits
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('caption_credits')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        // Don't throw error here, just log it since the user might not have a profile yet
+      } else {
+        console.log('Profile data fetched:', profileData);
       }
 
       // Fetch images count
       const { count: imagesCount } = await supabase
         .from('images')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       // Fetch products count
       const { count: productsCount } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       setStats(prev => ({
         ...prev,
@@ -93,11 +104,13 @@ export const useDashboardData = () => {
   };
 
   const handleCreditsUpdate = async () => {
+    if (!user?.id) return;
+    
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('caption_credits')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (profileError) {

@@ -43,8 +43,12 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  // Get display name - prefer restaurant name, fallback to user name or email
-  const displayName = restaurant?.name || user?.user_metadata?.full_name || user?.email || 'User';
+  // Get display name - prefer user's full name, fallback to email
+  const userDisplayName = user?.user_metadata?.full_name || user?.email || 'User';
+  // Get initials from user's name, not restaurant name
+  const displayInitials = getInitials(userDisplayName);
+
+  console.log('UserProfilePanel - user:', user?.user_metadata, 'restaurant:', restaurant);
 
   return (
     <div className="flex items-center space-x-4">
@@ -65,14 +69,16 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
               <AvatarFallback className="bg-vibrant-purple text-white">
-                {getInitials(displayName)}
+                {displayInitials}
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:block text-left">
               <p className="text-sm font-medium text-deep-blue dark:text-white">
-                {displayName}
+                {userDisplayName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.profile.owner')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {restaurant ? `Owner of ${restaurant.name}` : t('dashboard.profile.owner')}
+              </p>
             </div>
           </Button>
         </DropdownMenuTrigger>
@@ -80,11 +86,16 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
           <DropdownMenuLabel>
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {displayName}
+                {userDisplayName}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
                 {user?.email}
               </p>
+              {restaurant && (
+                <p className="text-xs leading-none text-muted-foreground">
+                  {restaurant.name} - {restaurant.category}
+                </p>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
