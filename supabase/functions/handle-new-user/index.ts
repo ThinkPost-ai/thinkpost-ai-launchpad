@@ -21,6 +21,7 @@ serve(async (req) => {
     const { record } = await req.json()
     
     console.log('New user record:', record)
+    console.log('User metadata:', record.raw_user_meta_data)
 
     // Create profile
     const { error: profileError } = await supabase
@@ -35,12 +36,28 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('Error creating profile:', profileError)
+    } else {
+      console.log('Profile created successfully for user:', record.id)
     }
 
     // Create restaurant if restaurant data is provided
     const restaurantData = record.raw_user_meta_data
+    console.log('Checking restaurant data:', {
+      restaurant_name: restaurantData?.restaurant_name,
+      restaurant_location: restaurantData?.restaurant_location,
+      restaurant_category: restaurantData?.restaurant_category
+    })
+
     if (restaurantData?.restaurant_name && restaurantData?.restaurant_location && restaurantData?.restaurant_category) {
-      const { error: restaurantError } = await supabase
+      console.log('Creating restaurant with data:', {
+        owner_id: record.id,
+        name: restaurantData.restaurant_name,
+        location: restaurantData.restaurant_location,
+        category: restaurantData.restaurant_category,
+        vision: restaurantData.restaurant_vision || null
+      })
+
+      const { data: restaurantResult, error: restaurantError } = await supabase
         .from('restaurants')
         .insert({
           owner_id: record.id,
@@ -49,12 +66,15 @@ serve(async (req) => {
           category: restaurantData.restaurant_category,
           vision: restaurantData.restaurant_vision || null
         })
+        .select()
 
       if (restaurantError) {
         console.error('Error creating restaurant:', restaurantError)
       } else {
-        console.log('Restaurant created successfully for user:', record.id)
+        console.log('Restaurant created successfully:', restaurantResult)
       }
+    } else {
+      console.log('No restaurant data provided or incomplete data')
     }
 
     return new Response(JSON.stringify({ success: true }), {
