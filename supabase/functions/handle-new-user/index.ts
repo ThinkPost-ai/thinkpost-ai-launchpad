@@ -43,28 +43,37 @@ serve(async (req) => {
     // Create restaurant if restaurant data is provided
     const restaurantData = record.raw_user_meta_data
     console.log('Checking restaurant data:', {
+      restaurantName: restaurantData?.restaurantName,
+      restaurantLocation: restaurantData?.restaurantLocation,
+      restaurantCategory: restaurantData?.restaurantCategory,
       restaurant_name: restaurantData?.restaurant_name,
       restaurant_location: restaurantData?.restaurant_location,
       restaurant_category: restaurantData?.restaurant_category
     })
 
-    if (restaurantData?.restaurant_name && restaurantData?.restaurant_location && restaurantData?.restaurant_category) {
+    // Check for both possible key formats
+    const restaurantName = restaurantData?.restaurantName || restaurantData?.restaurant_name
+    const restaurantLocation = restaurantData?.restaurantLocation || restaurantData?.restaurant_location
+    const restaurantCategory = restaurantData?.restaurantCategory || restaurantData?.restaurant_category
+    const restaurantVision = restaurantData?.restaurantVision || restaurantData?.restaurant_vision
+
+    if (restaurantName && restaurantLocation && restaurantCategory) {
       console.log('Creating restaurant with data:', {
         owner_id: record.id,
-        name: restaurantData.restaurant_name,
-        location: restaurantData.restaurant_location,
-        category: restaurantData.restaurant_category,
-        vision: restaurantData.restaurant_vision || null
+        name: restaurantName,
+        location: restaurantLocation,
+        category: restaurantCategory,
+        vision: restaurantVision || null
       })
 
       const { data: restaurantResult, error: restaurantError } = await supabase
         .from('restaurants')
         .insert({
           owner_id: record.id,
-          name: restaurantData.restaurant_name,
-          location: restaurantData.restaurant_location,
-          category: restaurantData.restaurant_category,
-          vision: restaurantData.restaurant_vision || null
+          name: restaurantName,
+          location: restaurantLocation,
+          category: restaurantCategory,
+          vision: restaurantVision || null
         })
         .select()
 
@@ -74,7 +83,7 @@ serve(async (req) => {
         console.log('Restaurant created successfully:', restaurantResult)
       }
     } else {
-      console.log('No restaurant data provided or incomplete data')
+      console.log('No restaurant data provided or incomplete data. Available keys:', Object.keys(restaurantData || {}))
     }
 
     return new Response(JSON.stringify({ success: true }), {

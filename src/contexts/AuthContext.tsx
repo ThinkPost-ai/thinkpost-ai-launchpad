@@ -60,25 +60,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       // If no restaurant found but user has restaurant metadata, create it
-      if (!data && user.user_metadata?.restaurant_name && user.user_metadata?.restaurant_location && user.user_metadata?.restaurant_category) {
-        console.log('Creating missing restaurant from user metadata');
-        
-        const { error: createError } = await supabase
-          .from('restaurants')
-          .insert({
-            owner_id: user.id,
-            name: user.user_metadata.restaurant_name,
-            location: user.user_metadata.restaurant_location,
-            category: user.user_metadata.restaurant_category,
-            vision: user.user_metadata.restaurant_vision || null
-          });
+      if (!data && user.user_metadata) {
+        const metadata = user.user_metadata;
+        const restaurantName = metadata.restaurantName || metadata.restaurant_name;
+        const restaurantLocation = metadata.restaurantLocation || metadata.restaurant_location;
+        const restaurantCategory = metadata.restaurantCategory || metadata.restaurant_category;
+        const restaurantVision = metadata.restaurantVision || metadata.restaurant_vision;
 
-        if (createError) {
-          console.error('Error creating restaurant from metadata:', createError);
-          setHasRestaurant(false);
+        if (restaurantName && restaurantLocation && restaurantCategory) {
+          console.log('Creating missing restaurant from user metadata');
+          
+          const { error: createError } = await supabase
+            .from('restaurants')
+            .insert({
+              owner_id: user.id,
+              name: restaurantName,
+              location: restaurantLocation,
+              category: restaurantCategory,
+              vision: restaurantVision || null
+            });
+
+          if (createError) {
+            console.error('Error creating restaurant from metadata:', createError);
+            setHasRestaurant(false);
+          } else {
+            console.log('Restaurant created successfully from metadata');
+            setHasRestaurant(true);
+          }
         } else {
-          console.log('Restaurant created successfully from metadata');
-          setHasRestaurant(true);
+          setHasRestaurant(false);
         }
       } else {
         setHasRestaurant(!!data);
@@ -140,10 +150,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Add restaurant data to metadata if provided
       if (restaurantData) {
-        metadata.restaurant_name = restaurantData.restaurantName;
-        metadata.restaurant_location = restaurantData.restaurantLocation;
-        metadata.restaurant_category = restaurantData.restaurantCategory;
-        metadata.restaurant_vision = restaurantData.restaurantVision;
+        metadata.restaurantName = restaurantData.restaurantName;
+        metadata.restaurantLocation = restaurantData.restaurantLocation;
+        metadata.restaurantCategory = restaurantData.restaurantCategory;
+        metadata.restaurantVision = restaurantData.restaurantVision;
       }
 
       const { error } = await supabase.auth.signUp({
