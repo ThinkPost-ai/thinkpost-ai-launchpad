@@ -4,6 +4,7 @@ import { useTikTokConnectionData } from './hooks/useTikTokConnectionData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import TikTokConnectedState from './components/TikTokConnectedState';
 import TikTokDisconnectedState from './components/TikTokDisconnectedState';
+import TikTokLoginButton from './TikTokLoginButton';
 
 const TikTokConnection = () => {
   const { t } = useLanguage();
@@ -39,10 +40,19 @@ const TikTokConnection = () => {
             onDisconnect={handleDisconnect} 
           />
         ) : (
-          <TikTokDisconnectedState 
-            connecting={connecting} 
-            onConnect={handleConnect} 
-          />
+          <div className="space-y-4">
+            <TikTokDisconnectedState 
+              connecting={connecting} 
+              onConnect={handleConnect} 
+            />
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium mb-2">Alternative: TikTok Login Kit</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Connect using TikTok's official Login Kit for enhanced features
+              </p>
+              <TikTokLoginButton />
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

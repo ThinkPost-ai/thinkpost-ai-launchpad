@@ -258,6 +258,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_in: number | null
+          id: string
+          open_id: string
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_in?: number | null
+          id?: string
+          open_id: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_in?: number | null
+          id?: string
+          open_id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tiktok_users: {
         Row: {
           access_token: string
