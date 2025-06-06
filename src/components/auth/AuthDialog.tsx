@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
@@ -22,6 +22,15 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
         <DialogHeader>
+          <DialogTitle className="sr-only">
+            {activeTab === 'signin' ? 'Sign In' : 'Sign Up'} to ThinkPost
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {activeTab === 'signin' 
+              ? 'Sign in to your ThinkPost account to access your dashboard and manage your social media content.'
+              : 'Create a new ThinkPost account to start managing your social media content with AI assistance.'
+            }
+          </DialogDescription>
           <div className="flex items-center justify-center space-x-2 mb-4">
             <img 
               src="/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png" 

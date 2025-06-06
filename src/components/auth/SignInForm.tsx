@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, AlertCircle, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SignInFormProps {
@@ -16,17 +17,30 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    setNeedsEmailConfirmation(false);
     
-    const { error } = await signIn(email, password);
+    const { error: signInError } = await signIn(email, password);
     
     setIsLoading(false);
     
-    if (!error) {
+    if (signInError) {
+      if (signInError.message.includes('Email not confirmed')) {
+        setNeedsEmailConfirmation(true);
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (signInError.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else {
+        setError(signInError.message);
+      }
+    } else {
       onSuccess?.();
     }
   };
@@ -42,6 +56,23 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant={needsEmailConfirmation ? "default" : "destructive"} className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {needsEmailConfirmation && (
+          <Alert className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <strong>Email confirmation required:</strong> Please check your email inbox and click the confirmation link. 
+              If you don't see the email, check your spam folder.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-deep-blue dark:text-white font-medium">

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,7 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Check profile when user logs in
         if (session?.user && event === 'SIGNED_IN') {
-          await checkUserProfile();
+          setTimeout(() => {
+            checkUserProfile();
+          }, 0);
         } else if (!session?.user) {
           setHasRestaurant(null);
         }
@@ -93,7 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await checkUserProfile();
+        setTimeout(() => {
+          checkUserProfile();
+        }, 0);
       }
       
       setLoading(false);
@@ -128,26 +133,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        // Don't show toast here, let the form handle it
         return { error };
       }
 
       toast({
         title: "Account created successfully!",
-        description: "Please check your email to confirm your account."
+        description: "Please check your email to confirm your account before signing in."
       });
 
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: "Sign up failed",
-        description: error.message,
-        variant: "destructive"
-      });
       return { error };
     }
   };
@@ -160,11 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        // Don't show toast here, let the form handle it
         return { error };
       }
 
@@ -175,11 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive"
-      });
       return { error };
     }
   };
