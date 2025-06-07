@@ -33,15 +33,22 @@ serve(async (req) => {
       throw new Error('TikTok client credentials are not set in environment variables.');
     }
 
-    // 1. Initialize video upload with TikTok
-    console.log('Initializing TikTok video upload...');
-    const initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', {
+    // 1. Initialize video upload with TikTok (Direct Post)
+    console.log('Initializing TikTok video direct post...');
+    const initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tiktokAccessToken}`,
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify({
+        post_info: {
+          title: caption,
+          privacy_level: 'PUBLIC_TO_EVERYONE',
+          disable_duet: false,
+          disable_comment: false,
+          disable_stitch: false,
+        },
         source_info: {
           source: 'PULL_FROM_URL',
           video_url: videoUrl,
