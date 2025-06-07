@@ -18,9 +18,13 @@ serve(async (req) => {
     const state = url.searchParams.get('state')
 
     if (!code || !state) {
-      return new Response('Missing code or state parameter', { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      console.error('Missing code or state parameter')
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/tiktok-callback?error=missing_parameters',
+          ...corsHeaders
+        }
       })
     }
 
@@ -38,11 +42,18 @@ serve(async (req) => {
       .single()
 
     if (stateError || !stateData) {
-      return new Response('Invalid or expired state parameter', { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      console.error('Invalid or expired state parameter:', stateError)
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/tiktok-callback?error=invalid_state',
+          ...corsHeaders
+        }
       })
     }
+
+    // Use the correct redirect URI for token exchange
+    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -55,15 +66,19 @@ serve(async (req) => {
         client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || 'YlXChnvcXTZ2N8kOMtFGZ2IDbPBH8ps3',
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: Deno.env.get('TIKTOK_REDIRECT_URI') || 'https://thinkpost.co/api/auth/tiktok/callback'
+        redirect_uri: redirectUri
       })
     })
 
     if (!tokenResponse.ok) {
-      console.error('TikTok token exchange failed:', await tokenResponse.text())
-      return new Response('Failed to exchange code for token', { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      const errorText = await tokenResponse.text()
+      console.error('TikTok token exchange failed:', errorText)
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/tiktok-callback?error=token_exchange_failed',
+          ...corsHeaders
+        }
       })
     }
 
@@ -71,9 +86,13 @@ serve(async (req) => {
     const { access_token, open_id } = tokenData
 
     if (!access_token || !open_id) {
-      return new Response('Invalid token response from TikTok', { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      console.error('Invalid token response from TikTok:', tokenData)
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/tiktok-callback?error=invalid_token_response',
+          ...corsHeaders
+        }
       })
     }
 
@@ -107,9 +126,12 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating profile:', updateError)
-      return new Response('Failed to update profile', { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/tiktok-callback?error=profile_update_failed',
+          ...corsHeaders
+        }
       })
     }
 
@@ -123,16 +145,19 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/user-dashboard?tab=overview&tiktok=connected',
+        'Location': '/tiktok-callback?code=' + code,
         ...corsHeaders
       }
     })
 
   } catch (error) {
     console.error('Error in TikTok callback:', error)
-    return new Response('Internal server error', { 
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': '/tiktok-callback?error=internal_error',
+        ...corsHeaders
+      }
     })
   }
 })

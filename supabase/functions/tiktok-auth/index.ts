@@ -52,13 +52,19 @@ serve(async (req) => {
       )
     }
 
+    // Use the correct Supabase edge function URL for redirect
+    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+
     // Build TikTok OAuth URL
     const tiktokAuthUrl = new URL('https://www.tiktok.com/v2/auth/authorize/')
     tiktokAuthUrl.searchParams.set('client_key', Deno.env.get('TIKTOK_CLIENT_ID') || 'sbawdyn4l42rz2ceyq')
     tiktokAuthUrl.searchParams.set('response_type', 'code')
     tiktokAuthUrl.searchParams.set('scope', 'user.info.basic')
-    tiktokAuthUrl.searchParams.set('redirect_uri', Deno.env.get('TIKTOK_REDIRECT_URI') || 'https://thinkpost.co/api/auth/tiktok/callback')
+    tiktokAuthUrl.searchParams.set('redirect_uri', redirectUri)
     tiktokAuthUrl.searchParams.set('state', state)
+
+    console.log('TikTok Auth URL:', tiktokAuthUrl.toString())
+    console.log('Redirect URI:', redirectUri)
 
     return new Response(
       JSON.stringify({ authUrl: tiktokAuthUrl.toString() }),
