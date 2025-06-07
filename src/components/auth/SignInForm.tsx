@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SignInFormProps {
   onSuccess?: () => void;
@@ -20,6 +20,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const { signIn } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +35,9 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
     if (signInError) {
       if (signInError.message.includes('Email not confirmed')) {
         setNeedsEmailConfirmation(true);
-        setError('Please check your email and click the confirmation link before signing in.');
+        setError(t('auth.checkEmailConfirmation'));
       } else if (signInError.message.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please check your credentials and try again.');
+        setError(t('auth.invalidCredentials'));
       } else {
         setError(signInError.message);
       }
@@ -49,10 +50,10 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
     <Card className="w-full">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold text-deep-blue dark:text-white">
-          Welcome Back
+          {t('auth.welcomeBack')}
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
-          Sign in to your ThinkPost account
+          {t('auth.signInToAccount')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,8 +68,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
           <Alert className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
             <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <strong>Email confirmation required:</strong> Please check your email inbox and click the confirmation link. 
-              If you don't see the email, check your spam folder.
+              <strong>{t('auth.emailConfirmationRequired')}</strong> {t('auth.checkEmailConfirmation')}
             </AlertDescription>
           </Alert>
         )}
@@ -76,12 +76,12 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-deep-blue dark:text-white font-medium">
-              Email
+              {t('auth.email')}
             </Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('auth.enterEmail')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -91,13 +91,13 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-deep-blue dark:text-white font-medium">
-              Password
+              {t('auth.password')}
             </Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
+                placeholder={t('auth.enterPassword')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -118,7 +118,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
               href="#" 
               className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium"
             >
-              Forgot password?
+              {t('auth.forgotPassword')}
             </a>
           </div>
 
@@ -127,7 +127,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
             disabled={isLoading}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5"
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
       </CardContent>

@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,7 +51,7 @@ const Hero = () => {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-deep-blue dark:text-white mb-6 leading-tight">
                 {t('hero.title.transform')}
                 <br />
-                <span className="bg-gradient-primary bg-clip-text text-transparent">
+                <span className="bg-gradient-primary bg-clip-text text-transparent dark:text-pink-400">
                   {t('hero.title.contentStrategy')}
                 </span>
               </h1>

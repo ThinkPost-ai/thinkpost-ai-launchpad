@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SignUpFormProps {
   onSuccess?: () => void;
@@ -19,6 +20,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,12 +70,12 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-deep-blue dark:text-white font-medium">
-              Email
+              {t('auth.email')}
             </Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('auth.enterEmail')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -83,7 +85,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-deep-blue dark:text-white font-medium">
-              Password
+              {t('auth.password')}
             </Label>
             <div className="relative">
               <Input

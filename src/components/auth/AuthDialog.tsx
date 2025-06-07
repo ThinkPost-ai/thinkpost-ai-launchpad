@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AuthDialogProps {
 
 const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps) => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
+  const { t } = useLanguage();
 
   const handleAuthSuccess = () => {
     onClose();
@@ -22,11 +24,11 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
       <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
         <DialogHeader>
           <DialogTitle className="sr-only">
-            {activeTab === 'signin' ? 'Sign In' : 'Sign Up'} to ThinkPost
+            {activeTab === 'signin' ? t('auth.signIn') : t('auth.signUp')} to ThinkPost
           </DialogTitle>
           <DialogDescription className="sr-only">
             {activeTab === 'signin' 
-              ? 'Sign in to your ThinkPost account to access your dashboard and manage your social media content.'
+              ? t('auth.signInToAccount')
               : 'Create a new ThinkPost account to start managing your social media content with AI assistance.'
             }
           </DialogDescription>
@@ -51,7 +53,7 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
                 : 'text-gray-600 dark:text-gray-300 hover:text-deep-blue dark:hover:text-white'
             }`}
           >
-            Sign In
+            {t('auth.signIn')}
           </Button>
           <Button
             variant={activeTab === 'signup' ? 'default' : 'ghost'}
@@ -62,7 +64,7 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
                 : 'text-gray-600 dark:text-gray-300 hover:text-deep-blue dark:hover:text-white'
             }`}
           >
-            Sign Up
+            {t('auth.signUp')}
           </Button>
         </div>
 
@@ -77,22 +79,22 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
         <div className="text-center text-sm text-gray-600 dark:text-gray-300 mt-4">
           {activeTab === 'signin' ? (
             <>
-              Don't have an account?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <button
                 onClick={() => setActiveTab('signup')}
                 className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium"
               >
-                Sign up
+                {t('auth.signUp')}
               </button>
             </>
           ) : (
             <>
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <button
                 onClick={() => setActiveTab('signin')}
                 className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium"
               >
-                Sign in
+                {t('auth.signIn')}
               </button>
             </>
           )}

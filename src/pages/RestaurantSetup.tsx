@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
@@ -35,6 +36,7 @@ const RestaurantSetup = () => {
   const { user, loading, checkUserProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -79,8 +81,8 @@ const RestaurantSetup = () => {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to load restaurant data",
+        title: t('restaurant.error'),
+        description: t('restaurant.failedToLoad'),
         variant: "destructive"
       });
     }
@@ -105,8 +107,8 @@ const RestaurantSetup = () => {
         if (error) throw error;
 
         toast({
-          title: "Success!",
-          description: "Restaurant profile updated successfully"
+          title: t('restaurant.success'),
+          description: t('restaurant.profileUpdated')
         });
       } else {
         const { error } = await supabase
@@ -122,8 +124,8 @@ const RestaurantSetup = () => {
         if (error) throw error;
 
         toast({
-          title: "Success!",
-          description: "Restaurant profile created successfully"
+          title: t('restaurant.success'),
+          description: t('restaurant.profileCreated')
         });
       }
 
@@ -134,8 +136,8 @@ const RestaurantSetup = () => {
       navigate('/user-dashboard');
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save restaurant profile",
+        title: t('restaurant.error'),
+        description: error.message || t('restaurant.failedToSave'),
         variant: "destructive"
       });
     } finally {
@@ -157,51 +159,51 @@ const RestaurantSetup = () => {
         <Card className="shadow-lg">
           <CardHeader className="text-center px-4 sm:px-6">
             <CardTitle className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white leading-tight">
-              {isEditing ? 'Update Restaurant Profile' : 'Complete Your Restaurant Profile'}
+              {isEditing ? t('restaurant.updateProfile') : t('restaurant.completeProfile')}
             </CardTitle>
             <CardDescription className="text-sm sm:text-base mt-2">
               {isEditing 
-                ? 'Update your restaurant information'
-                : 'Tell us about your restaurant to get started with ThinkPost'
+                ? t('restaurant.updateInformation')
+                : t('restaurant.tellUsAbout')
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">Restaurant Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium">{t('restaurant.name')} *</Label>
                 <Input
                   id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter your restaurant name"
+                  placeholder={t('restaurant.enterName')}
                   required
                   className="h-11 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium">Location *</Label>
+                <Label htmlFor="location" className="text-sm font-medium">{t('restaurant.location')} *</Label>
                 <Input
                   id="location"
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="e.g., Riyadh, Saudi Arabia"
+                  placeholder={t('restaurant.locationPlaceholder')}
                   required
                   className="h-11 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+                <Label htmlFor="category" className="text-sm font-medium">{t('restaurant.category')} *</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(value: RestaurantCategory) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger className="h-11 text-base">
-                    <SelectValue placeholder="Select restaurant category" />
+                    <SelectValue placeholder={t('restaurant.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                     {restaurantCategories.map((category) => (
@@ -218,12 +220,12 @@ const RestaurantSetup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="vision" className="text-sm font-medium">Restaurant Vision</Label>
+                <Label htmlFor="vision" className="text-sm font-medium">{t('restaurant.vision')}</Label>
                 <Textarea
                   id="vision"
                   value={formData.vision}
                   onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-                  placeholder="Describe your restaurant's vision, style, and what makes it special..."
+                  placeholder={t('restaurant.visionPlaceholder')}
                   rows={4}
                   className="resize-none text-base min-h-[100px]"
                 />
@@ -237,7 +239,7 @@ const RestaurantSetup = () => {
                     onClick={() => navigate('/dashboard')}
                     className="w-full sm:flex-1 h-11 text-base"
                   >
-                    Cancel
+                    {t('restaurant.cancel')}
                   </Button>
                 )}
                 <Button
@@ -248,10 +250,10 @@ const RestaurantSetup = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEditing ? 'Updating...' : 'Creating...'}
+                      {isEditing ? t('restaurant.updating') : t('restaurant.creating')}
                     </>
                   ) : (
-                    isEditing ? 'Update Profile' : 'Complete Setup'
+                    isEditing ? t('restaurant.updateButton') : t('restaurant.completeSetup')
                   )}
                 </Button>
               </div>
