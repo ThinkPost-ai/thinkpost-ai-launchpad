@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -59,7 +58,7 @@ serve(async (req) => {
     const tiktokAuthUrl = new URL('https://www.tiktok.com/v2/auth/authorize/')
     tiktokAuthUrl.searchParams.set('client_key', Deno.env.get('TIKTOK_CLIENT_ID') || 'sbawdyn4l42rz2ceyq')
     tiktokAuthUrl.searchParams.set('response_type', 'code')
-    tiktokAuthUrl.searchParams.set('scope', 'user.info.basic')
+    tiktokAuthUrl.searchParams.set('scope', 'user.info.basic,video.publish')
     tiktokAuthUrl.searchParams.set('redirect_uri', redirectUri)
     tiktokAuthUrl.searchParams.set('state', state)
 
