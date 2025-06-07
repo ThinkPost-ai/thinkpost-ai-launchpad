@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -7,6 +8,9 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log("🟡 TikTok callback function hit");
+  console.log("Request URL:", req.url);
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -16,10 +20,11 @@ serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
 
-    console.log('TikTok callback received:', { code: !!code, state: !!state })
+    console.log("🔍 Received code:", code ? "present" : "missing");
+    console.log("🔍 Received state:", state ? "present" : "missing");
 
     if (!code || !state) {
-      console.error('Missing code or state parameter')
+      console.error('❌ Missing code or state from TikTok redirect');
       return new Response(null, {
         status: 302,
         headers: {
@@ -35,6 +40,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log("🔍 Validating state parameter");
+
     // Validate state (CSRF protection)
     const { data: stateData, error: stateError } = await supabaseClient
       .from('tiktok_oauth_states')
@@ -44,7 +51,7 @@ serve(async (req) => {
       .single()
 
     if (stateError || !stateData) {
-      console.error('Invalid or expired state parameter:', stateError)
+      console.error('❌ Invalid or expired state parameter:', stateError)
       return new Response(null, {
         status: 302,
         headers: {
@@ -54,10 +61,22 @@ serve(async (req) => {
       })
     }
 
+    console.log("✅ State validation successful, user_id:", stateData.user_id);
+
     // Use the verified domain redirect URI for token exchange
     const redirectUri = 'https://thinkpost.co/tiktok-callback'
 
-    console.log('Exchanging code for token with redirect URI:', redirectUri)
+    const tokenPayload = {
+      client_key: Deno.env.get('TIKTOK_CLIENT_ID') || '',
+      client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || '',
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri
+    };
+
+    console.log('📤 Sending token request to TikTok with redirect URI:', redirectUri);
+    console.log('📤 Token payload (client_key):', tokenPayload.client_key ? 'present' : 'missing');
+    console.log('📤 Token payload (client_secret):', tokenPayload.client_secret ? 'present' : 'missing');
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -65,18 +84,15 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        client_key: Deno.env.get('TIKTOK_CLIENT_ID') || '',
-        client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || '',
-        code: code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri
-      })
+      body: new URLSearchParams(tokenPayload)
     })
 
+    const tokenText = await tokenResponse.text();
+    console.log('🎯 TikTok token response status:', tokenResponse.status);
+    console.log('🎯 TikTok token response:', tokenText);
+
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text()
-      console.error('TikTok token exchange failed:', errorText)
+      console.error('❌ Failed to get access token from TikTok:', tokenText);
       return new Response(null, {
         status: 302,
         headers: {
@@ -86,13 +102,28 @@ serve(async (req) => {
       })
     }
 
-    const tokenData = await tokenResponse.json()
-    const { access_token, open_id } = tokenData
+    let tokenData;
+    try {
+      tokenData = JSON.parse(tokenText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse TikTok token response:', parseError);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_token_response',
+          ...corsHeaders
+        }
+      })
+    }
 
-    console.log('Token exchange successful:', { has_access_token: !!access_token, open_id })
+    const { access_token, open_id } = tokenData;
+
+    console.log('✅ Token exchange successful');
+    console.log('🔍 Access token:', access_token ? 'present' : 'missing');
+    console.log('🔍 Open ID:', open_id ? 'present' : 'missing');
 
     if (!access_token || !open_id) {
-      console.error('Invalid token response from TikTok:', tokenData)
+      console.error('❌ Invalid token response from TikTok - missing access_token or open_id');
       return new Response(null, {
         status: 302,
         headers: {
@@ -107,7 +138,7 @@ serve(async (req) => {
     let avatarUrl = null
 
     try {
-      console.log('Fetching user info from TikTok with access token')
+      console.log('📤 Fetching user info from TikTok');
       const userInfoResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
         method: 'GET',
         headers: {
@@ -116,26 +147,27 @@ serve(async (req) => {
         }
       })
 
-      console.log('User info response status:', userInfoResponse.status)
+      const userInfoText = await userInfoResponse.text();
+      console.log('🎯 User info response status:', userInfoResponse.status);
+      console.log('🎯 User info response:', userInfoText);
 
       if (userInfoResponse.ok) {
-        const userInfo = await userInfoResponse.json()
-        console.log('User info response:', JSON.stringify(userInfo, null, 2))
-        
-        username = userInfo.data?.user?.display_name
-        avatarUrl = userInfo.data?.user?.avatar_url
-        console.log('User info extracted:', { username, has_avatar: !!avatarUrl })
+        try {
+          const userInfo = JSON.parse(userInfoText);
+          username = userInfo.data?.user?.display_name
+          avatarUrl = userInfo.data?.user?.avatar_url
+          console.log('✅ User info extracted - username:', username, 'avatar:', avatarUrl ? 'present' : 'missing');
+        } catch (parseError) {
+          console.error('❌ Failed to parse user info response:', parseError);
+        }
       } else {
-        const errorText = await userInfoResponse.text()
-        console.error('Failed to fetch user info from TikTok:', {
-          status: userInfoResponse.status,
-          statusText: userInfoResponse.statusText,
-          error: errorText
-        })
+        console.error('❌ Failed to fetch user info from TikTok');
       }
     } catch (userInfoError) {
-      console.error('Error fetching user info:', userInfoError)
+      console.error('❌ Error fetching user info:', userInfoError)
     }
+
+    console.log('📤 Updating user profile in database');
 
     // Update user profile with TikTok data
     const { error: updateError } = await supabaseClient
@@ -150,7 +182,7 @@ serve(async (req) => {
       .eq('id', stateData.user_id)
 
     if (updateError) {
-      console.error('Error updating profile:', updateError)
+      console.error('❌ Error updating profile:', updateError)
       return new Response(null, {
         status: 302,
         headers: {
@@ -160,13 +192,16 @@ serve(async (req) => {
       })
     }
 
+    console.log('✅ Profile updated successfully');
+
     // Clean up the OAuth state
+    console.log('📤 Cleaning up OAuth state');
     await supabaseClient
       .from('tiktok_oauth_states')
       .delete()
       .eq('state_value', state)
 
-    console.log('TikTok connection successful for user:', stateData.user_id)
+    console.log('🎉 TikTok connection successful for user:', stateData.user_id)
 
     // Redirect to dashboard with success
     return new Response(null, {
@@ -178,7 +213,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error in TikTok callback:', error)
+    console.error('💥 Unexpected error in TikTok callback:', error)
     return new Response(null, {
       status: 302,
       headers: {
