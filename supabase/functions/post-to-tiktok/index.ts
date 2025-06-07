@@ -82,7 +82,7 @@ serve(async (req) => {
       body: JSON.stringify({
         post_info: {
           title: caption,
-          privacy_level: 'PUBLIC_TO_EVERYONE',
+          privacy_level: 'SELF_ONLY',
           disable_duet: false,
           disable_comment: false,
           disable_stitch: false,
@@ -101,7 +101,7 @@ serve(async (req) => {
     console.log('Request body for TikTok video init:', JSON.stringify({
       post_info: {
         title: caption,
-        privacy_level: 'PUBLIC_TO_EVERYONE',
+        privacy_level: 'SELF_ONLY',
         disable_duet: false,
         disable_comment: false,
         disable_stitch: false,
