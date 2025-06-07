@@ -1,66 +1,33 @@
 
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const TikTokLoginCallback = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   useEffect(() => {
-    const processCallback = async () => {
-      const tiktokConnected = searchParams.get('tiktok');
-      const error = searchParams.get('error');
-
-      if (error) {
-        toast({
-          title: "Connection Failed",
-          description: "TikTok connection was cancelled or failed.",
-          variant: "destructive"
-        });
-        navigate('/user-dashboard?tab=overview');
-        return;
-      }
-
-      if (tiktokConnected === 'connected') {
-        toast({
-          title: "Success!",
-          description: "Your TikTok account has been connected successfully.",
-        });
-        navigate('/user-dashboard?tab=overview');
-        return;
-      }
-
-      // If we reach here, it means the callback is being processed by the edge function
-      // Show loading state briefly before redirecting
-      setTimeout(() => {
-        navigate('/user-dashboard?tab=overview');
-      }, 2000);
-    };
-
-    processCallback();
-  }, [searchParams, navigate, toast]);
+    toast({
+      title: "Feature Unavailable",
+      description: "TikTok connection has been disabled.",
+      variant: "destructive"
+    });
+    navigate('/user-dashboard?tab=overview');
+  }, [navigate, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
       <div className="text-center">
         <div className="mb-4">
-          {searchParams.get('tiktok') === 'connected' ? (
-            <CheckCircle className="h-8 w-8 mx-auto text-green-500" />
-          ) : (
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-vibrant-purple" />
-          )}
+          <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
         </div>
         <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
-          {searchParams.get('tiktok') === 'connected' ? 'TikTok Connected!' : 'Connecting TikTok Account'}
+          TikTok Connection Disabled
         </h2>
         <p className="text-muted-foreground">
-          {searchParams.get('tiktok') === 'connected' 
-            ? 'Redirecting to your dashboard...'
-            : 'Please wait while we connect your TikTok account...'
-          }
+          Redirecting to your dashboard...
         </p>
       </div>
     </div>

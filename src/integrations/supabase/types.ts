@@ -83,11 +83,6 @@ export type Database = {
           display_name: string | null
           full_name: string | null
           id: string
-          tiktok_avatar_url: string | null
-          tiktok_connected: boolean | null
-          tiktok_open_id: string | null
-          tiktok_token: string | null
-          tiktok_username: string | null
           updated_at: string
         }
         Insert: {
@@ -97,11 +92,6 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id: string
-          tiktok_avatar_url?: string | null
-          tiktok_connected?: boolean | null
-          tiktok_open_id?: string | null
-          tiktok_token?: string | null
-          tiktok_username?: string | null
           updated_at?: string
         }
         Update: {
@@ -111,11 +101,6 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id?: string
-          tiktok_avatar_url?: string | null
-          tiktok_connected?: boolean | null
-          tiktok_open_id?: string | null
-          tiktok_token?: string | null
-          tiktok_username?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -206,147 +191,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      tiktok_connections: {
-        Row: {
-          access_token: string
-          created_at: string
-          id: string
-          refresh_token: string | null
-          scope: string | null
-          tiktok_user_id: string
-          tiktok_username: string | null
-          token_expires_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_user_id: string
-          tiktok_username?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_user_id?: string
-          tiktok_username?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tiktok_oauth_states: {
-        Row: {
-          created_at: string | null
-          expires_at: string
-          id: string
-          state_token: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at: string
-          id?: string
-          state_token: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          state_token?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tiktok_tokens: {
-        Row: {
-          access_token: string
-          created_at: string
-          expires_in: number | null
-          id: string
-          open_id: string
-          refresh_token: string | null
-          scope: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          expires_in?: number | null
-          id?: string
-          open_id: string
-          refresh_token?: string | null
-          scope?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          expires_in?: number | null
-          id?: string
-          open_id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tiktok_users: {
-        Row: {
-          access_token: string
-          avatar_url: string | null
-          created_at: string
-          display_name: string | null
-          id: string
-          refresh_token: string | null
-          scope: string | null
-          tiktok_open_id: string
-          token_expires_at: string | null
-          updated_at: string
-          username: string | null
-        }
-        Insert: {
-          access_token: string
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_open_id: string
-          token_expires_at?: string | null
-          updated_at?: string
-          username?: string | null
-        }
-        Update: {
-          access_token?: string
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          refresh_token?: string | null
-          scope?: string | null
-          tiktok_open_id?: string
-          token_expires_at?: string | null
-          updated_at?: string
-          username?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {
