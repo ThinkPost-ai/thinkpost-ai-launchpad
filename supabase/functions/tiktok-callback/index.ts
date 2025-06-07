@@ -22,12 +22,13 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/tiktok-callback?error=missing_parameters',
+          'Location': '/user-dashboard?error=missing_parameters',
           ...corsHeaders
         }
       })
     }
 
+    // Use service role key since this is a callback without user session
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -46,7 +47,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/tiktok-callback?error=invalid_state',
+          'Location': '/user-dashboard?error=invalid_state',
           ...corsHeaders
         }
       })
@@ -62,8 +63,8 @@ serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_key: Deno.env.get('TIKTOK_CLIENT_ID') || 'sbawdyn4l42rz2ceyq',
-        client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || 'YlXChnvcXTZ2N8kOMtFGZ2IDbPBH8ps3',
+        client_key: Deno.env.get('TIKTOK_CLIENT_ID') || '',
+        client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || '',
         code: code,
         grant_type: 'authorization_code',
         redirect_uri: redirectUri
@@ -76,7 +77,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/tiktok-callback?error=token_exchange_failed',
+          'Location': '/user-dashboard?error=token_exchange_failed',
           ...corsHeaders
         }
       })
@@ -90,7 +91,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/tiktok-callback?error=invalid_token_response',
+          'Location': '/user-dashboard?error=invalid_token_response',
           ...corsHeaders
         }
       })
@@ -129,7 +130,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/tiktok-callback?error=profile_update_failed',
+          'Location': '/user-dashboard?error=profile_update_failed',
           ...corsHeaders
         }
       })
@@ -145,7 +146,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/tiktok-callback?code=' + code,
+        'Location': '/user-dashboard?tiktok=connected',
         ...corsHeaders
       }
     })
@@ -155,7 +156,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/tiktok-callback?error=internal_error',
+        'Location': '/user-dashboard?error=internal_error',
         ...corsHeaders
       }
     })

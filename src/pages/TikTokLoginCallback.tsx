@@ -10,23 +10,44 @@ const TikTokLoginCallback = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
+    const tiktokConnected = searchParams.get('tiktok');
     const error = searchParams.get('error');
 
     if (error) {
+      let errorMessage = "There was an error connecting your TikTok account.";
+      
+      switch (error) {
+        case 'missing_parameters':
+          errorMessage = "Missing required parameters from TikTok.";
+          break;
+        case 'invalid_state':
+          errorMessage = "Invalid or expired authorization state.";
+          break;
+        case 'token_exchange_failed':
+          errorMessage = "Failed to exchange authorization code for access token.";
+          break;
+        case 'invalid_token_response':
+          errorMessage = "Invalid response from TikTok's token service.";
+          break;
+        case 'profile_update_failed':
+          errorMessage = "Failed to update your profile with TikTok information.";
+          break;
+        case 'internal_error':
+          errorMessage = "An internal error occurred during the connection process.";
+          break;
+      }
+
       toast({
         title: "TikTok Connection Failed",
-        description: "There was an error connecting your TikTok account.",
+        description: errorMessage,
         variant: "destructive"
       });
+      
       navigate('/user-dashboard?tab=overview');
       return;
     }
 
-    if (code && state) {
-      // The callback is handled by the edge function
-      // This page is mainly for handling client-side errors and redirects
+    if (tiktokConnected === 'connected') {
       toast({
         title: "TikTok Connected!",
         description: "Your TikTok account has been connected successfully.",
@@ -42,7 +63,7 @@ const TikTokLoginCallback = () => {
   }, [navigate, toast, searchParams]);
 
   const hasError = searchParams.get('error');
-  const hasCode = searchParams.get('code');
+  const isConnected = searchParams.get('tiktok') === 'connected';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
@@ -50,7 +71,7 @@ const TikTokLoginCallback = () => {
         <div className="mb-4">
           {hasError ? (
             <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
-          ) : hasCode ? (
+          ) : isConnected ? (
             <CheckCircle className="h-8 w-8 mx-auto text-green-500" />
           ) : (
             <Loader2 className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
@@ -59,7 +80,7 @@ const TikTokLoginCallback = () => {
         <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
           {hasError 
             ? 'Connection Failed' 
-            : hasCode 
+            : isConnected 
               ? 'TikTok Connected Successfully!' 
               : 'Processing TikTok Connection...'
           }
