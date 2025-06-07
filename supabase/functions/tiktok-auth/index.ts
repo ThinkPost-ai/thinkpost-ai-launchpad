@@ -52,8 +52,8 @@ serve(async (req) => {
       )
     }
 
-    // Use the correct Supabase edge function URL for redirect
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    // Use the verified domain redirect URI that TikTok has approved
+    const redirectUri = 'https://thinkpost.co/tiktok-callback'
 
     // Build TikTok OAuth URL
     const tiktokAuthUrl = new URL('https://www.tiktok.com/v2/auth/authorize/')

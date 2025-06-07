@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -24,7 +23,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=missing_parameters',
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=missing_parameters',
           ...corsHeaders
         }
       })
@@ -49,14 +48,14 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=invalid_state',
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_state',
           ...corsHeaders
         }
       })
     }
 
-    // Use the correct redirect URI for token exchange
-    const redirectUri = 'https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback'
+    // Use the verified domain redirect URI for token exchange
+    const redirectUri = 'https://thinkpost.co/tiktok-callback'
 
     console.log('Exchanging code for token with redirect URI:', redirectUri)
 
@@ -81,7 +80,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=token_exchange_failed',
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=token_exchange_failed',
           ...corsHeaders
         }
       })
@@ -97,7 +96,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=invalid_token_response',
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_token_response',
           ...corsHeaders
         }
       })
@@ -155,7 +154,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=profile_update_failed',
+          'Location': 'https://thinkpost.co/tiktok-login-callback?error=profile_update_failed',
           ...corsHeaders
         }
       })
@@ -173,7 +172,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?tiktok=connected',
+        'Location': 'https://thinkpost.co/tiktok-login-callback?tiktok=connected',
         ...corsHeaders
       }
     })
@@ -183,7 +182,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=internal_error',
+        'Location': 'https://thinkpost.co/tiktok-login-callback?error=internal_error',
         ...corsHeaders
       }
     })
