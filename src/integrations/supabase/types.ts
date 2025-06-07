@@ -83,6 +83,11 @@ export type Database = {
           display_name: string | null
           full_name: string | null
           id: string
+          tiktok_access_token: string | null
+          tiktok_avatar_url: string | null
+          tiktok_connected: boolean | null
+          tiktok_open_id: string | null
+          tiktok_username: string | null
           updated_at: string
         }
         Insert: {
@@ -92,6 +97,11 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id: string
+          tiktok_access_token?: string | null
+          tiktok_avatar_url?: string | null
+          tiktok_connected?: boolean | null
+          tiktok_open_id?: string | null
+          tiktok_username?: string | null
           updated_at?: string
         }
         Update: {
@@ -101,6 +111,11 @@ export type Database = {
           display_name?: string | null
           full_name?: string | null
           id?: string
+          tiktok_access_token?: string | null
+          tiktok_avatar_url?: string | null
+          tiktok_connected?: boolean | null
+          tiktok_open_id?: string | null
+          tiktok_username?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -192,11 +207,39 @@ export type Database = {
           },
         ]
       }
+      tiktok_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          state_value: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          state_value: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          state_value?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_oauth_states: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       decrement_caption_credits: {
         Args: { user_id: string }
         Returns: number

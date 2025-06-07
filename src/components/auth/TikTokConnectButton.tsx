@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Music, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 
 interface TikTokConnectButtonProps {
   variant?: 'default' | 'outline';
@@ -11,15 +11,10 @@ interface TikTokConnectButtonProps {
 }
 
 const TikTokConnectButton = ({ variant = 'default', size = 'default', className }: TikTokConnectButtonProps) => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { toast } = useToast();
+  const { connectTikTok, isConnecting } = useTikTokConnection();
 
   const handleConnectTikTok = async () => {
-    toast({
-      title: "Feature Unavailable",
-      description: "TikTok connection has been disabled.",
-      variant: "destructive"
-    });
+    await connectTikTok();
   };
 
   return (
