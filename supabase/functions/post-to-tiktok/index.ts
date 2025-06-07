@@ -60,8 +60,19 @@ serve(async (req) => {
       throw new Error('TikTok client credentials are not set in environment variables.');
     }
 
+    // Fetch the video from Supabase Storage
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok || !videoResponse.body) {
+      throw new Error(`Failed to fetch video from URL: ${videoResponse.statusText}`);
+    }
+
+    const videoSize = parseInt(videoResponse.headers.get('Content-Length') || '0');
+    if (videoSize === 0) {
+      throw new Error('Fetched video has zero size.');
+    }
+
     // 1. Initialize video upload with TikTok (Direct Post)
-    console.log('Initializing TikTok video direct post...');
+    console.log('Initializing TikTok video direct post with FILE_UPLOAD...');
     const initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
       method: 'POST',
       headers: {
@@ -77,8 +88,11 @@ serve(async (req) => {
           disable_stitch: false,
         },
         source_info: {
-          source: 'PULL_FROM_URL',
-          video_url: videoUrl,
+          source: 'FILE_UPLOAD',
+          video_size: videoSize,
+          // TikTok recommends chunk_size around 10MB. For simplicity, we'll assume one chunk for now.
+          // For larger videos, this needs to be properly chunked.
+          total_chunk_count: 1,
         },
       }),
     });
@@ -92,7 +106,26 @@ serve(async (req) => {
     }
 
     const publish_id = initUploadData.data.publish_id;
-    console.log(`Video upload initialized. Publish ID: ${publish_id}`);
+    const upload_url = initUploadData.data.upload_url; // Get upload_url for the next step
+    console.log(`Video upload initialized. Publish ID: ${publish_id}, Upload URL: ${upload_url}`);
+
+    // 2. Upload the video file to the received upload_url
+    console.log('Uploading video to TikTok...');
+    const uploadVideoResponse = await fetch(upload_url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': videoResponse.headers.get('Content-Type') || 'video/mp4',
+        'Content-Range': `bytes 0-${videoSize - 1}/${videoSize}`,
+      },
+      body: videoResponse.body, // Stream the video body directly
+    });
+
+    if (!uploadVideoResponse.ok) {
+      const uploadErrorText = await uploadVideoResponse.text();
+      throw new Error(`TikTok video upload failed: ${uploadVideoResponse.status} - ${uploadErrorText}`);
+    }
+
+    console.log('Video uploaded to TikTok successfully.');
 
     // Update scheduled post status to indicate it's being processed by TikTok
     const { error: updateError } = await supabase
