@@ -86,21 +86,7 @@ const Hero = () => {
                 </Button>
               </div>
 
-              {/* Stats */}
-              <div className={`grid grid-cols-3 gap-8 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-deep-blue dark:text-white mb-1">10M+</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('hero.stats.contentGenerated')}</div>
-                </div>
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-deep-blue dark:text-white mb-1">50K+</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('hero.stats.users')}</div>
-                </div>
-                <div>
-                  <div className="text-2xl md:text-3xl font-bold text-deep-blue dark:text-white mb-1">99.9%</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('hero.stats.uptime')}</div>
-                </div>
-              </div>
+
             </div>
 
             {/* Right Content - Video Section */}
