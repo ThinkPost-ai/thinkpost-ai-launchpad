@@ -227,6 +227,7 @@ const getTranslations = () => {
       'footer.bottomLinks.cookies': 'Cookies',
       
       // Dashboard
+      'dashboard.loading': 'Loading your dashboard...',
       'dashboard.tabs.overview': 'Overview',
       'dashboard.tabs.media': 'Media',
       'dashboard.tabs.captions': 'Captions',
@@ -252,6 +253,12 @@ const getTranslations = () => {
       // TikTok Connection
       'dashboard.tiktok.title': 'TikTok Connection',
       'dashboard.tiktok.description': 'Connect your TikTok account to schedule and post content directly',
+      'dashboard.tiktok.connectedAs': 'Connected as @{username}',
+      'dashboard.tiktok.connectedStatus': 'Connected to TikTok',
+      'dashboard.tiktok.disconnect': 'Disconnect TikTok',
+      'dashboard.tiktok.connectDescription': 'Connect your TikTok account to access additional features and enhance your content creation.',
+      'dashboard.tiktok.connecting': 'Connecting...',
+      'dashboard.tiktok.connect': 'Connect TikTok',
       
       // User Profile
       'dashboard.profile.owner': 'Owner',
@@ -259,6 +266,62 @@ const getTranslations = () => {
       'dashboard.profile.accountSettings': 'Account Settings',
       'dashboard.profile.signOut': 'Sign Out',
       
+      // Media Management
+      'media.title': 'Media Management',
+      'media.description': 'Manage your uploaded photos and product images',
+      'media.addProducts': 'Add Products',
+      'media.selectAll': 'Select All Products',
+      'media.cancelSelection': 'Cancel Selection',
+      'media.deleteSelected': 'Delete Selected ({count})',
+      'media.deleteAll': 'Delete All Products',
+      'media.noMedia': 'No media uploaded yet',
+      'media.noFilter': 'No {filter} found',
+      'media.viewGrid': 'Grid View',
+      'media.viewList': 'List View',
+      'media.filterAll': 'All',
+      'media.filterImages': 'Images',
+      'media.filterProducts': 'Products',
+      'media.filterWithCaptions': 'With Captions',
+      'media.filterWithoutCaptions': 'Without Captions',
+
+      // Generated Captions
+      'captions.title': 'Generated Captions',
+      'captions.description': 'Manage your AI-generated captions for images and products',
+      'captions.regenerate': 'Regenerate caption',
+      'captions.noCredits': 'No caption credits remaining',
+      'captions.generating': 'Generating...',
+      'captions.generated': 'Caption generated successfully',
+      'captions.failed': 'Failed to generate caption',
+      'captions.noContent': 'No content yet',
+      'captions.addProducts': 'Add some products with images to generate AI captions',
+      'captions.addFirst': 'Add Your First Product',
+      'captions.addMore': 'Add More Content',
+
+      // Scheduled Posts
+      'schedule.title': 'Scheduled Posts',
+      'schedule.description': 'Schedule and manage your social media posts',
+      'schedule.schedulePosts': 'Schedule Posts',
+      'schedule.noPosts': 'No posts scheduled for this date',
+      'schedule.deleteAll': 'Delete All Scheduled Tasks',
+      'schedule.editDate': 'Edit Date',
+      'schedule.delete': 'Delete',
+      'schedule.cancel': 'Cancel',
+      'schedule.needContent': 'You need products or images with captions to schedule posts',
+      'schedule.dailyView': 'Daily View',
+      'schedule.weeklyView': 'Weekly View',
+      'schedule.calendar': 'Calendar',
+
+      // Notifications
+      'notifications.title': 'Notifications',
+      'notifications.description': 'Choose what notifications you want to receive',
+      'notifications.noNotifications': 'No notifications yet',
+      'notifications.markAsRead': 'Mark as read',
+      'notifications.delete': 'Delete',
+      'notifications.captionGenerated': 'Caption Generated',
+      'notifications.uploadFailed': 'Upload Failed',
+      'notifications.uploadStatus': 'Upload Status',
+      'notifications.captionSettings': 'Get notified when AI captions are generated',
+
       // Image Upload Page
       'upload.backToDashboard': 'Back to Dashboard',
       'upload.title': 'Upload Images',
@@ -425,9 +488,10 @@ const getTranslations = () => {
       'footer.bottomLinks.cookies': 'ملفات تعريف الارتباط',
       
       // Dashboard
+      'dashboard.loading': 'جارٍ تحميل لوحة التحكم...',
       'dashboard.tabs.overview': 'نظرة عامة',
       'dashboard.tabs.media': 'الوسائط',
-      'dashboard.tabs.captions': 'التسميات التوضيحية',
+      'dashboard.tabs.captions': 'توليد المحتوى',
       'dashboard.tabs.schedule': 'الجدولة',
       'dashboard.tabs.notifications': 'الإشعارات',
       
@@ -436,7 +500,7 @@ const getTranslations = () => {
       'dashboard.overview.totalPostsSubtext': '+12% من الشهر الماضي',
       'dashboard.overview.upcomingPosts': 'المنشورات القادمة',
       'dashboard.overview.upcomingPostsSubtext': 'مجدولة هذا الأسبوع',
-      'dashboard.overview.captionCredits': 'رصيد التسميات التوضيحية',
+      'dashboard.overview.captionCredits': 'رصيد توليد المحتوى',
       'dashboard.overview.captionCreditsSubtext': '{credits} رصيد متبقي',
       'dashboard.overview.mediaLibrary': 'مكتبة الوسائط',
       'dashboard.overview.mediaLibrarySubtext': 'صور مرفوعة',
@@ -444,12 +508,18 @@ const getTranslations = () => {
       // Quick Actions
       'dashboard.quickActions.title': 'إجراءات سريعة',
       'dashboard.quickActions.addProducts': 'ابدأ وأضف منتجات',
-      'dashboard.quickActions.viewCaptions': 'عرض التسميات التوضيحية',
+      'dashboard.quickActions.viewCaptions': 'عرض المحتويات التي تم توليدها',
       'dashboard.quickActions.schedulePost': 'جدولة منشور',
       
       // TikTok Connection
       'dashboard.tiktok.title': 'اتصال TikTok',
-      'dashboard.tiktok.description': 'اربط حساب TikTok الخاص بك لجدولة ونشر المحتوى مباشرة',
+      'dashboard.tiktok.description': 'اربط حساب تيك توك الخاص بك لجدولة ونشر المحتوى مباشرة',
+      'dashboard.tiktok.connectedAs': 'متصل باسم @{username}',
+      'dashboard.tiktok.connectedStatus': 'متصل بـ TikTok',
+      'dashboard.tiktok.disconnect': 'قطع الاتصال مع TikTok',
+      'dashboard.tiktok.connectDescription': 'اربط حسابك في TikTok للوصول إلى ميزات إضافية وتحسين إنشاء المحتوى.',
+      'dashboard.tiktok.connecting': 'جارٍ الاتصال...',
+      'dashboard.tiktok.connect': 'اربط TikTok',
       
       // User Profile
       'dashboard.profile.owner': 'المالك',
@@ -457,6 +527,62 @@ const getTranslations = () => {
       'dashboard.profile.accountSettings': 'إعدادات الحساب',
       'dashboard.profile.signOut': 'تسجيل الخروج',
       
+      // Media Management
+      'media.title': 'إدارة الوسائط',
+      'media.description': 'إدارة الصور والمنتجات المرفوعة',
+      'media.addProducts': 'إضافة منتجات',
+      'media.selectAll': 'تحديد جميع المنتجات',
+      'media.cancelSelection': 'إلغاء التحديد',
+      'media.deleteSelected': 'حذف المحدد ({count})',
+      'media.deleteAll': 'حذف جميع المنتجات',
+      'media.noMedia': 'لم يتم رفع وسائط بعد',
+      'media.noFilter': 'لا توجد {filter}',
+      'media.viewGrid': 'عرض الشبكة',
+      'media.viewList': 'عرض القائمة',
+      'media.filterAll': 'الكل',
+      'media.filterImages': 'الصور',
+      'media.filterProducts': 'المنتجات',
+      'media.filterWithCaptions': 'مع تسميات توضيحية',
+      'media.filterWithoutCaptions': 'بدون تسميات توضيحية',
+
+      // Generated Captions
+      'captions.title': 'توليد المحتوى',
+      'captions.description': 'إدارة المحتوى المولد بالذكاء الاصطناعي للصور والمنتجات',
+      'captions.regenerate': 'إعادة توليد المحتوى',
+      'captions.noCredits': 'لا توجد رصيد كافي لتوليد المحتوى',
+      'captions.generating': 'جارٍ التوليد...',
+      'captions.generated': 'تم توليد المحتوى بنجاح',
+      'captions.failed': 'فشل في توليد المحتوى',
+      'captions.noContent': 'لا يوجد محتوى بعد',
+      'captions.addProducts': 'أضف منتجات مع صور لتوليد محتوى بالذكاء الاصطناعي',
+      'captions.addFirst': 'أضف أول منتج',
+      'captions.addMore': 'إضافة المزيد من المحتوى',
+
+      // Scheduled Posts
+      'schedule.title': 'المنشورات المجدولة',
+      'schedule.description': 'جدولة وإدارة منشوراتك على وسائل التواصل الاجتماعي',
+      'schedule.schedulePosts': 'جدولة المنشورات',
+      'schedule.noPosts': 'لا توجد منشورات مجدولة لهذا التاريخ',
+      'schedule.deleteAll': 'حذف جميع المهام المجدولة',
+      'schedule.editDate': 'تعديل التاريخ',
+      'schedule.delete': 'حذف',
+      'schedule.cancel': 'إلغاء',
+      'schedule.needContent': 'تحتاج إلى منتجات أو صور مع تسميات توضيحية لجدولة المنشورات',
+      'schedule.dailyView': 'العرض اليومي',
+      'schedule.weeklyView': 'العرض الأسبوعي',
+      'schedule.calendar': 'التقويم',
+
+      // Notifications
+      'notifications.title': 'الإشعارات',
+      'notifications.description': 'اختر الإشعارات التي تريد استقبالها',
+      'notifications.noNotifications': 'لا توجد إشعارات بعد',
+      'notifications.markAsRead': 'تحديد كمقروء',
+      'notifications.delete': 'حذف',
+      'notifications.captionGenerated': 'تم توليد المحتوى',
+      'notifications.uploadFailed': 'فشل الرفع',
+      'notifications.uploadStatus': 'حالة الرفع',
+      'notifications.captionSettings': 'احصل على إشعار عند توليد محتوى بالذكاء الاصطناعي',
+
       // Image Upload Page
       'upload.backToDashboard': 'العودة إلى لوحة التحكم',
       'upload.title': 'رفع الصور',

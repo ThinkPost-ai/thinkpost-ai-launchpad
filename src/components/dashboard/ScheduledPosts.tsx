@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,7 @@ interface MediaItem {
 const ScheduledPosts = () => {
   const { user, session } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily');
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
@@ -460,10 +462,10 @@ const ScheduledPosts = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5 text-vibrant-purple" />
-                Scheduled Posts
+                {t('schedule.title')}
               </CardTitle>
               <CardDescription>
-                Manage your scheduled social media posts
+                {t('schedule.description')}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -480,7 +482,7 @@ const ScheduledPosts = () => {
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete All Scheduled Tasks
+                    {t('schedule.deleteAll')}
                   </>
                 )}
               </Button>
@@ -497,7 +499,7 @@ const ScheduledPosts = () => {
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Schedule Posts
+                    {t('schedule.schedulePosts')}
                   </>
                 )}
               </Button>
@@ -507,8 +509,8 @@ const ScheduledPosts = () => {
         <CardContent>
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'daily' | 'weekly')}>
             <TabsList className="grid w-full grid-cols-2 lg:w-auto">
-              <TabsTrigger value="daily">Daily View</TabsTrigger>
-              <TabsTrigger value="weekly">Weekly View</TabsTrigger>
+              <TabsTrigger value="daily">{t('schedule.dailyView')}</TabsTrigger>
+              <TabsTrigger value="weekly">{t('schedule.weeklyView')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="daily" className="space-y-6">
@@ -516,7 +518,7 @@ const ScheduledPosts = () => {
                 {/* Calendar */}
                 <Card className="lg:col-span-1">
                   <CardHeader>
-                    <CardTitle className="text-lg">Calendar</CardTitle>
+                    <CardTitle className="text-lg">{t('schedule.calendar')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Calendar
@@ -595,14 +597,14 @@ const ScheduledPosts = () => {
                                   onClick={() => startEditDate(post)}
                                 >
                                   <Edit className="h-3 w-3 mr-1" />
-                                  Edit Date
+                                  {t('schedule.editDate')}
                                 </Button>
                                 <Button 
                                   size="sm" 
                                   variant="destructive"
                                   onClick={() => deletePost(post.id)}
                                 >
-                                  Delete
+                                  {t('schedule.delete')}
                                 </Button>
                               </div>
                             )}
@@ -615,7 +617,7 @@ const ScheduledPosts = () => {
                         <div className="text-center py-8">
                           <CalendarIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                           <p className="text-muted-foreground">
-                            No posts scheduled for this date
+                            {t('schedule.noPosts')}
                           </p>
                         </div>
                       )}

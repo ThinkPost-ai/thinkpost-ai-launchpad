@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useProductDeletion } from '@/hooks/useProductDeletion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
 interface MediaItem {
@@ -36,6 +37,7 @@ const MediaManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -54,7 +56,13 @@ const MediaManagement = () => {
     deleteAllProducts
   } = useProductDeletion();
 
-  const tags = ['All', 'Images', 'Products', 'With Captions', 'Without Captions'];
+  const getFilterTags = () => [
+    { key: 'all', label: t('media.filterAll') },
+    { key: 'images', label: t('media.filterImages') },
+    { key: 'products', label: t('media.filterProducts') },
+    { key: 'with captions', label: t('media.filterWithCaptions') },
+    { key: 'without captions', label: t('media.filterWithoutCaptions') }
+  ];
 
   useEffect(() => {
     fetchMediaItems();
@@ -182,10 +190,10 @@ const MediaManagement = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-vibrant-purple" />
-                Media Management
+                {t('media.title')}
               </CardTitle>
               <CardDescription>
-                Manage your uploaded photos and product images
+                {t('media.description')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -196,7 +204,7 @@ const MediaManagement = () => {
                     className="bg-gradient-primary hover:opacity-90"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Add Products
+                    {t('media.addProducts')}
                   </Button>
                   <Button
                     onClick={() => navigate('/images')}
@@ -221,14 +229,14 @@ const MediaManagement = () => {
                     onClick={cancelSelection}
                     variant="outline"
                   >
-                    Cancel
+                    {t('schedule.cancel')}
                   </Button>
                   <Button
                     onClick={() => selectAllItems(filteredItems)}
                     variant="outline"
                     disabled={selectedItems.size === productItems.length}
                   >
-                    Select All Products
+                    {t('media.selectAll')}
                   </Button>
                   <Button
                     onClick={handleDeleteAllProducts}
@@ -236,15 +244,15 @@ const MediaManagement = () => {
                     disabled={!hasProducts}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete All Products
+                    {t('media.deleteAll')}
                   </Button>
                   <Button
                     onClick={handleDeleteProducts}
                     variant="destructive"
                     disabled={selectedItems.size === 0}
-                  >
+                                    >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Selected ({selectedItems.size})
+                    {t('media.deleteSelected', { count: selectedItems.size })}
                   </Button>
                 </>
               )}
@@ -275,14 +283,14 @@ const MediaManagement = () => {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <div className="flex gap-2">
-                {tags.map((tag) => (
+                {getFilterTags().map((tag) => (
                   <Badge
-                    key={tag}
-                    variant={filter === tag.toLowerCase() ? 'default' : 'outline'}
+                    key={tag.key}
+                    variant={filter === tag.key ? 'default' : 'outline'}
                     className="cursor-pointer"
-                    onClick={() => setFilter(tag.toLowerCase())}
+                    onClick={() => setFilter(tag.key)}
                   >
-                    {tag}
+                    {tag.label}
                   </Badge>
                 ))}
               </div>
@@ -298,7 +306,7 @@ const MediaManagement = () => {
             <div className="text-center py-12">
               <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-2">
-                {filter === 'all' ? 'No media uploaded yet' : `No ${filter} found`}
+                {filter === 'all' ? t('media.noMedia') : t('media.noFilter', { filter })}
               </h3>
               <p className="text-muted-foreground mb-4">
                 Start by adding some products with images
@@ -308,7 +316,7 @@ const MediaManagement = () => {
                 className="bg-gradient-primary hover:opacity-90"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Add Your First Product
+                {t('media.addProducts')}
               </Button>
             </div>
           ) : (

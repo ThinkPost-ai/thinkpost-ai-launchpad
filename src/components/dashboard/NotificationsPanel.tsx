@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Notification {
   id: string;
@@ -24,6 +25,7 @@ interface Notification {
 }
 
 const NotificationsPanel = () => {
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -123,7 +125,7 @@ const NotificationsPanel = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-vibrant-purple" />
-                Notifications
+                {t('notifications.title')}
                 {unreadCount > 0 && (
                   <Badge className="bg-red-500 text-white">
                     {unreadCount}
@@ -131,7 +133,7 @@ const NotificationsPanel = () => {
                 )}
               </CardTitle>
               <CardDescription>
-                Stay updated with your account activity
+                {t('notifications.description')}
               </CardDescription>
             </div>
             {unreadCount > 0 && (
@@ -148,7 +150,7 @@ const NotificationsPanel = () => {
               <div className="text-center py-8">
                 <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">
-                  No notifications yet
+                  {t('notifications.noNotifications')}
                 </p>
               </div>
             ) : (

@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     console.log('Dashboard useEffect triggered', { user: user?.id, loading, checking });
@@ -69,7 +71,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Loading your dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-300">{t('dashboard.loading')}</p>
         </div>
       </div>
     );

@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Music, CheckCircle, Loader2 } from 'lucide-react';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TikTokConnection = () => {
   const { tiktokProfile, isLoading, isConnecting, connectTikTok, disconnectTikTok } = useTikTokConnection();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -29,13 +31,13 @@ const TikTokConnection = () => {
           </div>
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
-              TikTok Connection
+              {t('dashboard.tiktok.title')}
               {isConnected && <CheckCircle className="h-5 w-5 text-green-600" />}
             </CardTitle>
             <CardDescription>
               {isConnected 
-                ? `Connected as @${tiktokProfile.tiktok_username || 'TikTok User'}`
-                : 'Connect your TikTok account to enhance your posts'
+                ? t('dashboard.tiktok.connectedAs', { username: tiktokProfile.tiktok_username || 'TikTok User' })
+                : t('dashboard.tiktok.description')
               }
             </CardDescription>
           </div>
@@ -54,7 +56,7 @@ const TikTokConnection = () => {
               </Avatar>
               <div>
                 <p className="font-medium">@{tiktokProfile.tiktok_username || 'TikTok User'}</p>
-                <p className="text-sm text-muted-foreground">Connected to TikTok</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.tiktok.connectedStatus')}</p>
               </div>
             </div>
             
@@ -63,7 +65,7 @@ const TikTokConnection = () => {
               variant="outline"
               className="w-full"
             >
-              Disconnect TikTok
+              {t('dashboard.tiktok.disconnect')}
             </Button>
           </div>
         ) : (
@@ -73,7 +75,7 @@ const TikTokConnection = () => {
                 <Music className="h-8 w-8 text-white" />
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Connect your TikTok account to access additional features and enhance your content creation.
+                {t('dashboard.tiktok.connectDescription')}
               </p>
             </div>
             
@@ -85,12 +87,12 @@ const TikTokConnection = () => {
               {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
+                  {t('dashboard.tiktok.connecting')}
                 </>
               ) : (
                 <>
                   <Music className="mr-2 h-4 w-4" />
-                  Connect TikTok
+                  {t('dashboard.tiktok.connect')}
                 </>
               )}
             </Button>
