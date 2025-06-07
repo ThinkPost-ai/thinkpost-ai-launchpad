@@ -542,7 +542,8 @@ const ScheduledPosts = () => {
                     <div className="space-y-4">
                       {scheduledPosts
                         .filter(post => 
-                          new Date(post.scheduled_date).toDateString() === selectedDate?.toDateString()
+                          new Date(post.scheduled_date).toDateString() === selectedDate?.toDateString() &&
+                          post.platform === 'tiktok'
                         )
                         .map((post) => (
                           <div key={post.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -647,7 +648,7 @@ const ScheduledPosts = () => {
                           {/* Posts for this day */}
                           <div className="space-y-2">
                             {scheduledPosts
-                              .filter(post => new Date(post.scheduled_date).toDateString() === date.toDateString())
+                              .filter(post => new Date(post.scheduled_date).toDateString() === date.toDateString() && post.platform === 'tiktok')
                               .map(post => (
                                 <div key={post.id} className="p-2 bg-muted rounded text-xs">
                                   <div className="flex items-center gap-1 mb-1">
