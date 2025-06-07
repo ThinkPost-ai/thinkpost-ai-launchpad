@@ -17,18 +17,20 @@ serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
 
+    console.log('TikTok callback received:', { code: !!code, state: !!state })
+
     if (!code || !state) {
       console.error('Missing code or state parameter')
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/user-dashboard?error=missing_parameters',
+          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=missing_parameters',
           ...corsHeaders
         }
       })
     }
 
-    // Use service role key since this is a callback without user session
+    // Use service role key for all database operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -47,14 +49,16 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/user-dashboard?error=invalid_state',
+          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=invalid_state',
           ...corsHeaders
         }
       })
     }
 
     // Use the correct redirect URI for token exchange
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/tiktok-callback`
+    const redirectUri = 'https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback'
+
+    console.log('Exchanging code for token with redirect URI:', redirectUri)
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -77,7 +81,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/user-dashboard?error=token_exchange_failed',
+          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=token_exchange_failed',
           ...corsHeaders
         }
       })
@@ -86,12 +90,14 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json()
     const { access_token, open_id } = tokenData
 
+    console.log('Token exchange successful:', { has_access_token: !!access_token, open_id })
+
     if (!access_token || !open_id) {
       console.error('Invalid token response from TikTok:', tokenData)
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/user-dashboard?error=invalid_token_response',
+          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=invalid_token_response',
           ...corsHeaders
         }
       })
@@ -111,6 +117,9 @@ serve(async (req) => {
       const userInfo = await userInfoResponse.json()
       username = userInfo.data?.user?.display_name
       avatarUrl = userInfo.data?.user?.avatar_url
+      console.log('User info fetched:', { username, has_avatar: !!avatarUrl })
+    } else {
+      console.warn('Failed to fetch user info from TikTok')
     }
 
     // Update user profile with TikTok data
@@ -130,7 +139,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/user-dashboard?error=profile_update_failed',
+          'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=profile_update_failed',
           ...corsHeaders
         }
       })
@@ -142,11 +151,13 @@ serve(async (req) => {
       .delete()
       .eq('state_value', state)
 
+    console.log('TikTok connection successful for user:', stateData.user_id)
+
     // Redirect to dashboard with success
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/user-dashboard?tiktok=connected',
+        'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?tiktok=connected',
         ...corsHeaders
       }
     })
@@ -156,7 +167,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/user-dashboard?error=internal_error',
+        'Location': 'https://eztbwukcnddtvcairvpz.supabase.co/tiktok-login-callback?error=internal_error',
         ...corsHeaders
       }
     })
