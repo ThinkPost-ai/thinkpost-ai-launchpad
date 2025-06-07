@@ -105,6 +105,12 @@ const UserDashboard = () => {
             </TabsList>
           </div>
 
+          {/* Quick Actions - positioned below tabs and above content */}
+          <QuickActions 
+            onCaptionsClick={() => setActiveTab('captions')}
+            onScheduleClick={() => setActiveTab('schedule')}
+          />
+
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             <OverviewCards stats={stats} />
             
@@ -113,11 +119,6 @@ const UserDashboard = () => {
               <TikTokConnection />
               {/* Future social media connections can be added here */}
             </div>
-            
-            <QuickActions 
-              onCaptionsClick={() => setActiveTab('captions')}
-              onScheduleClick={() => setActiveTab('schedule')}
-            />
           </TabsContent>
 
           <TabsContent value="media">
