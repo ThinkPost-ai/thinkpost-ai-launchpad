@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -105,14 +104,23 @@ serve(async (req) => {
 
     const tokenResponseText = await tokenResponse.text();
     console.log('📥 TikTok token response status:', tokenResponse.status);
-    console.log('📥 TikTok token response:', tokenResponseText);
+    console.log('📥 TikTok token response (raw text):', tokenResponseText);
 
     if (!tokenResponse.ok) {
       console.error('❌ Token exchange failed with status:', tokenResponse.status);
+      let errorDetails = '';
+      try {
+        const errorJson = JSON.parse(tokenResponseText);
+        if (errorJson.error) errorDetails += `Error: ${errorJson.error}. `;
+        if (errorJson.error_description) errorDetails += `Description: ${errorJson.error_description}`;
+      } catch (e) {
+        errorDetails = `Could not parse error response: ${tokenResponseText}`;
+      }
+      console.error('Detailed token exchange error:', errorDetails);
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=token_exchange_failed',
+          'Location': `https://thinkpost.co/tiktok-login-callback?error=token_exchange_failed&details=${encodeURIComponent(errorDetails)}`,
           ...corsHeaders
         }
       })
@@ -167,7 +175,7 @@ serve(async (req) => {
 
       const userInfoText = await userInfoResponse.text();
       console.log('📥 User info response status:', userInfoResponse.status);
-      console.log('📥 User info response:', userInfoText);
+      console.log('�� User info response (raw text):', userInfoText);
 
       if (userInfoResponse.ok) {
         try {
@@ -176,12 +184,23 @@ serve(async (req) => {
             username = userInfo.data.user.display_name;
             avatarUrl = userInfo.data.user.avatar_url;
             console.log('✅ User info extracted - username:', username, 'avatar:', avatarUrl ? 'present' : 'missing');
+          } else {
+            console.error('❌ User info data or user object is missing in response.');
           }
         } catch (parseError) {
           console.error('❌ Failed to parse user info:', parseError);
         }
       } else {
         console.error('❌ Failed to fetch user info, status:', userInfoResponse.status);
+        let errorDetails = '';
+        try {
+          const errorJson = JSON.parse(userInfoText);
+          if (errorJson.error) errorDetails += `Error: ${errorJson.error}. `;
+          if (errorJson.message) errorDetails += `Message: ${errorJson.message}`;
+        } catch (e) {
+          errorDetails = `Could not parse error response: ${userInfoText}`;
+        }
+        console.error('Detailed user info fetch error:', errorDetails);
       }
     } catch (userInfoError) {
       console.error('❌ Error fetching user info:', userInfoError);
