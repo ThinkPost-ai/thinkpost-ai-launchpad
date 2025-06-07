@@ -11,20 +11,39 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let scheduledPostId: string | undefined; // Declare scheduledPostId outside try block
+
   try {
-    const { scheduledPostId, videoUrl, caption, tiktokAccessToken } = await req.json();
+    const { videoUrl, caption, scheduledPostId: reqScheduledPostId } = await req.json();
+    scheduledPostId = reqScheduledPostId; // Assign the value here
 
     console.log(`Attempting to post video for scheduledPostId: ${scheduledPostId}`);
     console.log(`Video URL: ${videoUrl}`);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // Use service role key for fetching profiles data
     );
 
-    if (!tiktokAccessToken) {
-      throw new Error('TikTok access token is missing.');
+    // Authenticate the user to get their ID
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('User not authenticated or not found.');
     }
+
+    // Fetch TikTok access token from the profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tiktok_access_token')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tiktok_access_token) {
+      throw new Error('TikTok access token is missing in user profile. Please connect your TikTok account.');
+    }
+
+    const tiktokAccessToken = profile.tiktok_access_token;
 
     const client_key = Deno.env.get('TIKTOK_CLIENT_ID');
     const client_secret = Deno.env.get('TIKTOK_CLIENT_SECRET');
@@ -88,15 +107,17 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in post-to-tiktok function:', error);
 
-    // Update scheduled post status to failed on error
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-    await supabase
-      .from('scheduled_posts')
-      .update({ status: 'failed' })
-      .eq('id', scheduledPostId);
+    // Update scheduled post status to failed on error, only if scheduledPostId is defined
+    if (scheduledPostId) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await supabase
+        .from('scheduled_posts')
+        .update({ status: 'failed' })
+        .eq('id', scheduledPostId);
+    }
 
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
