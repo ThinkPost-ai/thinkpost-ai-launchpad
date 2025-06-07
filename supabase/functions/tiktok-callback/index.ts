@@ -20,17 +20,14 @@ serve(async (req) => {
     const code = url.searchParams.get('code')
     const state = url.searchParams.get('state')
 
-    console.log("🔍 Received code:", code ? "present" : "missing");
-    console.log("🔍 Received state:", state ? "present" : "missing");
+    console.log("🔑 code:", code);
+    console.log("🧩 state:", state);
 
     if (!code || !state) {
-      console.error('❌ Missing code or state from TikTok redirect');
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=missing_parameters',
-          ...corsHeaders
-        }
+      console.error('❌ Missing code or state from TikTok');
+      return new Response('Missing parameters', { 
+        status: 400,
+        headers: corsHeaders
       })
     }
 
@@ -52,12 +49,9 @@ serve(async (req) => {
 
     if (stateError || !stateData) {
       console.error('❌ Invalid or expired state parameter:', stateError)
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_state',
-          ...corsHeaders
-        }
+      return new Response('Invalid state', { 
+        status: 400,
+        headers: corsHeaders
       })
     }
 
@@ -74,9 +68,7 @@ serve(async (req) => {
       redirect_uri: redirectUri
     };
 
-    console.log('📤 Sending token request to TikTok with redirect URI:', redirectUri);
-    console.log('📤 Token payload (client_key):', tokenPayload.client_key ? 'present' : 'missing');
-    console.log('📤 Token payload (client_secret):', tokenPayload.client_secret ? 'present' : 'missing');
+    console.log('📤 Sending token payload to TikTok:', tokenPayload);
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -88,17 +80,13 @@ serve(async (req) => {
     })
 
     const tokenText = await tokenResponse.text();
-    console.log('🎯 TikTok token response status:', tokenResponse.status);
-    console.log('🎯 TikTok token response:', tokenText);
+    console.log('📥 TikTok token response:', tokenText);
 
     if (!tokenResponse.ok) {
-      console.error('❌ Failed to get access token from TikTok:', tokenText);
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=token_exchange_failed',
-          ...corsHeaders
-        }
+      console.error('❌ Token request failed');
+      return new Response('Token exchange failed', { 
+        status: 500,
+        headers: corsHeaders
       })
     }
 
@@ -107,12 +95,9 @@ serve(async (req) => {
       tokenData = JSON.parse(tokenText);
     } catch (parseError) {
       console.error('❌ Failed to parse TikTok token response:', parseError);
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_token_response',
-          ...corsHeaders
-        }
+      return new Response('Invalid token response', { 
+        status: 500,
+        headers: corsHeaders
       })
     }
 
@@ -124,12 +109,9 @@ serve(async (req) => {
 
     if (!access_token || !open_id) {
       console.error('❌ Invalid token response from TikTok - missing access_token or open_id');
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=invalid_token_response',
-          ...corsHeaders
-        }
+      return new Response('Invalid token response', { 
+        status: 500,
+        headers: corsHeaders
       })
     }
 
@@ -148,7 +130,6 @@ serve(async (req) => {
       })
 
       const userInfoText = await userInfoResponse.text();
-      console.log('🎯 User info response status:', userInfoResponse.status);
       console.log('🎯 User info response:', userInfoText);
 
       if (userInfoResponse.ok) {
@@ -183,12 +164,9 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('❌ Error updating profile:', updateError)
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': 'https://thinkpost.co/tiktok-login-callback?error=profile_update_failed',
-          ...corsHeaders
-        }
+      return new Response('Profile update failed', { 
+        status: 500,
+        headers: corsHeaders
       })
     }
 
@@ -201,6 +179,7 @@ serve(async (req) => {
       .delete()
       .eq('state_value', state)
 
+    console.log('✅ TikTok account connected successfully');
     console.log('🎉 TikTok connection successful for user:', stateData.user_id)
 
     // Redirect to dashboard with success
@@ -214,12 +193,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('💥 Unexpected error in TikTok callback:', error)
-    return new Response(null, {
-      status: 302,
-      headers: {
-        'Location': 'https://thinkpost.co/tiktok-login-callback?error=internal_error',
-        ...corsHeaders
-      }
+    return new Response('Internal server error', { 
+      status: 500,
+      headers: corsHeaders
     })
   }
 })
