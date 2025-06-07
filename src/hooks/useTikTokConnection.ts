@@ -59,28 +59,24 @@ export const useTikTokConnection = () => {
 
     setIsConnecting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Initiating TikTok OAuth...');
       
-      if (!session) {
-        throw new Error('No valid session');
-      }
+      const { data, error } = await supabase.functions.invoke('tiktok-auth');
 
-      const response = await fetch('/functions/v1/tiktok-auth', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
+      if (error) {
+        console.error('Supabase function error:', error);
         throw new Error('Failed to initiate TikTok OAuth');
       }
 
-      const { authUrl } = await response.json();
+      if (!data?.authUrl) {
+        console.error('No auth URL received:', data);
+        throw new Error('No authorization URL received');
+      }
+
+      console.log('Redirecting to TikTok OAuth URL:', data.authUrl);
       
       // Redirect to TikTok OAuth
-      window.location.href = authUrl;
+      window.location.href = data.authUrl;
       
     } catch (error) {
       console.error('TikTok connection error:', error);
