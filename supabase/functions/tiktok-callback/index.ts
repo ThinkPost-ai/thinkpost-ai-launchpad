@@ -103,23 +103,39 @@ serve(async (req) => {
       })
     }
 
-    // Fetch user info from TikTok
-    const userInfoResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
-      headers: {
-        'Authorization': `Bearer ${access_token}`
-      }
-    })
-
+    // Fetch user info from TikTok with proper authorization header
     let username = null
     let avatarUrl = null
 
-    if (userInfoResponse.ok) {
-      const userInfo = await userInfoResponse.json()
-      username = userInfo.data?.user?.display_name
-      avatarUrl = userInfo.data?.user?.avatar_url
-      console.log('User info fetched:', { username, has_avatar: !!avatarUrl })
-    } else {
-      console.warn('Failed to fetch user info from TikTok')
+    try {
+      console.log('Fetching user info from TikTok with access token')
+      const userInfoResponse = await fetch('https://open.tiktokapis.com/v2/user/info/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('User info response status:', userInfoResponse.status)
+
+      if (userInfoResponse.ok) {
+        const userInfo = await userInfoResponse.json()
+        console.log('User info response:', JSON.stringify(userInfo, null, 2))
+        
+        username = userInfo.data?.user?.display_name
+        avatarUrl = userInfo.data?.user?.avatar_url
+        console.log('User info extracted:', { username, has_avatar: !!avatarUrl })
+      } else {
+        const errorText = await userInfoResponse.text()
+        console.error('Failed to fetch user info from TikTok:', {
+          status: userInfoResponse.status,
+          statusText: userInfoResponse.statusText,
+          error: errorText
+        })
+      }
+    } catch (userInfoError) {
+      console.error('Error fetching user info:', userInfoError)
     }
 
     // Update user profile with TikTok data
