@@ -31,6 +31,22 @@ serve(async (req) => {
       })
     }
 
+    // Use correct environment variable names
+    const client_key = Deno.env.get('TIKTOK_CLIENT_ID');
+    const client_secret = Deno.env.get('TIKTOK_CLIENT_SECRET');
+    const redirect_uri = 'https://thinkpost.co/tiktok-callback';
+
+    console.log("🔑 TikTok client_key:", client_key);
+    console.log("🔁 TikTok redirect_uri:", redirect_uri);
+
+    if (!client_key || !client_secret) {
+      console.error("❌ Missing TikTok keys in env");
+      return new Response("Missing TikTok keys in env", { 
+        status: 500,
+        headers: corsHeaders
+      });
+    }
+
     // Use service role key for all database operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -57,18 +73,16 @@ serve(async (req) => {
 
     console.log("✅ State validation successful, user_id:", stateData.user_id);
 
-    // Use the verified domain redirect URI for token exchange
-    const redirectUri = 'https://thinkpost.co/tiktok-callback'
-
-    const tokenPayload = {
-      client_key: Deno.env.get('TIKTOK_CLIENT_ID') || '',
-      client_secret: Deno.env.get('TIKTOK_CLIENT_SECRET') || '',
-      code: code,
+    // Prepare token exchange payload
+    const tokenPayload = new URLSearchParams({
+      client_key,
+      client_secret,
+      code,
       grant_type: 'authorization_code',
-      redirect_uri: redirectUri
-    };
+      redirect_uri
+    });
 
-    console.log('📤 Sending token payload to TikTok:', tokenPayload);
+    console.log('📤 Sending token payload to TikTok:', tokenPayload.toString());
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -76,14 +90,14 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams(tokenPayload)
+      body: tokenPayload
     })
 
     const tokenText = await tokenResponse.text();
     console.log('📥 TikTok token response:', tokenText);
 
     if (!tokenResponse.ok) {
-      console.error('❌ Token request failed');
+      console.error('❌ Failed to exchange token with TikTok');
       return new Response('Token exchange failed', { 
         status: 500,
         headers: corsHeaders
