@@ -144,6 +144,28 @@ serve(async (req) => {
 
     console.log('Video uploaded to TikTok successfully.');
 
+    // 3. Query Post Status from TikTok
+    console.log('Querying TikTok post status...');
+    const statusQueryResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tiktokAccessToken}`,
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: JSON.stringify({
+        publish_id: publish_id,
+      }),
+    });
+
+    const statusData = await statusQueryResponse.json();
+    console.log('TikTok post status response status:', statusQueryResponse.status);
+    console.log('TikTok post status response data:', statusData);
+
+    if (!statusQueryResponse.ok || statusData.error?.code !== 'ok') {
+      console.error(`Failed to retrieve TikTok post status: ${statusData.error?.message || statusQueryResponse.statusText}`);
+      // Do not throw error here, as the video upload itself might have been successful
+    }
+
     // Update scheduled post status to indicate it's being processed by TikTok
     const { error: updateError } = await supabase
       .from('scheduled_posts')
