@@ -9,33 +9,33 @@ const Features = () => {
   const features = [
     {
       icon: Bot,
-      title: "AI-Powered Generation",
-      description: "Advanced algorithms create human-like content tailored to your brand voice and style."
+      title: t('features.feature1.title'),
+      description: t('features.feature1.description')
     },
     {
       icon: Zap,
-      title: "Lightning Fast",
-      description: "Generate high-quality content in seconds, not hours. Boost your productivity instantly."
+      title: t('features.feature2.title'),
+      description: t('features.feature2.description')
     },
     {
       icon: Target,
-      title: "Targeted Content",
-      description: "Create content optimized for your specific audience and marketing goals."
+      title: t('features.feature3.title'),
+      description: t('features.feature3.description')
     },
     {
       icon: Shield,
-      title: "Quality Assurance",
-      description: "Built-in quality checks ensure your content meets the highest standards."
+      title: t('features.feature4.title'),
+      description: t('features.feature4.description')
     },
     {
       icon: Globe,
-      title: "Multi-Language",
-      description: "Generate content in over 50 languages to reach a global audience."
+      title: t('features.feature5.title'),
+      description: t('features.feature5.description')
     },
     {
       icon: Rocket,
-      title: "SEO Optimized",
-      description: "Content automatically optimized for search engines to boost your rankings."
+      title: t('features.feature6.title'),
+      description: t('features.feature6.description')
     }
   ];
 
