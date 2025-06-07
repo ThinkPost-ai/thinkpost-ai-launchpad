@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Check, Sparkles, Crown, Rocket } from 'lucide-react';
@@ -70,18 +69,18 @@ const Pricing = () => {
   ];
 
   return (
-    <section id="pricing" className="py-20 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 transition-colors">
+    <section id="pricing" className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 transition-colors">
       <div className="container mx-auto px-4 lg:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold text-deep-blue dark:text-white mb-6">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 lg:mb-16 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-deep-blue dark:text-white mb-4 sm:mb-6 leading-tight">
             {t('pricing.title')}
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
             {t('pricing.subtitle')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={index} 
@@ -91,38 +90,38 @@ const Pricing = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-white px-6 py-2 rounded-full text-sm font-semibold">
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold">
                   {t('pricing.mostPopular')}
                 </div>
               )}
               
-              <CardHeader className="text-center pb-4">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${
+              <CardHeader className="text-center pb-3 sm:pb-4 px-4 sm:px-6">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full ${
                   plan.popular ? 'bg-gradient-primary' : 'bg-gray-100 dark:bg-gray-700'
                 } flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <plan.icon className={`h-8 w-8 ${plan.popular ? 'text-white' : 'text-vibrant-purple'}`} />
+                  <plan.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${plan.popular ? 'text-white' : 'text-vibrant-purple'}`} />
                 </div>
-                <h3 className="text-2xl font-bold text-deep-blue dark:text-white">{plan.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400">{plan.description}</p>
-                <div className="flex items-baseline justify-center mt-4">
-                  <span className="text-4xl font-bold text-deep-blue dark:text-white">{plan.price}</span>
-                  <span className={`text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-1' : 'ml-1'}`}>{plan.period}</span>
+                <h3 className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white leading-tight">{plan.name}</h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">{plan.description}</p>
+                <div className="flex items-baseline justify-center mt-3 sm:mt-4">
+                  <span className="text-3xl sm:text-4xl font-bold text-deep-blue dark:text-white">{plan.price}</span>
+                  <span className={`text-sm sm:text-base text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-1' : 'ml-1'}`}>{plan.period}</span>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
+              <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+                <ul className="space-y-2 sm:space-y-3">
                   {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className={`flex items-center ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                      <Check className={`h-5 w-5 text-green-500 flex-shrink-0 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                      <span className="text-gray-600 dark:text-gray-300">{feature}</span>
+                    <li key={featureIndex} className={`flex items-start ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                      <Check className={`h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0 mt-0.5 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`} />
+                      <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 <Button 
                   variant={plan.buttonVariant}
-                  className={`w-full py-3 font-semibold ${
+                  className={`w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold h-10 sm:h-11 ${
                     plan.popular 
                       ? 'bg-gradient-primary hover:opacity-90 text-white' 
                       : plan.buttonVariant === 'outline'
@@ -138,15 +137,18 @@ const Pricing = () => {
         </div>
 
         {/* Enterprise section */}
-        <div className="mt-16 text-center animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-deep-blue dark:text-white mb-4">
+        <div className="mt-12 sm:mt-16 text-center animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 max-w-4xl mx-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white mb-3 sm:mb-4 leading-tight">
               {t('pricing.enterprise.title')}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
               {t('pricing.enterprise.description')}
             </p>
-            <Button variant="outline" className="border-2 border-deep-blue text-deep-blue hover:bg-deep-blue hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-deep-blue">
+            <Button 
+              variant="outline" 
+              className="border-2 border-deep-blue text-deep-blue hover:bg-deep-blue hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-deep-blue h-10 sm:h-11 text-sm sm:text-base px-6 sm:px-8"
+            >
               {t('pricing.enterprise.buttonText')}
             </Button>
           </div>

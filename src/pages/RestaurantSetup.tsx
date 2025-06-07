@@ -184,14 +184,13 @@ const RestaurantSetup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium">{t('restaurant.location')} *</Label>
+                <Label htmlFor="location" className="text-sm font-medium">{t('restaurant.location')}</Label>
                 <Input
                   id="location"
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder={t('restaurant.locationPlaceholder')}
-                  required
                   className="h-11 text-base"
                 />
               </div>

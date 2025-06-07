@@ -45,22 +45,22 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     <Card className="w-full">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold text-deep-blue dark:text-white">
-          Join ThinkPost
+          {t('auth.joinThinkPost')}
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
-          Create your account to get started
+          {t('auth.createAccountToStart')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-deep-blue dark:text-white font-medium">
-              Full Name
+              {t('auth.fullName')}
             </Label>
             <Input
               id="name"
               type="text"
-              placeholder="Enter your full name"
+              placeholder={t('auth.enterFullName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -91,7 +91,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Create a strong password"
+                placeholder={t('auth.createStrongPassword')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -109,13 +109,13 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="text-deep-blue dark:text-white font-medium">
-              Confirm Password
+              {t('auth.confirmPassword')}
             </Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm your password"
+                placeholder={t('auth.confirmYourPassword')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -132,13 +132,13 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           </div>
 
           <div className="text-xs text-gray-600 dark:text-gray-400 pt-2">
-            By signing up, you agree to our{' '}
+            {t('auth.agreeToTerms')}{' '}
             <a href="#" className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium">
-              Terms of Service
+              {t('auth.termsOfService')}
             </a>{' '}
-            and{' '}
+            {t('auth.and')}{' '}
             <a href="#" className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium">
-              Privacy Policy
+              {t('auth.privacyPolicy')}
             </a>
           </div>
 
@@ -147,7 +147,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             disabled={isLoading}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5 mt-6"
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
           </Button>
         </form>
       </CardContent>

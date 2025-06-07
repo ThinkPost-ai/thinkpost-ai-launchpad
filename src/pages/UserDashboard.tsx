@@ -83,21 +83,33 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
       <DashboardHeader restaurant={restaurant} />
 
-      <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
-            <TabsTrigger value="overview">{t('dashboard.tabs.overview')}</TabsTrigger>
-            <TabsTrigger value="media">{t('dashboard.tabs.media')}</TabsTrigger>
-            <TabsTrigger value="captions">{t('dashboard.tabs.captions')}</TabsTrigger>
-            <TabsTrigger value="schedule">{t('dashboard.tabs.schedule')}</TabsTrigger>
-            <TabsTrigger value="notifications">{t('dashboard.tabs.notifications')}</TabsTrigger>
-          </TabsList>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <TabsList className="grid w-max min-w-full grid-cols-5 h-11 sm:h-10 mx-3 sm:mx-0 sm:w-full lg:w-auto">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="media" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.media')}
+              </TabsTrigger>
+              <TabsTrigger value="captions" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.captions')}
+              </TabsTrigger>
+              <TabsTrigger value="schedule" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.schedule')}
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.notifications')}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             <OverviewCards stats={stats} />
             
             {/* Social Media Connections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <TikTokConnection />
               {/* Future social media connections can be added here */}
             </div>
