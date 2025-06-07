@@ -20,9 +20,17 @@ serve(async (req) => {
     console.log(`Attempting to post video for scheduledPostId: ${scheduledPostId}`);
     console.log(`Video URL: ${videoUrl}`);
 
+    // Get the Authorization header from the request
+    const authHeader = req.headers.get('Authorization');
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // Use service role key for fetching profiles data
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '', // Use anon key for client-side functionality
+      {
+        global: {
+          headers: { Authorization: authHeader! },
+        },
+      }
     );
 
     // Authenticate the user to get their ID
