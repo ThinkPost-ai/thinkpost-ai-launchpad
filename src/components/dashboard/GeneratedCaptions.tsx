@@ -385,12 +385,12 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Content</TableHead>
-                    <TableHead>Caption</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Performance</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{t('table.content')}</TableHead>
+                    <TableHead>{t('table.caption')}</TableHead>
+                    <TableHead>{t('table.details')}</TableHead>
+                    <TableHead>{t('table.status')}</TableHead>
+                    <TableHead>{t('table.performance')}</TableHead>
+                    <TableHead>{t('table.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

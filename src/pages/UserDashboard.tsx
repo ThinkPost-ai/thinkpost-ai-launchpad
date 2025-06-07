@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
 import MediaManagement from '@/components/dashboard/MediaManagement';
@@ -19,6 +20,7 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
+  const [checkingRestaurant, setCheckingRestaurant] = useState(true);
 
   // Use custom hooks for data management
   const { restaurant, stats, isLoading, handleCreditsUpdate } = useDashboardData();
@@ -28,7 +30,38 @@ const UserDashboard = () => {
       navigate('/');
       return;
     }
+
+    if (user && !loading) {
+      checkRestaurantExists();
+    }
   }, [user, loading, navigate]);
+
+  const checkRestaurantExists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('owner_id', user?.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking restaurant:', error);
+        navigate('/restaurant-setup');
+        return;
+      }
+
+      if (!data) {
+        console.log('No restaurant found, redirecting to setup');
+        navigate('/restaurant-setup');
+        return;
+      }
+
+      setCheckingRestaurant(false);
+    } catch (error) {
+      console.error('Error in checkRestaurantExists:', error);
+      navigate('/restaurant-setup');
+    }
+  };
 
   // Handle tab from URL parameters
   useEffect(() => {
@@ -38,7 +71,7 @@ const UserDashboard = () => {
     }
   }, [searchParams]);
 
-  if (loading || isLoading) {
+  if (loading || isLoading || checkingRestaurant) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-purple"></div>

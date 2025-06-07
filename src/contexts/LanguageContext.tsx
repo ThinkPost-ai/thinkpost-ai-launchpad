@@ -297,6 +297,14 @@ const getTranslations = () => {
       'captions.addFirst': 'Add Your First Product',
       'captions.addMore': 'Add More Content',
 
+      // Table Headers
+      'table.content': 'Content',
+      'table.caption': 'Caption',
+      'table.details': 'Details',
+      'table.status': 'Status',
+      'table.performance': 'Performance',
+      'table.actions': 'Actions',
+
       // Scheduled Posts
       'schedule.title': 'Scheduled Posts',
       'schedule.description': 'Schedule and manage your social media posts',
@@ -557,6 +565,14 @@ const getTranslations = () => {
       'captions.addProducts': 'أضف منتجات مع صور لتوليد محتوى بالذكاء الاصطناعي',
       'captions.addFirst': 'أضف أول منتج',
       'captions.addMore': 'إضافة المزيد من المحتوى',
+
+      // Table Headers
+      'table.content': 'المحتوى',
+      'table.caption': 'التسمية',
+      'table.details': 'التفاصيل',
+      'table.status': 'الحالة',
+      'table.performance': 'الأداء',
+      'table.actions': 'الإجراءات',
 
       // Scheduled Posts
       'schedule.title': 'المنشورات المجدولة',

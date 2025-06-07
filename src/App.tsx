@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import UserDashboard from "./pages/UserDashboard";
+import RestaurantSetup from "./pages/RestaurantSetup";
 import ProfileSettings from "./pages/ProfileSettings";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
@@ -39,6 +39,7 @@ const App = () => {
                   <Route path="/home" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/user-dashboard" element={<UserDashboard />} />
+                  <Route path="/restaurant-setup" element={<RestaurantSetup />} />
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />
                   <Route path="/privacy" element={<Privacy />} />

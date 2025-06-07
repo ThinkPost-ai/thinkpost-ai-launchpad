@@ -2,16 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Database } from '@/integrations/supabase/types';
-
-type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
-
-interface RestaurantData {
-  restaurantName: string;
-  restaurantLocation: string;
-  restaurantCategory: RestaurantCategory;
-  restaurantVision?: string;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +9,7 @@ interface AuthContextType {
   loading: boolean;
   hasRestaurant: boolean | null;
   checkingProfile: boolean;
-  signUp: (email: string, password: string, fullName: string, restaurantData?: RestaurantData) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   checkUserProfile: () => Promise<void>;
@@ -59,40 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       
-      // If no restaurant found but user has restaurant metadata, create it
-      if (!data && user.user_metadata) {
-        const metadata = user.user_metadata;
-        const restaurantName = metadata.restaurantName || metadata.restaurant_name;
-        const restaurantLocation = metadata.restaurantLocation || metadata.restaurant_location;
-        const restaurantCategory = metadata.restaurantCategory || metadata.restaurant_category;
-        const restaurantVision = metadata.restaurantVision || metadata.restaurant_vision;
-
-        if (restaurantName && restaurantLocation && restaurantCategory) {
-          console.log('Creating missing restaurant from user metadata');
-          
-          const { error: createError } = await supabase
-            .from('restaurants')
-            .insert({
-              owner_id: user.id,
-              name: restaurantName,
-              location: restaurantLocation,
-              category: restaurantCategory,
-              vision: restaurantVision || null
-            });
-
-          if (createError) {
-            console.error('Error creating restaurant from metadata:', createError);
-            setHasRestaurant(false);
-          } else {
-            console.log('Restaurant created successfully from metadata');
-            setHasRestaurant(true);
-          }
-        } else {
-          setHasRestaurant(false);
-        }
-      } else {
-        setHasRestaurant(!!data);
-      }
+      setHasRestaurant(!!data);
     } catch (error) {
       console.error('Error checking user profile:', error);
       setHasRestaurant(false);
@@ -142,26 +99,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, restaurantData?: RestaurantData) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const metadata: any = {
-        full_name: fullName
-      };
-
-      // Add restaurant data to metadata if provided
-      if (restaurantData) {
-        metadata.restaurantName = restaurantData.restaurantName;
-        metadata.restaurantLocation = restaurantData.restaurantLocation;
-        metadata.restaurantCategory = restaurantData.restaurantCategory;
-        metadata.restaurantVision = restaurantData.restaurantVision;
-      }
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/email-confirmation`,
-          data: metadata
+          data: {
+            full_name: fullName
+          }
         }
       });
 

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,13 +15,13 @@ const Dashboard = () => {
     console.log('Dashboard useEffect triggered', { user: user?.id, loading, checking });
     
     if (!loading && !user) {
-      console.log('Condition 1: No user, redirecting to home');
+      console.log('No user found, redirecting to home');
       navigate('/');
       return;
     }
 
     if (user && !loading) {
-      console.log('Condition 2: User exists, checking restaurant status');
+      console.log('User exists, checking restaurant status');
       checkRestaurantStatus();
     }
   }, [user, loading, navigate]);
@@ -47,13 +46,11 @@ const Dashboard = () => {
       console.log('Restaurant data found:', data);
       
       if (data) {
-        console.log('Condition 3: Restaurant exists, attempting to redirect to user dashboard');
+        console.log('Restaurant exists, redirecting to user dashboard');
         setChecking(false);
-        // Use replace instead of navigate to avoid back button issues
         navigate('/user-dashboard', { replace: true });
-        console.log('Navigation to user-dashboard completed');
       } else {
-        console.log('No restaurant found, redirecting to setup');
+        console.log('No restaurant found, redirecting to restaurant setup');
         setChecking(false);
         navigate('/restaurant-setup');
       }
@@ -77,8 +74,7 @@ const Dashboard = () => {
     );
   }
 
-  // This component now serves as a redirect component
-  console.log('Dashboard render completed, should have redirected by now');
+  // This component serves as a redirect component - should not reach here
   return null;
 };
 
