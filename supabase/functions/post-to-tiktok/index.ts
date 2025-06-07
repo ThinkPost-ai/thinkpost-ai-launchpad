@@ -90,6 +90,7 @@ serve(async (req) => {
         source_info: {
           source: 'FILE_UPLOAD',
           video_size: videoSize,
+          chunk_size: videoSize,
           // TikTok recommends chunk_size around 10MB. For simplicity, we'll assume one chunk for now.
           // For larger videos, this needs to be properly chunked.
           total_chunk_count: 1,
@@ -97,12 +98,28 @@ serve(async (req) => {
       }),
     });
 
+    console.log('Request body for TikTok video init:', JSON.stringify({
+      post_info: {
+        title: caption,
+        privacy_level: 'PUBLIC_TO_EVERYONE',
+        disable_duet: false,
+        disable_comment: false,
+        disable_stitch: false,
+      },
+      source_info: {
+        source: 'FILE_UPLOAD',
+        video_size: videoSize,
+        chunk_size: videoSize,
+        total_chunk_count: 1,
+      },
+    }, null, 2));
+
     const initUploadData = await initUploadResponse.json();
     console.log('TikTok init upload response status:', initUploadResponse.status);
     console.log('TikTok init upload response data:', initUploadData);
 
-    if (!initUploadResponse.ok || initUploadData.error?.code !== 'ok') {
-      throw new Error(`TikTok video upload initialization failed: ${initUploadData.error?.message || initUploadResponse.statusText}`);
+    if (!initUploadResponse.ok || initUploadData.error?.code !== 'ok' || !initUploadData.data) {
+      throw new Error(`TikTok video upload initialization failed: ${initUploadData.error?.message || initUploadResponse.statusText || 'The video info is empty (no data object from TikTok).'}`);
     }
 
     const publish_id = initUploadData.data.publish_id;
