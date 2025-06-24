@@ -65,7 +65,10 @@ const InstagramConnection = () => {
             </div>
             
             <Button 
-              onClick={() => {}}
+              onClick={() => {
+                const instagramAuthUrl = "https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1092698762721463&redirect_uri=https://thinkpost.co/instagram-callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
+                window.location.href = instagramAuthUrl;
+              }}
               disabled={isConnecting}
               className="w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 hover:from-yellow-500 hover:via-red-600 hover:to-pink-600"
             >
