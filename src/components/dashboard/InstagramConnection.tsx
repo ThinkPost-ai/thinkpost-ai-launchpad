@@ -1,0 +1,91 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Instagram, CheckCircle, Loader2 } from 'lucide-react';
+
+const InstagramConnection = () => {
+  const isConnected = false;
+  const isConnecting = false;
+
+  return (
+    <Card className={`border-2 hover:shadow-lg transition-shadow ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${isConnected ? 'bg-green-600' : 'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500'}`}>
+            <Instagram className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Instagram
+              {isConnected && <CheckCircle className="h-5 w-5 text-green-600" />}
+            </CardTitle>
+            <CardDescription>
+              {isConnected 
+                ? "Connected as Instagram User"
+                : "Connect your Instagram account to get started."
+              }
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {isConnected ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={''} />
+                <AvatarFallback className="bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 text-white">
+                  <Instagram className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">@instagram_user</p>
+                <p className="text-sm text-muted-foreground">Connected</p>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={() => {}}
+              variant="outline"
+              className="w-full"
+            >
+              Disconnect
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="text-center py-6">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+                <Instagram className="h-8 w-8 text-white" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Connect your Instagram to automatically post content.
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => {}}
+              disabled={isConnecting}
+              className="w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 hover:from-yellow-500 hover:via-red-600 hover:to-pink-600"
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Instagram className="mr-2 h-4 w-4" />
+                  Connect Instagram
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default InstagramConnection; 
