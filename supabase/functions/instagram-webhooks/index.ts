@@ -1,20 +1,17 @@
+/// <reference types="https://deno.land/x/deno/cli/types/v1.28.0.d.ts" />
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts'
 
-// Generate a secure, random string for the verify token.
-// You will use this token in the Facebook Developer Portal.
-const VERIFY_TOKEN = crypto.randomUUID();
-console.log(`Your Instagram Webhook Verify Token is: ${VERIFY_TOKEN}`);
-console.log(`Your Callback URL is: https://<YOUR_SUPABASE_PROJECT_REF>.supabase.co/functions/v1/instagram-webhooks`);
-
-// It's crucial to keep your Instagram App Secret secure.
-// Store it as an environment variable in your Supabase project settings.
+// These should be set as environment variables in your Supabase project.
+const VERIFY_TOKEN = Deno.env.get('INSTAGRAM_VERIFY_TOKEN');
 const INSTAGRAM_APP_SECRET = Deno.env.get('INSTAGRAM_APP_SECRET');
 
 serve(async (req) => {
-  if (!INSTAGRAM_APP_SECRET) {
-    console.error('INSTAGRAM_APP_SECRET is not set.');
-    return new Response('Internal Server Error: App Secret not configured.', { status: 500 });
+  // Check that environment variables are set
+  if (!INSTAGRAM_APP_SECRET || !VERIFY_TOKEN) {
+    console.error('A required environment variable (INSTAGRAM_APP_SECRET or INSTAGRAM_VERIFY_TOKEN) is not set.');
+    return new Response('Internal Server Error: App not configured correctly.', { status: 500 });
   }
 
   if (req.method === 'GET') {
