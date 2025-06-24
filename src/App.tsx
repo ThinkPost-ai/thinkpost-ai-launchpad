@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import TikTokCallback from "./pages/TikTokCallback";
 import TikTokLoginCallback from "./pages/TikTokLoginCallback";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import InstagramLoginCallback from "./pages/InstagramLoginCallback";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/tiktok-callback" element={<TikTokCallback />} />
                   <Route path="/tiktok-login-callback" element={<TikTokLoginCallback />} />
+                  <Route path="/instagram-callback" element={<InstagramLoginCallback />} />
                   <Route path="/email-confirmation" element={<EmailConfirmation />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
