@@ -119,6 +119,9 @@ serve(async (req) => {
     console.log('TikTok init upload response data:', initUploadData);
 
     if (!initUploadResponse.ok || initUploadData.error?.code !== 'ok' || !initUploadData.data) {
+      // Log the full response body for debugging
+      const errorText = JSON.stringify(initUploadData, null, 2);
+      console.error('TikTok video upload initialization failed. Full response:', errorText);
       throw new Error(`TikTok video upload initialization failed: ${initUploadData.error?.message || initUploadResponse.statusText || 'The video info is empty (no data object from TikTok).'}`);
     }
 
