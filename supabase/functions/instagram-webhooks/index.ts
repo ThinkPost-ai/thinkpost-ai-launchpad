@@ -3,19 +3,19 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts'
 
-// These should be set as environment variables in your Supabase project.
+// These must be set as environment variables in your Supabase project settings.
 const VERIFY_TOKEN = Deno.env.get('INSTAGRAM_VERIFY_TOKEN');
 const INSTAGRAM_APP_SECRET = Deno.env.get('INSTAGRAM_APP_SECRET');
 
 serve(async (req) => {
-  // Check that environment variables are set
+  // 1. Check that environment variables are set
   if (!INSTAGRAM_APP_SECRET || !VERIFY_TOKEN) {
     console.error('A required environment variable (INSTAGRAM_APP_SECRET or INSTAGRAM_VERIFY_TOKEN) is not set.');
     return new Response('Internal Server Error: App not configured correctly.', { status: 500 });
   }
 
+  // 2. Handle the verification request from Meta
   if (req.method === 'GET') {
-    // This is the verification request from Meta.
     const url = new URL(req.url);
     const mode = url.searchParams.get('hub.mode');
     const token = url.searchParams.get('hub.verify_token');
@@ -25,13 +25,13 @@ serve(async (req) => {
       console.log('Webhook verified successfully!');
       return new Response(challenge, { status: 200 });
     } else {
-      console.error('Webhook verification failed.');
-      return new Response('Forbidden', { status: 403 });
+      console.error('Webhook verification failed. Ensure your VERIFY_TOKEN is set correctly in both Supabase and the Facebook Developer Portal.');
+      return new Response('Forbidden: Verification failed.', { status: 403 });
     }
   }
 
+  // 3. Handle incoming event notifications
   if (req.method === 'POST') {
-    // This is an event notification.
     const signature = req.headers.get('X-Hub-Signature-256');
 
     if (!signature) {
@@ -41,8 +41,7 @@ serve(async (req) => {
 
     const body = await req.text();
     
-    // Validate the payload
-    // https://developers.facebook.com/docs/graph-api/webhooks/getting-started#validate-payloads
+    // Validate the payload against the signature
     const hmac = createHmac('sha256', INSTAGRAM_APP_SECRET);
     hmac.update(body);
     const expectedSignature = `sha256=${hmac.digest('hex')}`;
@@ -55,11 +54,11 @@ serve(async (req) => {
     console.log('Received valid webhook event:');
     console.log(JSON.stringify(JSON.parse(body), null, 2));
 
-    // Process the webhook event here...
+    // You can now process the webhook event data here.
 
     return new Response('OK', { status: 200 });
   }
 
-  // Handle other methods
+  // 4. Handle other HTTP methods
   return new Response('Method Not Allowed', { status: 405 });
 }) 
