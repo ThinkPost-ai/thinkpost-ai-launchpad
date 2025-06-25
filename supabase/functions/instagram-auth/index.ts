@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Instagram Auth Function for ThinkPost
+// For development/testing: Uses basic scopes that work before app review
+// For production: Will use business scopes after Meta app review
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -42,6 +46,43 @@ serve(async (req) => {
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    // Test Meta app configuration
+    if (url.searchParams.get('test') === 'meta') {
+      try {
+        const testResponse = await fetch(
+          `https://graph.facebook.com/v21.0/${facebookAppId}?fields=id,name,category&access_token=${facebookAppId}|${facebookAppSecret}`
+        )
+        
+        const isValid = testResponse.ok
+        const testData = isValid ? await testResponse.json() : await testResponse.text()
+        
+        return new Response(
+          JSON.stringify({ 
+            message: 'Meta App Configuration Test',
+            environment: envStatus,
+            app_valid: isValid,
+            app_data: testData,
+            test_scopes: ['instagram_basic', 'pages_show_list', 'pages_read_engagement'],
+            instructions: isValid ? 
+              'App credentials are valid. Make sure your test user is added in Meta Developer Console.' :
+              'App credentials may be invalid. Check your FACEBOOK_APP_ID and FACEBOOK_APP_SECRET.',
+            timestamp: new Date().toISOString()
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ 
+            message: 'Meta App Configuration Test Failed',
+            environment: envStatus,
+            error: error.message,
+            timestamp: new Date().toISOString()
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
     if (!facebookAppId) {
@@ -165,15 +206,12 @@ serve(async (req) => {
 
     const redirectUri = `${frontendUrl}/instagram-callback`
 
-    // Updated Instagram OAuth scopes based on current API documentation
+    // For development/testing, use Basic Display API scopes
+    // These work before app review is completed
     const scopes = [
-      'instagram_business_basic',
-      'instagram_business_content_publish', 
-      'instagram_business_manage_comments',
-      'instagram_business_manage_messages',
+      'instagram_basic',
       'pages_show_list',
-      'pages_read_engagement',
-      'business_management'
+      'pages_read_engagement'
     ].join(',');
 
     // Build Facebook OAuth URL (which includes Instagram permissions)
