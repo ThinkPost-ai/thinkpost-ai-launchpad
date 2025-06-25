@@ -14,6 +14,7 @@ import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
 import QuickActions from '@/components/dashboard/QuickActions';
 import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import InstagramConnection from '@/components/dashboard/InstagramConnection';
+import VideoConverter from '@/components/dashboard/VideoConverter';
 
 const UserDashboard = () => {
   const { user, loading } = useAuth();
@@ -67,7 +68,7 @@ const UserDashboard = () => {
   // Handle tab from URL parameters
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['overview', 'media', 'captions', 'schedule', 'notifications'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'media', 'video', 'captions', 'schedule', 'notifications'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
@@ -87,12 +88,15 @@ const UserDashboard = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <TabsList className="grid w-max min-w-full grid-cols-5 h-11 sm:h-10 mx-3 sm:mx-0 sm:w-full lg:w-auto">
+            <TabsList className="grid w-max min-w-full grid-cols-6 h-11 sm:h-10 mx-3 sm:mx-0 sm:w-full lg:w-auto">
               <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                 {t('dashboard.tabs.overview')}
               </TabsTrigger>
               <TabsTrigger value="media" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                 {t('dashboard.tabs.media')}
+              </TabsTrigger>
+              <TabsTrigger value="video" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                Video
               </TabsTrigger>
               <TabsTrigger value="captions" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                 {t('dashboard.tabs.captions')}
@@ -124,6 +128,10 @@ const UserDashboard = () => {
 
           <TabsContent value="media">
             <MediaManagement />
+          </TabsContent>
+
+          <TabsContent value="video">
+            <VideoConverter />
           </TabsContent>
 
           <TabsContent value="captions">
