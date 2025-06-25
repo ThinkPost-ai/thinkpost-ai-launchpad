@@ -165,12 +165,23 @@ serve(async (req) => {
 
     const redirectUri = `${frontendUrl}/instagram-callback`
 
+    // Updated Instagram OAuth scopes based on current API documentation
+    const scopes = [
+      'instagram_business_basic',
+      'instagram_business_content_publish', 
+      'instagram_business_manage_comments',
+      'instagram_business_manage_messages',
+      'pages_show_list',
+      'pages_read_engagement',
+      'business_management'
+    ].join(',');
+
     // Build Facebook OAuth URL (which includes Instagram permissions)
     const facebookAuthUrl = new URL('https://www.facebook.com/v21.0/dialog/oauth')
     facebookAuthUrl.searchParams.set('client_id', facebookAppId)
     facebookAuthUrl.searchParams.set('redirect_uri', redirectUri)
     facebookAuthUrl.searchParams.set('state', state)
-    facebookAuthUrl.searchParams.set('scope', 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish')
+    facebookAuthUrl.searchParams.set('scope', scopes)
     facebookAuthUrl.searchParams.set('response_type', 'code')
 
     console.log('✅ Instagram/Facebook Auth URL generated successfully')
