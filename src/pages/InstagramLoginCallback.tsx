@@ -37,8 +37,18 @@ const InstagramLoginCallback = () => {
     try {
       console.log('Processing Instagram callback with code:', code);
       
+      // Get current user session to include authorization header
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase.functions.invoke('instagram-oauth-callback', {
-        body: { code, state }
+        body: { code, state },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) {
