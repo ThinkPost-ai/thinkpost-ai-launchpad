@@ -39,30 +39,6 @@ export type Database = {
         }
         Relationships: []
       }
-      instagram_oauth_states: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          state_value: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          state_value: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          state_value?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           caption: string | null
@@ -105,15 +81,8 @@ export type Database = {
           avatar_url: string | null
           caption_credits: number
           display_name: string | null
-          facebook_access_token: string | null
-          facebook_page_id: string | null
           full_name: string | null
           id: string
-          instagram_access_token: string | null
-          instagram_avatar_url: string | null
-          instagram_connected: boolean | null
-          instagram_user_id: string | null
-          instagram_username: string | null
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -126,15 +95,8 @@ export type Database = {
           avatar_url?: string | null
           caption_credits?: number
           display_name?: string | null
-          facebook_access_token?: string | null
-          facebook_page_id?: string | null
           full_name?: string | null
           id: string
-          instagram_access_token?: string | null
-          instagram_avatar_url?: string | null
-          instagram_connected?: boolean | null
-          instagram_user_id?: string | null
-          instagram_username?: string | null
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -147,15 +109,8 @@ export type Database = {
           avatar_url?: string | null
           caption_credits?: number
           display_name?: string | null
-          facebook_access_token?: string | null
-          facebook_page_id?: string | null
           full_name?: string | null
           id?: string
-          instagram_access_token?: string | null
-          instagram_avatar_url?: string | null
-          instagram_connected?: boolean | null
-          instagram_user_id?: string | null
-          instagram_username?: string | null
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null

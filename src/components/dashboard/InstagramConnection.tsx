@@ -1,21 +1,11 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Instagram, CheckCircle, Loader2 } from 'lucide-react';
-import { constructInstagramOAuthUrl, isLovablePreview } from '@/utils/domainUtils';
 
 const InstagramConnection = () => {
   const isConnected = false;
   const isConnecting = false;
-  const isPreview = isLovablePreview();
-
-  const handleInstagramConnect = () => {
-    const instagramAuthUrl = constructInstagramOAuthUrl();
-    console.log('Instagram OAuth URL:', instagramAuthUrl);
-    console.log('Current environment:', isPreview ? 'Lovable Preview' : 'Production');
-    window.location.href = instagramAuthUrl;
-  };
 
   return (
     <Card className={`border-2 hover:shadow-lg transition-shadow ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
@@ -72,15 +62,13 @@ const InstagramConnection = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Connect your Instagram to automatically post content.
               </p>
-              {isPreview && (
-                <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded-md">
-                  Running in preview mode - OAuth will redirect to this domain
-                </p>
-              )}
             </div>
             
             <Button 
-              onClick={handleInstagramConnect}
+              onClick={() => {
+                const instagramAuthUrl = "https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1092698762721463&redirect_uri=https://thinkpost.co/instagram-callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
+                window.location.href = instagramAuthUrl;
+              }}
               disabled={isConnecting}
               className="w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 hover:from-yellow-500 hover:via-red-600 hover:to-pink-600"
             >
@@ -103,4 +91,4 @@ const InstagramConnection = () => {
   );
 };
 
-export default InstagramConnection;
+export default InstagramConnection; 
