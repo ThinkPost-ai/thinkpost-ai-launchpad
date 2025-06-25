@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -17,9 +16,18 @@ const InstagramLoginCallback = () => {
 
     if (error) {
       const errorDescription = searchParams.get('error_description') || 'An unknown error occurred.';
+      let userFriendlyMessage = errorDescription;
+      
+      // Provide more specific error messages based on common Instagram issues
+      if (error === 'access_denied') {
+        userFriendlyMessage = 'Instagram connection was cancelled. Please try again and authorize the connection.';
+      } else if (errorDescription.includes('redirect_uri')) {
+        userFriendlyMessage = 'Instagram connection failed due to configuration issue. Please contact support.';
+      }
+      
       toast({
         title: "Instagram Connection Failed",
-        description: errorDescription,
+        description: userFriendlyMessage,
         variant: "destructive"
       });
       navigate('/user-dashboard?tab=overview');
@@ -53,16 +61,36 @@ const InstagramLoginCallback = () => {
 
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to connect Instagram');
+        
+        // Provide more specific error messages
+        let userFriendlyMessage = 'Failed to connect Instagram account.';
+        
+        if (error.message?.includes('Instagram Business account')) {
+          userFriendlyMessage = 'No Instagram Business account found. Please make sure you have an Instagram Business account connected to a Facebook Page.';
+        } else if (error.message?.includes('redirect_uri')) {
+          userFriendlyMessage = 'Configuration error. Please contact support.';
+        } else if (error.message?.includes('access_token')) {
+          userFriendlyMessage = 'Authentication failed. Please try connecting again.';
+        }
+        
+        throw new Error(userFriendlyMessage);
       }
 
       if (data.success) {
         toast({
           title: "Instagram Connected!",
-          description: `Your Instagram account @${data.username} has been connected successfully.`,
+          description: `Your Instagram Business account @${data.username} has been connected successfully.`,
         });
       } else {
-        throw new Error(data.error || 'Unknown error occurred');
+        let userFriendlyMessage = 'Unknown error occurred';
+        
+        if (data.error?.includes('Instagram Business account')) {
+          userFriendlyMessage = 'No Instagram Business account found. Please make sure you have an Instagram Business account connected to a Facebook Page.';
+        } else if (data.error) {
+          userFriendlyMessage = data.error;
+        }
+        
+        throw new Error(userFriendlyMessage);
       }
     } catch (error) {
       console.error('Instagram callback error:', error);
@@ -86,7 +114,7 @@ const InstagramLoginCallback = () => {
           <Loader2 className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
         </div>
         <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
-          Connecting your Instagram Account...
+          Connecting your Instagram Business Account...
         </h2>
         <p className="text-muted-foreground">
           Please wait while we finalize the connection. You will be redirected shortly.

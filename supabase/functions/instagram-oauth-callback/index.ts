@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -26,8 +25,8 @@ Deno.serve(async (req) => {
 
     console.log('Processing Instagram OAuth callback with code:', code)
 
-    // Exchange code for access token
-    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+    // Instagram Business API uses Facebook Graph API for token exchange
+    const tokenResponse = await fetch('https://graph.facebook.com/v21.0/oauth/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -48,23 +47,37 @@ Deno.serve(async (req) => {
     }
 
     const tokenData = await tokenResponse.json()
-    console.log('Token exchange successful for user:', tokenData.user_id)
+    console.log('Token exchange successful, access_token length:', tokenData.access_token?.length)
 
-    // Get long-lived access token
-    const longLivedTokenResponse = await fetch(
-      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${Deno.env.get('INSTAGRAM_APP_SECRET')}&access_token=${tokenData.access_token}`
+    // For Instagram Business, we need to get the user's Instagram accounts
+    // First, get the user's Facebook pages/accounts
+    const accountsResponse = await fetch(
+      `https://graph.facebook.com/v21.0/me/accounts?access_token=${tokenData.access_token}&fields=instagram_business_account`
     )
 
-    let finalToken = tokenData.access_token
-    if (longLivedTokenResponse.ok) {
-      const longLivedTokenData = await longLivedTokenResponse.json()
-      finalToken = longLivedTokenData.access_token
-      console.log('Long-lived token obtained')
+    if (!accountsResponse.ok) {
+      throw new Error('Failed to fetch Instagram business accounts')
     }
 
-    // Get user profile information
+    const accountsData = await accountsResponse.json()
+    console.log('Accounts data:', JSON.stringify(accountsData, null, 2))
+
+    // Find the first Instagram business account
+    let instagramAccount = null
+    for (const account of accountsData.data || []) {
+      if (account.instagram_business_account) {
+        instagramAccount = account.instagram_business_account
+        break
+      }
+    }
+
+    if (!instagramAccount) {
+      throw new Error('No Instagram Business account found. Please make sure you have an Instagram Business account connected to your Facebook page.')
+    }
+
+    // Get Instagram account details
     const profileResponse = await fetch(
-      `https://graph.instagram.com/me?fields=id,username,account_type&access_token=${finalToken}`
+      `https://graph.facebook.com/v21.0/${instagramAccount.id}?fields=id,username,profile_picture_url,account_type&access_token=${tokenData.access_token}`
     )
 
     if (!profileResponse.ok) {
@@ -95,8 +108,8 @@ Deno.serve(async (req) => {
         instagram_connected: true,
         instagram_user_id: profileData.id,
         instagram_username: profileData.username,
-        instagram_access_token: finalToken,
-        instagram_avatar_url: `https://graph.instagram.com/${profileData.id}/picture?access_token=${finalToken}`,
+        instagram_access_token: tokenData.access_token,
+        instagram_avatar_url: profileData.profile_picture_url,
       })
       .eq('id', user.id)
 
