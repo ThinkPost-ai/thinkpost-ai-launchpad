@@ -4,14 +4,52 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Instagram, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const InstagramConnection = () => {
   const { profile, isLoading, isConnecting, setIsConnecting, disconnectInstagram } = useInstagramConnection();
+  const { toast } = useToast();
 
-  const handleConnect = () => {
-    setIsConnecting(true);
-    const instagramAuthUrl = "https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1092698762721463&redirect_uri=https://thinkpost.co/instagram-callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights";
-    window.location.href = instagramAuthUrl;
+  const handleConnect = async () => {
+    try {
+      setIsConnecting(true);
+      
+      // Get current user session to include authorization header
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
+
+      // Call the instagram-auth function to get the proper OAuth URL
+      const { data, error } = await supabase.functions.invoke('instagram-auth', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Instagram auth error:', error);
+        throw new Error(error.message || 'Failed to initialize Instagram connection');
+      }
+
+      if (!data?.authUrl) {
+        throw new Error('No authorization URL received from server');
+      }
+
+      // Redirect to the proper Facebook OAuth URL
+      window.location.href = data.authUrl;
+      
+    } catch (error) {
+      console.error('Instagram connection error:', error);
+      toast({
+        title: "Connection Failed",
+        description: error.message || 'Failed to connect Instagram account. Please try again.',
+        variant: "destructive"
+      });
+      setIsConnecting(false);
+    }
   };
 
   if (isLoading) {
