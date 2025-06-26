@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, duration = 3, scheduledPostId } = await req.json();
+    const { imageUrl, scheduledPostId } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -25,7 +25,6 @@ serve(async (req) => {
     }
 
     console.log(`Processing image for TikTok: ${imageUrl}`);
-    console.log(`Video duration: ${duration} seconds`);
     if (scheduledPostId) {
       console.log(`Scheduled post ID: ${scheduledPostId}`);
     }
@@ -50,112 +49,50 @@ serve(async (req) => {
       throw new Error('User not authenticated or not found.');
     }
 
-    // Step 1: Convert image to video using the convert-image-to-video function
-    console.log('Step 1: Converting image to video...');
+    console.log('Preparing image for direct TikTok posting...');
     
-    const convertResponse = await supabase.functions.invoke('convert-image-to-video', {
-      body: { imageUrl, duration },
-      headers: {
-        Authorization: authHeader!,
-      },
-    });
-
-    if (convertResponse.error) {
-      console.error('Image to video conversion failed:', convertResponse.error);
-      throw new Error(`Image to video conversion failed: ${convertResponse.error.message}`);
-    }
-
-    // Get the video data as blob
-    const videoBlob = convertResponse.data;
-    if (!videoBlob) {
-      throw new Error('No video data received from conversion');
-    }
-
-    console.log('Video conversion successful, uploading to storage...');
-
-    // Step 2: Upload the video to Supabase Storage
-    const videoFileName = `tiktok-video-${Date.now()}-${user.id}.mp4`;
-    const videoPath = `${user.id}/${videoFileName}`;
-
-    // Convert blob to File for upload
-    const videoFile = new File([videoBlob], videoFileName, { type: 'video/mp4' });
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('media')
-      .upload(videoPath, videoFile, {
-        contentType: 'video/mp4',
-        upsert: false
-      });
-
-    if (uploadError) {
-      console.error('Video upload failed:', uploadError);
-      throw new Error(`Video upload failed: ${uploadError.message}`);
-    }
-
-    console.log('Video uploaded successfully:', uploadData.path);
-
-    // Step 3: Generate public URL for the video
-    const { data: urlData } = supabase.storage
-      .from('media')
-      .getPublicUrl(uploadData.path);
-
-    const publicVideoUrl = urlData.publicUrl;
+    // TikTok supports posting images directly - no video conversion needed!
+    // We just need to ensure the image URL is accessible for TikTok's API
     
-    // Also generate media-proxy URL for TikTok posting (to ensure domain verification)
-    const proxyVideoUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/media-proxy/media/${uploadData.path}`;
+    // Generate media-proxy URL to ensure domain verification for TikTok posting
+    const imageUrlParts = imageUrl.split('/');
+    const imagePath = imageUrlParts.slice(-2).join('/'); // Get the last two parts (user_id/filename)
+    const proxyImageUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/media-proxy/media/${imagePath}`;
 
-    console.log('Public video URL:', publicVideoUrl);
-    console.log('Proxy video URL:', proxyVideoUrl);
+    console.log('Original image URL:', imageUrl);
+    console.log('Proxy image URL for TikTok:', proxyImageUrl);
 
-    // Step 4: Update the database with video information
+    // Update the database with image information for TikTok posting
     if (scheduledPostId) {
-      console.log('Updating scheduled post with video information...');
+      console.log('Updating scheduled post with image information...');
       
       const { error: updateError } = await supabase
         .from('scheduled_posts')
         .update({
-          video_path: uploadData.path,
-          video_url: publicVideoUrl,
-          proxy_video_url: proxyVideoUrl,
-          processing_status: 'completed'
+          image_url: imageUrl,
+          proxy_image_url: proxyImageUrl,
+          processing_status: 'ready_for_tiktok',
+          media_type: 'photo' // TikTok supports photo posts directly
         })
         .eq('id', scheduledPostId)
         .eq('user_id', user.id);
 
       if (updateError) {
         console.error('Failed to update scheduled post:', updateError);
-        // Don't throw here, video was created successfully
+        throw new Error(`Failed to update scheduled post: ${updateError.message}`);
       }
     }
 
-    // Step 5: Store video information in images table for future reference
-    const { error: insertError } = await supabase
-      .from('images')
-      .insert({
-        user_id: user.id,
-        file_path: uploadData.path,
-        url: publicVideoUrl,
-        public_url: proxyVideoUrl,
-        file_name: videoFileName,
-        mime_type: 'video/mp4',
-        file_size: videoFile.size,
-        original_filename: videoFileName
-      });
-
-    if (insertError) {
-      console.error('Failed to store video information:', insertError);
-      // Don't throw here, video was created successfully
-    }
-
-    console.log('Image to TikTok video processing completed successfully');
+    console.log('Image processing for TikTok completed successfully - ready for direct photo posting');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Image successfully converted to TikTok video',
-      videoPath: uploadData.path,
-      publicVideoUrl: publicVideoUrl,
-      proxyVideoUrl: proxyVideoUrl,
-      scheduledPostId: scheduledPostId
+      message: 'Image ready for direct TikTok photo posting',
+      imageUrl: imageUrl,
+      proxyImageUrl: proxyImageUrl,
+      scheduledPostId: scheduledPostId,
+      mediaType: 'photo',
+      note: 'TikTok supports photo posts directly - no video conversion needed'
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
