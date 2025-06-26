@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -186,6 +185,28 @@ export const useProductManagement = () => {
       return;
     }
 
+    // Debug: Check user session before proceeding
+    console.log('Current user:', user);
+    console.log('User ID:', user.id);
+    
+    // Check current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Current session:', session);
+    console.log('Session error:', sessionError);
+    
+    if (!session) {
+      console.error('No active session found');
+      toast({
+        title: "Authentication Error",
+        description: "You need to be logged in to generate captions. Please sign in again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Session access token available:', !!session.access_token);
+    console.log('Session user ID:', session.user?.id);
+
     setGeneratingCaptions(true);
 
     try {
@@ -216,17 +237,53 @@ export const useProductManagement = () => {
 
       const captionPromises = savedProducts.map(async (product) => {
         try {
-          const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
-            body: {
+          console.log(`Generating caption for product: ${product.name}`, {
+            productId: product.id,
+            productName: product.name,
+            price: product.price,
+            description: product.description
+          });
+
+          // Check session again before API call
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          console.log('Session before API call:', {
+            hasSession: !!currentSession,
+            hasAccessToken: !!currentSession?.access_token,
+            userId: currentSession?.user?.id
+          });
+
+          // Try manual API call with explicit authorization header
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const captionResponse = await fetch(`${supabaseUrl}/functions/v1/generate-caption`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentSession?.access_token}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({
               productName: product.name,
               price: product.price,
               description: product.description
-            }
+            })
           });
 
-          if (captionError) {
-            console.error('Caption generation error:', captionError);
-            if (captionError.message?.includes('Insufficient caption credits')) {
+          console.log('Manual API call response status:', captionResponse.status);
+
+          const captionResponseData = await captionResponse.json();
+          console.log(`Caption generation response for ${product.name}:`, captionResponseData);
+
+          if (!captionResponse.ok) {
+            console.error('Caption generation error:', captionResponseData);
+            
+            // Show specific error message to user
+            toast({
+              title: "Caption Generation Failed",
+              description: captionResponseData.error || "Failed to generate caption for " + product.name,
+              variant: "destructive"
+            });
+
+            if (captionResponseData.error?.includes('Insufficient caption credits') || captionResponse.status === 402) {
               toast({
                 title: "Caption Credits Exhausted",
                 description: "You have reached your monthly caption limit. Products saved without captions.",
@@ -236,41 +293,68 @@ export const useProductManagement = () => {
             return product;
           }
 
-          const caption = captionData?.caption;
+          const caption = captionResponseData?.caption;
 
-          if (caption) {
-            const { error: updateError } = await supabase
-              .from('products')
-              .update({ caption })
-              .eq('id', product.id);
+          if (!caption) {
+            console.error('No caption received for product:', product.name);
+            toast({
+              title: "Caption Generation Failed",
+              description: `No caption generated for ${product.name}`,
+              variant: "destructive"
+            });
+            return product;
+          }
 
-            if (updateError) {
-              console.error('Caption update error:', updateError);
-            }
+          console.log(`Generated caption for ${product.name}:`, caption);
 
-            // Schedule the post with the generated caption
-            const scheduledDate = new Date();
-            scheduledDate.setHours(scheduledDate.getHours() + 24); // Schedule for 24 hours from now
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ caption })
+            .eq('id', product.id);
 
-            const { error: scheduleError } = await supabase
-              .from('scheduled_posts')
-              .insert({
-                user_id: user.id,
-                product_id: product.id,
-                caption: caption,
-                platform: 'instagram', // Default platform
-                scheduled_date: scheduledDate.toISOString(),
-                status: 'scheduled'
-              });
+          if (updateError) {
+            console.error('Caption update error:', updateError);
+            toast({
+              title: "Database Update Failed",
+              description: `Failed to save caption for ${product.name}`,
+              variant: "destructive"
+            });
+          }
 
-            if (scheduleError) {
-              console.error('Schedule error:', scheduleError);
-            }
+          // Schedule the post with the generated caption
+          const scheduledDate = new Date();
+          scheduledDate.setHours(scheduledDate.getHours() + 24); // Schedule for 24 hours from now
+
+          const { error: scheduleError } = await supabase
+            .from('scheduled_posts')
+            .insert({
+              user_id: user.id,
+              product_id: product.id,
+              caption: caption,
+              platform: 'tiktok',
+              scheduled_date: scheduledDate.toISOString(),
+              status: 'scheduled'
+            });
+
+          if (scheduleError) {
+            console.error('Schedule error:', scheduleError);
+            toast({
+              title: "Scheduling Failed",
+              description: `Failed to schedule post for ${product.name}`,
+              variant: "destructive"
+            });
+          } else {
+            console.log(`Successfully scheduled post for ${product.name}`);
           }
 
           return { ...product, caption };
         } catch (error) {
           console.error('Failed to generate caption for product:', product.name, error);
+          toast({
+            title: "Error",
+            description: `Error processing ${product.name}: ${error.message}`,
+            variant: "destructive"
+          });
           return product;
         }
       });
