@@ -279,33 +279,32 @@ const ScheduledPosts = () => {
         throw new Error('No media found for this post');
       }
 
-      // Check if this is already a video or needs conversion
+      // Check if this is already a video or needs processing for TikTok
       const isVideo = mediaPath.toLowerCase().endsWith('.mp4') || 
                      mediaPath.toLowerCase().endsWith('.mov') || 
                      mediaPath.toLowerCase().endsWith('.avi');
 
-      let videoUrl: string;
+      let mediaUrl: string;
 
       if (isVideo) {
         // If it's already a video, use it directly
-        videoUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
-        console.log('Using existing video:', videoUrl);
+        mediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
+        console.log('Using existing video:', mediaUrl);
       } else {
-        // If it's an image, convert it to video first
-        console.log('Converting image to video for TikTok posting...');
+        // If it's an image, prepare it for direct TikTok photo posting
+        console.log('Preparing image for direct TikTok photo posting...');
         
-        // Show conversion progress
+        // Show processing progress
         toast({
-          title: "Converting to Video",
-          description: "Converting your image to TikTok-ready video...",
+          title: "Preparing Image",
+          description: "Preparing your image for TikTok photo posting...",
         });
 
         const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
         
-        const { data: conversionData, error: conversionError } = await supabase.functions.invoke('process-image-for-tiktok', {
+        const { data: processingData, error: processingError } = await supabase.functions.invoke('process-image-for-tiktok', {
           body: {
             imageUrl: imageUrl,
-            duration: 3, // 3-second video
             scheduledPostId: post.id
           },
           headers: {
@@ -313,31 +312,31 @@ const ScheduledPosts = () => {
           },
         });
 
-        if (conversionError) {
-          throw new Error(`Video conversion failed: ${conversionError.message}`);
+        if (processingError) {
+          throw new Error(`Image processing failed: ${processingError.message}`);
         }
 
-        if (!conversionData.success || !conversionData.proxyVideoUrl) {
-          throw new Error('Video conversion completed but no video URL received');
+        if (!processingData.success || !processingData.proxyImageUrl) {
+          throw new Error('Image processing completed but no image URL received');
         }
 
-        videoUrl = conversionData.proxyVideoUrl;
-        console.log('Image converted to video successfully:', videoUrl);
+        mediaUrl = processingData.proxyImageUrl;
+        console.log('Image prepared for TikTok successfully:', mediaUrl);
         
-        // Update toast to show conversion complete
+        // Update toast to show processing complete
         toast({
-          title: "Conversion Complete",
+          title: "Image Ready",
           description: "Now posting to TikTok...",
         });
       }
 
-      // Now post the video to TikTok
-      console.log('Posting video to TikTok:', videoUrl);
+      // Now post to TikTok (the backend will handle whether it's a photo or video post)
+      console.log('Posting to TikTok:', mediaUrl);
       
       const { data, error } = await supabase.functions.invoke('post-to-tiktok', {
         body: {
           scheduledPostId: post.id,
-          videoUrl: videoUrl,
+          videoUrl: mediaUrl, // This parameter name stays the same for compatibility
           caption: post.caption
         },
         headers: {
