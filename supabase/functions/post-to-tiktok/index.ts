@@ -81,7 +81,7 @@ serve(async (req) => {
     let requestBody;
 
     if (mediaType === 'photo') {
-      // Use TikTok's photo posting API
+      // Use TikTok's photo posting API - Official format from TikTok documentation
       console.log('Initializing TikTok photo post...');
       
       requestBody = {
@@ -94,7 +94,7 @@ serve(async (req) => {
         source_info: {
           source: 'PULL_FROM_URL',
           photo_cover_index: 1,
-          photo_urls: [videoUrl], // Using videoUrl parameter name for compatibility, but it's actually an image URL
+          photo_images: [videoUrl], // Official TikTok API format - using videoUrl parameter for compatibility
         },
         media_type: 'PHOTO',
         post_mode: 'DIRECT_POST',
@@ -153,17 +153,19 @@ serve(async (req) => {
     console.log(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} upload initialized. Publish ID: ${publish_id}`);
 
     // Update scheduled post status to indicate it's being processed by TikTok
-    const { error: updateError } = await supabase
-      .from('scheduled_posts')
-      .update({ 
-        status: 'posted', // Assuming 'posted' means successfully sent to TikTok for review
-        tiktok_publish_id: publish_id, // Store publish_id for webhook tracking
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', scheduledPostId);
+    if (scheduledPostId) {
+      const { error: updateError } = await supabase
+        .from('scheduled_posts')
+        .update({ 
+          status: 'posted', // Assuming 'posted' means successfully sent to TikTok for review
+          tiktok_publish_id: publish_id, // Store publish_id for webhook tracking
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', scheduledPostId);
 
-    if (updateError) {
-      console.error('Error updating scheduled post status:', updateError);
+      if (updateError) {
+        console.error('Error updating scheduled post status:', updateError);
+      }
     }
 
     return new Response(JSON.stringify({
