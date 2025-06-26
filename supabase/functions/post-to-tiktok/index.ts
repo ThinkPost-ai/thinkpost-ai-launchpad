@@ -6,6 +6,72 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to refresh TikTok access token
+async function refreshTikTokToken(supabase: any, userId: string, refreshToken: string): Promise<string | null> {
+  const client_key = Deno.env.get('TIKTOK_CLIENT_ID');
+  const client_secret = Deno.env.get('TIKTOK_CLIENT_SECRET');
+
+  if (!client_key || !client_secret) {
+    console.error('TikTok client credentials missing for token refresh');
+    return null;
+  }
+
+  try {
+    console.log('🔄 Refreshing TikTok access token...');
+    
+    const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_key,
+        client_secret,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ Token refresh failed:', errorText);
+      return null;
+    }
+
+    const tokenData = await tokenResponse.json();
+    const { access_token, refresh_token: new_refresh_token, expires_in } = tokenData;
+
+    if (!access_token) {
+      console.error('❌ No access token in refresh response');
+      return null;
+    }
+
+    // Calculate new expiration time
+    const expiresAt = new Date(Date.now() + expires_in * 1000);
+
+    // Update the database with new tokens
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        tiktok_access_token: access_token,
+        tiktok_refresh_token: new_refresh_token || refreshToken, // Use new refresh token if provided
+        tiktok_token_expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('❌ Failed to update tokens in database:', updateError);
+      return null;
+    }
+
+    console.log('✅ TikTok access token refreshed successfully');
+    return access_token;
+  } catch (error) {
+    console.error('❌ Error during token refresh:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -60,7 +126,7 @@ serve(async (req) => {
     // Fetch TikTok access token from the profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('tiktok_access_token')
+      .select('tiktok_access_token, tiktok_refresh_token, tiktok_token_expires_at')
       .eq('id', user.id)
       .single();
 
@@ -68,7 +134,30 @@ serve(async (req) => {
       throw new Error('TikTok access token is missing in user profile. Please connect your TikTok account.');
     }
 
-    const tiktokAccessToken = profile.tiktok_access_token;
+    let tiktokAccessToken = profile.tiktok_access_token;
+
+    // Check if token is expired or will expire soon (within 1 hour)
+    if (profile.tiktok_token_expires_at && profile.tiktok_refresh_token) {
+      const expiresAt = new Date(profile.tiktok_token_expires_at);
+      const now = new Date();
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour buffer
+
+      if (expiresAt <= oneHourFromNow) {
+        console.log('🔄 TikTok access token is expired or expires soon, refreshing...');
+        const refreshedToken = await refreshTikTokToken(supabase, user.id, profile.tiktok_refresh_token);
+        
+        if (refreshedToken) {
+          tiktokAccessToken = refreshedToken;
+          console.log('✅ Using refreshed TikTok access token');
+        } else {
+          throw new Error('Failed to refresh TikTok access token. Please reconnect your TikTok account.');
+        }
+      } else {
+        console.log('✅ TikTok access token is still valid');
+      }
+    } else {
+      console.log('⚠️ No expiration time or refresh token found - using existing token');
+    }
 
     const client_key = Deno.env.get('TIKTOK_CLIENT_ID');
     const client_secret = Deno.env.get('TIKTOK_CLIENT_SECRET');

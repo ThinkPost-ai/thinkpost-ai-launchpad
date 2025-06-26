@@ -158,6 +158,14 @@ serve(async (req) => {
       })
     }
 
+    // Extract refresh token and calculate expiration time
+    const { refresh_token, refresh_expires_in } = tokenData;
+    const expiresAt = new Date(Date.now() + expires_in * 1000); // expires_in is in seconds
+
+    console.log('🔍 Additional token data:');
+    console.log('- Refresh token:', refresh_token ? 'Present' : 'Missing');
+    console.log('- Token expires at:', expiresAt.toISOString());
+
     // Fetch user information from TikTok
     let username = null;
     let avatarUrl = null;
@@ -175,7 +183,7 @@ serve(async (req) => {
 
       const userInfoText = await userInfoResponse.text();
       console.log('📥 User info response status:', userInfoResponse.status);
-      console.log('�� User info response (raw text):', userInfoText);
+      console.log('📥 User info response (raw text):', userInfoText);
 
       if (userInfoResponse.ok) {
         try {
@@ -216,6 +224,8 @@ serve(async (req) => {
         tiktok_username: username,
         tiktok_avatar_url: avatarUrl,
         tiktok_access_token: access_token,
+        tiktok_refresh_token: refresh_token,
+        tiktok_token_expires_at: expiresAt.toISOString(),
         tiktok_connected: true
       })
       .eq('id', stateData.user_id)
