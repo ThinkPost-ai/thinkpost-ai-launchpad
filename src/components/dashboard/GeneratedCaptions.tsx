@@ -107,16 +107,32 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
 
       if (productsError) throw productsError;
 
+      // Fetch scheduled posts to determine real status
+      const { data: scheduledPosts, error: postsError } = await supabase
+        .from('scheduled_posts')
+        .select('product_id, status, scheduled_date')
+        .eq('user_id', user?.id);
+
+      if (postsError) {
+        console.error('Error fetching scheduled posts:', postsError);
+      }
+
+      // Create a map of product/image IDs to their scheduled post status
+      const statusMap = new Map();
+      if (scheduledPosts) {
+        scheduledPosts.forEach(post => {
+          if (post.product_id) {
+            statusMap.set(post.product_id, {
+              status: post.status,
+              scheduled_date: post.scheduled_date
+            });
+          }
+        });
+      }
+
       const transformedImages = (images || []).map(image => {
-        const randomValue = Math.random();
-        let status: 'draft' | 'scheduled' | 'posted';
-        if (randomValue > 0.7) {
-          status = 'posted';
-        } else if (randomValue > 0.5) {
-          status = 'scheduled';
-        } else {
-          status = 'draft';
-        }
+        // For images, default to draft since they're not typically scheduled automatically
+        const status = 'draft';
 
         return {
           id: image.id,
@@ -136,13 +152,24 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       });
 
       const transformedProducts = (products || []).map(product => {
-        const randomValue = Math.random();
-        let status: 'draft' | 'scheduled' | 'posted';
-        if (randomValue > 0.7) {
-          status = 'posted';
-        } else if (randomValue > 0.5) {
-          status = 'scheduled';
-        } else {
+        // Determine real status based on scheduled posts
+        let status: 'draft' | 'scheduled' | 'posted' = 'draft';
+        
+        const postInfo = statusMap.get(product.id);
+        if (postInfo) {
+          if (postInfo.status === 'posted') {
+            status = 'posted';
+          } else if (postInfo.status === 'scheduled' && postInfo.scheduled_date) {
+            const scheduledDate = new Date(postInfo.scheduled_date);
+            const now = new Date();
+            if (scheduledDate > now) {
+              status = 'scheduled';
+            } else {
+              status = 'posted'; // Past scheduled date means it should be posted
+            }
+          }
+        } else if (product.caption) {
+          // If product has caption but no scheduled post, it's a draft
           status = 'draft';
         }
 
