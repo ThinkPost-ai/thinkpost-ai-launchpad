@@ -46,7 +46,14 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      throw new Error('User not authenticated or not found.');
+      console.error('Authentication error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'User not authenticated or not found' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     console.log('Preparing image for direct TikTok posting...');
@@ -62,7 +69,7 @@ serve(async (req) => {
     console.log('Original image URL:', imageUrl);
     console.log('Proxy image URL for TikTok:', proxyImageUrl);
 
-    // Update the database with image information for TikTok posting
+    // Update the database with image information for TikTok posting (only if scheduledPostId is provided)
     if (scheduledPostId) {
       console.log('Updating scheduled post with image information...');
       
@@ -79,8 +86,19 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Failed to update scheduled post:', updateError);
-        throw new Error(`Failed to update scheduled post: ${updateError.message}`);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to update scheduled post',
+            details: updateError.message 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
+    } else {
+      console.log('No scheduled post ID provided - proceeding without database update');
     }
 
     console.log('Image processing for TikTok completed successfully - ready for direct photo posting');
