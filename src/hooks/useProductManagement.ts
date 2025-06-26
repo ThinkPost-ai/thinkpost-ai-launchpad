@@ -244,46 +244,30 @@ export const useProductManagement = () => {
             description: product.description
           });
 
-          // Check session again before API call
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          console.log('Session before API call:', {
-            hasSession: !!currentSession,
-            hasAccessToken: !!currentSession?.access_token,
-            userId: currentSession?.user?.id
-          });
-
-          // Try manual API call with explicit authorization header
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const captionResponse = await fetch(`${supabaseUrl}/functions/v1/generate-caption`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${currentSession?.access_token}`,
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({
+          const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
+            body: {
               productName: product.name,
               price: product.price,
               description: product.description
-            })
+            }
           });
 
-          console.log('Manual API call response status:', captionResponse.status);
+          console.log(`Caption generation response for ${product.name}:`, {
+            data: captionData,
+            error: captionError
+          });
 
-          const captionResponseData = await captionResponse.json();
-          console.log(`Caption generation response for ${product.name}:`, captionResponseData);
-
-          if (!captionResponse.ok) {
-            console.error('Caption generation error:', captionResponseData);
+          if (captionError) {
+            console.error('Caption generation error:', captionError);
             
             // Show specific error message to user
             toast({
               title: "Caption Generation Failed",
-              description: captionResponseData.error || "Failed to generate caption for " + product.name,
+              description: captionError.message || "Failed to generate caption for " + product.name,
               variant: "destructive"
             });
 
-            if (captionResponseData.error?.includes('Insufficient caption credits') || captionResponse.status === 402) {
+            if (captionError.message?.includes('Insufficient caption credits') || captionError.message?.includes('402')) {
               toast({
                 title: "Caption Credits Exhausted",
                 description: "You have reached your monthly caption limit. Products saved without captions.",
@@ -293,7 +277,7 @@ export const useProductManagement = () => {
             return product;
           }
 
-          const caption = captionResponseData?.caption;
+          const caption = captionData?.caption;
 
           if (!caption) {
             console.error('No caption received for product:', product.name);

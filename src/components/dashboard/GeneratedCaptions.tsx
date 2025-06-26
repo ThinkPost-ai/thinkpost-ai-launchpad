@@ -210,12 +210,15 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       return;
     }
 
+    console.log('Starting regenerateCaption for:', { itemId, itemType, userCredits });
+
     setGeneratingCaption(itemId);
     
     try {
       let requestBody;
       if (itemType === 'product') {
         const product = captions.find(c => c.id === itemId && c.type === 'product');
+        console.log('Found product:', product);
         requestBody = {
           productName: product?.name || 'وجبة مميزة',
           price: product?.price,
@@ -228,11 +231,16 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
         };
       }
 
+      console.log('Sending request to generate-caption with body:', requestBody);
+
       const { data, error } = await supabase.functions.invoke('generate-caption', {
         body: requestBody
       });
 
+      console.log('Response from generate-caption:', { data, error });
+
       if (error) {
+        console.error('Error from generate-caption function:', error);
         if (error.message?.includes('Insufficient caption credits') || error.message?.includes('402')) {
           toast({
             title: "No Remaining Credits",
@@ -249,15 +257,21 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       }
 
       const newCaption = data.caption;
+      console.log('Generated caption:', newCaption);
       
       // Update the database
       const table = itemType === 'product' ? 'products' : 'images';
+      console.log('Updating table:', table, 'with caption for ID:', itemId);
+      
       const { error: updateError } = await supabase
         .from(table)
         .update({ caption: newCaption })
         .eq('id', itemId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw updateError;
+      }
       
       // Update the local state
       setCaptions(prev => prev.map(caption => 
@@ -270,11 +284,14 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       // Trigger credits update in parent component
       onCreditsUpdate?.();
       
+      console.log('Caption regeneration completed successfully');
+      
       toast({
         title: "Success!",
         description: "Caption generated successfully"
       });
     } catch (error: any) {
+      console.error('Caption regeneration error:', error);
       toast({
         title: "Error",
         description: "Failed to generate caption",
