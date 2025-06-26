@@ -94,15 +94,39 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '', // Use anon key for client-side functionality
       {
         global: {
-          headers: { Authorization: authHeader! },
+          headers: authHeader ? { Authorization: authHeader } : {},
         },
       }
     );
 
-    // Authenticate the user to get their ID
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    let user: any = null;
+    
+    // If we have an auth header, try to authenticate
+    if (authHeader) {
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      if (!userError && authUser) {
+        user = authUser;
+      }
+    }
 
-    if (userError || !user) {
+    // If no authenticated user but we have a scheduledPostId, get user from scheduled post
+    if (!user && scheduledPostId) {
+      const { data: postData, error: postError } = await supabase
+        .from('scheduled_posts')
+        .select('user_id, media_type')
+        .eq('id', scheduledPostId)
+        .single();
+      
+      if (postError || !postData?.user_id) {
+        throw new Error('Scheduled post not found or missing user ID.');
+      }
+      
+      // Create a user-like object for compatibility
+      user = { id: postData.user_id };
+    }
+
+    // If still no user, throw error
+    if (!user) {
       throw new Error('User not authenticated or not found.');
     }
 
