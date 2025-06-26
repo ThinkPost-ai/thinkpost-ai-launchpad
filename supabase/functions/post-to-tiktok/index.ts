@@ -93,7 +93,8 @@ serve(async (req) => {
         },
         source_info: {
           source: 'PULL_FROM_URL',
-          photo_images: [videoUrl], // Using videoUrl parameter name for compatibility, but it's actually an image URL
+          photo_cover_index: 1,
+          photo_urls: [videoUrl], // Using videoUrl parameter name for compatibility, but it's actually an image URL
         },
         media_type: 'PHOTO',
         post_mode: 'DIRECT_POST',
