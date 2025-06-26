@@ -75,7 +75,63 @@ serve(async (req) => {
           continue;
         }
 
-        const videoUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
+        // Check if video already exists for this post
+        let videoUrl: string;
+        
+        if (post.proxy_video_url && post.processing_status === 'completed') {
+          // Use existing converted video
+          videoUrl = post.proxy_video_url;
+          console.log(`Using existing video for post ${post.id}: ${videoUrl}`);
+        } else {
+          // Check if this is already a video or needs conversion
+          const isVideo = mediaPath.toLowerCase().endsWith('.mp4') || 
+                         mediaPath.toLowerCase().endsWith('.mov') || 
+                         mediaPath.toLowerCase().endsWith('.avi');
+
+          if (isVideo) {
+            // If it's already a video, use it directly
+            videoUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
+            console.log(`Using existing video file for post ${post.id}: ${videoUrl}`);
+          } else {
+            // Convert image to video first
+            console.log(`Converting image to video for post ${post.id}...`);
+            
+            // Update processing status
+            await supabase
+              .from('scheduled_posts')
+              .update({ processing_status: 'processing' })
+              .eq('id', post.id);
+
+            const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
+            
+            const conversionResponse = await supabase.functions.invoke('process-image-for-tiktok', {
+              body: {
+                imageUrl: imageUrl,
+                duration: 3,
+                scheduledPostId: post.id
+              },
+              headers: {
+                Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              },
+            });
+
+            if (conversionResponse.error || !conversionResponse.data?.success) {
+              console.error(`Video conversion failed for post ${post.id}:`, conversionResponse.error);
+              await supabase
+                .from('scheduled_posts')
+                .update({ 
+                  status: 'failed',
+                  processing_status: 'failed'
+                })
+                .eq('id', post.id);
+              failCount++;
+              continue;
+            }
+
+            videoUrl = conversionResponse.data.proxyVideoUrl;
+            console.log(`Image converted to video for post ${post.id}: ${videoUrl}`);
+          }
+        }
 
         // Get user's TikTok connection
         const { data: connection, error: connectionError } = await supabase

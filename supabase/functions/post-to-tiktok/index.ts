@@ -117,7 +117,11 @@ serve(async (req) => {
     // Update scheduled post status to indicate it's being processed by TikTok
     const { error: updateError } = await supabase
       .from('scheduled_posts')
-      .update({ status: 'posted' }) // Assuming 'posted' means successfully sent to TikTok for review
+      .update({ 
+        status: 'posted', // Assuming 'posted' means successfully sent to TikTok for review
+        tiktok_publish_id: publish_id, // Store publish_id for webhook tracking
+        updated_at: new Date().toISOString()
+      })
       .eq('id', scheduledPostId);
 
     if (updateError) {
