@@ -132,7 +132,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
 
       const transformedImages = (images || []).map(image => {
         // For images, default to draft since they're not typically scheduled automatically
-        const status = 'draft';
+        const status: 'draft' | 'scheduled' | 'posted' = 'draft';
 
         return {
           id: image.id,
