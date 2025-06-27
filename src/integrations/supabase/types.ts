@@ -106,18 +106,23 @@ export type Database = {
           caption_credits: number
           display_name: string | null
           facebook_access_token: string | null
+          facebook_app_scoped_user_id: string | null
           facebook_page_id: string | null
           full_name: string | null
           id: string
           instagram_access_token: string | null
           instagram_avatar_url: string | null
           instagram_connected: boolean | null
+          instagram_development_mode: boolean | null
+          instagram_test_mode: boolean | null
           instagram_user_id: string | null
           instagram_username: string | null
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
           tiktok_open_id: string | null
+          tiktok_refresh_token: string | null
+          tiktok_token_expires_at: string | null
           tiktok_username: string | null
           updated_at: string
         }
@@ -127,18 +132,23 @@ export type Database = {
           caption_credits?: number
           display_name?: string | null
           facebook_access_token?: string | null
+          facebook_app_scoped_user_id?: string | null
           facebook_page_id?: string | null
           full_name?: string | null
           id: string
           instagram_access_token?: string | null
           instagram_avatar_url?: string | null
           instagram_connected?: boolean | null
+          instagram_development_mode?: boolean | null
+          instagram_test_mode?: boolean | null
           instagram_user_id?: string | null
           instagram_username?: string | null
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           tiktok_username?: string | null
           updated_at?: string
         }
@@ -148,18 +158,23 @@ export type Database = {
           caption_credits?: number
           display_name?: string | null
           facebook_access_token?: string | null
+          facebook_app_scoped_user_id?: string | null
           facebook_page_id?: string | null
           full_name?: string | null
           id?: string
           instagram_access_token?: string | null
           instagram_avatar_url?: string | null
           instagram_connected?: boolean | null
+          instagram_development_mode?: boolean | null
+          instagram_test_mode?: boolean | null
           instagram_user_id?: string | null
           instagram_username?: string | null
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           tiktok_username?: string | null
           updated_at?: string
         }
@@ -204,36 +219,60 @@ export type Database = {
           created_at: string
           id: string
           image_id: string | null
+          image_url: string | null
+          media_type: string | null
           platform: string
+          processing_status: string | null
           product_id: string | null
+          proxy_image_url: string | null
+          proxy_video_url: string | null
           scheduled_date: string
           status: string
+          tiktok_publish_id: string | null
           updated_at: string
           user_id: string
+          video_path: string | null
+          video_url: string | null
         }
         Insert: {
           caption: string
           created_at?: string
           id?: string
           image_id?: string | null
+          image_url?: string | null
+          media_type?: string | null
           platform: string
+          processing_status?: string | null
           product_id?: string | null
+          proxy_image_url?: string | null
+          proxy_video_url?: string | null
           scheduled_date: string
           status?: string
+          tiktok_publish_id?: string | null
           updated_at?: string
           user_id: string
+          video_path?: string | null
+          video_url?: string | null
         }
         Update: {
           caption?: string
           created_at?: string
           id?: string
           image_id?: string | null
+          image_url?: string | null
+          media_type?: string | null
           platform?: string
+          processing_status?: string | null
           product_id?: string | null
+          proxy_image_url?: string | null
+          proxy_video_url?: string | null
           scheduled_date?: string
           status?: string
+          tiktok_publish_id?: string | null
           updated_at?: string
           user_id?: string
+          video_path?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
