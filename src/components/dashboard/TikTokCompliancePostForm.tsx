@@ -22,12 +22,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import TikTokIcon from '@/components/ui/TikTokIcon';
 import { 
   Play, 
   Loader2, 
   AlertTriangle, 
   CheckCircle, 
-  Music, 
   Eye,
   MessageCircle,
   Copy,
@@ -368,7 +368,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-black">
-              <Music className="h-6 w-6 text-white" />
+              <TikTokIcon className="h-6 w-6 text-white" size={24} />
             </div>
             <div>
               <CardTitle className="flex items-center gap-2">

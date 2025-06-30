@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Music, Loader2 } from 'lucide-react';
+import TikTokIcon from '@/components/ui/TikTokIcon';
+import { Loader2 } from 'lucide-react';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 
 interface TikTokConnectButtonProps {
@@ -28,7 +28,7 @@ const TikTokConnectButton = ({ variant = 'default', size = 'default', className 
       {isConnecting ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (
-        <Music className="mr-2 h-4 w-4" />
+        <TikTokIcon className="mr-2 h-4 w-4" size={16} />
       )}
       {isConnecting ? 'Connecting...' : 'Connect TikTok'}
     </Button>

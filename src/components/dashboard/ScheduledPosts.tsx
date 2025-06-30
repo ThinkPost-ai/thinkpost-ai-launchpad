@@ -40,6 +40,7 @@ import { DayContentProps } from 'react-day-picker';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import TikTokCompliancePostForm from './TikTokCompliancePostForm';
+import TikTokIcon from '@/components/ui/TikTokIcon';
 
 interface ScheduledPost {
   id: string;
@@ -300,7 +301,7 @@ const ScheduledPosts = () => {
       case 'instagram':
         return <Instagram className="h-4 w-4 text-pink-500" />;
       case 'tiktok':
-        return <Play className="h-4 w-4 text-black" />;
+        return <TikTokIcon className="h-4 w-4 text-black" size={16} />;
       case 'facebook':
         return <Facebook className="h-4 w-4 text-blue-600" />;
       default:
