@@ -503,6 +503,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                     checked={allowComment}
                     onCheckedChange={handleAllowCommentChange}
                     disabled={creatorInfo.comment_disabled}
+                    className="flex-shrink-0 h-4 w-4"
                   />
                   <label 
                     htmlFor="allow-comment" 
@@ -523,6 +524,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                         checked={allowDuet}
                         onCheckedChange={handleAllowDuetChange}
                         disabled={creatorInfo.duet_disabled}
+                        className="flex-shrink-0 h-4 w-4"
                       />
                       <label 
                         htmlFor="allow-duet" 
@@ -540,6 +542,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                         checked={allowStitch}
                         onCheckedChange={handleAllowStitchChange}
                         disabled={creatorInfo.stitch_disabled}
+                        className="flex-shrink-0 h-4 w-4"
                       />
                       <label 
                         htmlFor="allow-stitch" 
@@ -562,6 +565,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                   id="commercial-content"
                   checked={commercialContentToggle}
                   onCheckedChange={handleCommercialToggle}
+                  className="flex-shrink-0 h-4 w-4"
                 />
                 <label htmlFor="commercial-content" className="text-sm font-medium flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
@@ -576,6 +580,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       id="your-brand"
                       checked={yourBrand}
                       onCheckedChange={handleYourBrandChange}
+                      className="flex-shrink-0 h-4 w-4"
                     />
                     <label htmlFor="your-brand" className="text-sm flex items-center gap-2">
                       <Building className="h-4 w-4" />
@@ -597,6 +602,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       checked={brandedContent}
                       onCheckedChange={handleBrandedContentChange}
                       disabled={privacyLevel === 'SELF_ONLY'}
+                      className="flex-shrink-0 h-4 w-4"
                     />
                     <label htmlFor="branded-content" className="text-sm flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
