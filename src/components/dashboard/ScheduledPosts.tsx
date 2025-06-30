@@ -564,7 +564,7 @@ const ScheduledPosts = () => {
                                     ) : (
                                       <>
                                         <Send className="h-3 w-3 mr-1" />
-                                        {post.status === 'failed' ? 'Retry Post' : 'Post Now'}
+                                        {post.status === 'failed' ? 'Retry Post' : 'Post To TikTok'}
                                       </>
                                     )}
                                   </Button>
