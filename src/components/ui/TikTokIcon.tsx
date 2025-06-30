@@ -9,7 +9,7 @@ interface TikTokIconProps {
 const TikTokIcon: React.FC<TikTokIconProps> = ({ className, size = 24 }) => {
   return (
     <img 
-      src="/lovable-uploads/2724a728-8b48-4765-94bc-5dadc1f3c7bf.png"
+      src="/lovable-uploads/11457a01-faaf-4382-866d-f4c305d39975.png"
       alt="TikTok"
       width={size} 
       height={size} 
