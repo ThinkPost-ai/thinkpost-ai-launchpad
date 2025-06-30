@@ -39,6 +39,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DayContentProps } from 'react-day-picker';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import TikTokCompliancePostForm from './TikTokCompliancePostForm';
 
 interface ScheduledPost {
   id: string;
@@ -76,6 +77,10 @@ const ScheduledPosts = () => {
   const [selectedHour, setSelectedHour] = useState<string>('12');
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
   const [postingNow, setPostingNow] = useState<string | null>(null);
+  
+  // New state for TikTok compliance form
+  const [showTikTokComplianceForm, setShowTikTokComplianceForm] = useState(false);
+  const [selectedPostForCompliance, setSelectedPostForCompliance] = useState<ScheduledPost | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -270,100 +275,20 @@ const ScheduledPosts = () => {
     }
   };
 
-  const postToTikTokNow = async (post: ScheduledPost) => {
-    setPostingNow(post.id);
+  const startTikTokComplianceFlow = (post: ScheduledPost) => {
+    setSelectedPostForCompliance(post);
+    setShowTikTokComplianceForm(true);
+  };
 
-    try {
-      const mediaPath = post.image_path;
-      if (!mediaPath) {
-        throw new Error('No media found for this post');
-      }
+  const handleTikTokPostSuccess = async () => {
+    setShowTikTokComplianceForm(false);
+    setSelectedPostForCompliance(null);
+    await fetchScheduledPosts();
+  };
 
-      // Check if this is already a video or needs processing for TikTok
-      const isVideo = mediaPath.toLowerCase().endsWith('.mp4') || 
-                     mediaPath.toLowerCase().endsWith('.mov') || 
-                     mediaPath.toLowerCase().endsWith('.avi');
-
-      let mediaUrl: string;
-
-      if (isVideo) {
-        // If it's already a video, use it directly
-        mediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
-        console.log('Using existing video:', mediaUrl);
-      } else {
-        // If it's an image, prepare it for direct TikTok photo posting
-        console.log('Preparing image for direct TikTok photo posting...');
-        
-        // Show processing progress
-        toast({
-          title: "Preparing Image",
-          description: "Preparing your image for TikTok photo posting...",
-        });
-
-        const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
-        
-        const { data: processingData, error: processingError } = await supabase.functions.invoke('process-image-for-tiktok', {
-          body: {
-            imageUrl: imageUrl,
-            scheduledPostId: post.id
-          },
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-        });
-
-        if (processingError) {
-          throw new Error(`Image processing failed: ${processingError.message}`);
-        }
-
-        if (!processingData.success || !processingData.proxyImageUrl) {
-          throw new Error('Image processing completed but no image URL received');
-        }
-
-        mediaUrl = processingData.proxyImageUrl;
-        console.log('Image prepared for TikTok successfully:', mediaUrl);
-        
-        // Update toast to show processing complete
-        toast({
-          title: "Image Ready",
-          description: "Now posting to TikTok...",
-        });
-      }
-
-      // Now post to TikTok (the backend will handle whether it's a photo or video post)
-      console.log('Posting to TikTok:', mediaUrl);
-      
-      const { data, error } = await supabase.functions.invoke('post-to-tiktok', {
-        body: {
-          scheduledPostId: post.id,
-          videoUrl: mediaUrl, // This parameter name stays the same for compatibility
-          caption: post.caption
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      toast({
-        title: "Posted to TikTok!",
-        description: "Your post has been successfully published to TikTok",
-      });
-
-      await fetchScheduledPosts();
-    } catch (error: any) {
-      console.error('Error posting to TikTok:', error);
-      toast({
-        title: "Posting Failed",
-        description: error.message || "Failed to post to TikTok",
-        variant: "destructive"
-      });
-    } finally {
-      setPostingNow(null);
-    }
+  const handleTikTokComplianceCancel = () => {
+    setShowTikTokComplianceForm(false);
+    setSelectedPostForCompliance(null);
   };
 
   const getImageUrl = (filePath: string) => {
@@ -627,7 +552,7 @@ const ScheduledPosts = () => {
                                   <Button 
                                     size="sm" 
                                     className="bg-gradient-primary hover:opacity-90"
-                                    onClick={() => postToTikTokNow(post)}
+                                    onClick={() => startTikTokComplianceFlow(post)}
                                     disabled={postingNow === post.id}
                                   >
                                     {postingNow === post.id ? (
@@ -802,6 +727,25 @@ const ScheduledPosts = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* TikTok Compliance Form */}
+      <Dialog open={showTikTokComplianceForm} onOpenChange={setShowTikTokComplianceForm}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>TikTok Compliance Settings</DialogTitle>
+            <DialogDescription>
+              Configure your post according to TikTok's Content Sharing Guidelines
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPostForCompliance && (
+            <TikTokCompliancePostForm
+              post={selectedPostForCompliance}
+              onPostSuccess={handleTikTokPostSuccess}
+              onCancel={handleTikTokComplianceCancel}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

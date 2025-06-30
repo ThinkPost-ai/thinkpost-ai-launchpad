@@ -80,7 +80,18 @@ serve(async (req) => {
   let scheduledPostId: string | undefined; // Declare scheduledPostId outside try block
 
   try {
-    const { videoUrl, caption, scheduledPostId: reqScheduledPostId } = await req.json();
+    const { 
+      scheduledPostId: reqScheduledPostId, 
+      videoUrl, 
+      caption,
+      privacyLevel = 'PUBLIC_TO_EVERYONE',
+      allowComment = false,
+      allowDuet = false,
+      allowStitch = false,
+      commercialContent = false,
+      yourBrand = false,
+      brandedContent = false
+    } = await req.json();
     scheduledPostId = reqScheduledPostId; // Assign the value here
 
     console.log(`Attempting to post media for scheduledPostId: ${scheduledPostId}`);
@@ -200,9 +211,10 @@ serve(async (req) => {
       requestBody = {
         post_info: {
           title: caption,
-          privacy_level: 'PUBLIC_TO_EVERYONE',
-          disable_comment: false,
+          privacy_level: privacyLevel,
+          disable_comment: !allowComment,
           auto_add_music: true,
+          video_cover_timestamp_ms: 1000
         },
         source_info: {
           source: 'PULL_FROM_URL',
@@ -212,6 +224,12 @@ serve(async (req) => {
         media_type: 'PHOTO',
         post_mode: 'DIRECT_POST',
       };
+
+      // Add branded content info if specified
+      if (commercialContent && brandedContent) {
+        requestBody.post_info.brand_content_toggle = true;
+        requestBody.post_info.brand_organic_toggle = yourBrand;
+      }
 
       initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/content/init/', {
         method: 'POST',
@@ -228,16 +246,23 @@ serve(async (req) => {
       requestBody = {
         post_info: {
           title: caption,
-          privacy_level: 'PUBLIC_TO_EVERYONE',
-          disable_duet: false,
-          disable_comment: false,
-          disable_stitch: false,
+          privacy_level: privacyLevel,
+          disable_duet: !allowDuet,
+          disable_comment: !allowComment,
+          disable_stitch: !allowStitch,
+          video_cover_timestamp_ms: 1000
         },
         source_info: {
           source: 'PULL_FROM_URL',
           video_url: videoUrl, // Must be a public, verified domain
         },
       };
+
+      // Add branded content info if specified
+      if (commercialContent && brandedContent) {
+        requestBody.post_info.brand_content_toggle = true;
+        requestBody.post_info.brand_organic_toggle = yourBrand;
+      }
 
       initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
         method: 'POST',
