@@ -182,9 +182,11 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
 
   // Generate compliance declaration
   const getComplianceDeclaration = () => {
-    if (commercialContentToggle && (brandedContent || (yourBrand && brandedContent))) {
+    if (commercialContentToggle && brandedContent) {
+      // When Branded Content is selected (alone or with Your Brand)
       return "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation";
     }
+    // Default case (no commercial content, or only Your Brand selected)
     return "By posting, you agree to TikTok's Music Usage Confirmation";
   };
 
@@ -491,11 +493,17 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
               
               {/* Warning message when branded content restricts privacy */}
               {brandedContent && creatorInfo.privacy_level_options.includes('SELF_ONLY') && (
-                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                  <p className="text-xs text-amber-800 flex items-center gap-1">
-                    <Info className="h-3 w-3" />
-                    "Only Me" privacy setting is not available for branded content
-                  </p>
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Privacy Restriction</p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        "Only Me" privacy setting is not available for branded content. 
+                        Branded content visibility cannot be set to private.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
               
@@ -633,18 +641,27 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Alert variant="destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription>
-                              You need to indicate if your content promotes yourself, a third party, or both.
-                            </AlertDescription>
-                          </Alert>
+                          <div className="cursor-help">
+                            <Alert variant="destructive">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertDescription>
+                                You need to indicate if your content promotes yourself, a third party, or both.
+                              </AlertDescription>
+                            </Alert>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Select at least one option to proceed with commercial content</p>
+                          <p>You need to indicate if your content promotes yourself, a third party, or both.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                  )}
+
+                  {/* Additional hover guidance for disabled publish button */}
+                  {commercialContentToggle && !isCommercialValid() && (
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      💡 Hover over the message above for more details
+                    </p>
                   )}
                 </div>
               )}
