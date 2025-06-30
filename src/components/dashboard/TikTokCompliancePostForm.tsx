@@ -152,6 +152,8 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         return 'Friends';
       case 'PUBLIC_TO_EVERYONE':
         return 'Everyone';
+      case 'FOLLOWER_OF_CREATOR':
+        return 'Public';
       default:
         return option;
     }
@@ -470,19 +472,29 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                 </SelectTrigger>
                 <SelectContent>
                   {creatorInfo.privacy_level_options.map((option) => (
-                    <SelectItem 
-                      key={option} 
-                      value={option}
-                      disabled={option === 'SELF_ONLY' && brandedContent}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        {formatPrivacyOption(option)}
+                    <TooltipProvider key={option}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SelectItem 
+                            value={option}
+                            disabled={option === 'SELF_ONLY' && brandedContent}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              {formatPrivacyOption(option)}
+                              {option === 'SELF_ONLY' && brandedContent && (
+                                <span className="text-xs text-muted-foreground">(Not available for branded content)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        </TooltipTrigger>
                         {option === 'SELF_ONLY' && brandedContent && (
-                          <span className="text-xs text-muted-foreground">(Not available for branded content)</span>
+                          <TooltipContent>
+                            <p>Branded content visibility cannot be set to private</p>
+                          </TooltipContent>
                         )}
-                      </div>
-                    </SelectItem>
+                      </Tooltip>
+                    </TooltipProvider>
                   ))}
                 </SelectContent>
               </Select>
