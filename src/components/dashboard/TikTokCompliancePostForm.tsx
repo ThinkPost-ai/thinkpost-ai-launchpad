@@ -580,21 +580,13 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       id="your-brand"
                       checked={yourBrand}
                       onCheckedChange={handleYourBrandChange}
-                      className="h-5 w-5"
+                      className="flex-shrink-0 h-4 w-4"
                     />
                     <label htmlFor="your-brand" className="text-sm flex items-center gap-2">
                       <Building className="h-4 w-4" />
                       Your Brand
                     </label>
                   </div>
-                  {yourBrand && (
-                    <Alert className="ml-6">
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Your {mediaType} will be labeled as 'Promotional content'
-                      </AlertDescription>
-                    </Alert>
-                  )}
 
                   <div className="flex items-center space-x-2">
                     <Checkbox 
@@ -602,18 +594,23 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       checked={brandedContent}
                       onCheckedChange={handleBrandedContentChange}
                       disabled={privacyLevel === 'SELF_ONLY'}
-                      className="h-5 w-5"
+                      className="flex-shrink-0 h-4 w-4"
                     />
                     <label htmlFor="branded-content" className="text-sm flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
                       Branded Content
                     </label>
                   </div>
-                  {brandedContent && (
+
+                  {/* TikTok Compliance Messaging */}
+                  {(yourBrand || brandedContent) && (
                     <Alert className="ml-6">
                       <Info className="h-4 w-4" />
                       <AlertDescription>
-                        Your {mediaType} will be labeled as 'Paid partnership'
+                        {brandedContent 
+                          ? `Your ${mediaType} will be labeled as 'Paid partnership'`
+                          : `Your ${mediaType} will be labeled as 'Promotional content'`
+                        }
                       </AlertDescription>
                     </Alert>
                   )}
