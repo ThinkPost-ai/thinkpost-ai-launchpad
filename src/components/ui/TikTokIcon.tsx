@@ -1,5 +1,5 @@
 import React from 'react';
-import tikTokLogo from '@/assets/tiktok-logo.jpg';
+import tikTokLogo from '@/assets/tiktok-logo.png';
 
 interface TikTokIconProps {
   className?: string;
@@ -13,9 +13,9 @@ const TikTokIcon: React.FC<TikTokIconProps> = ({ className, size = 24 }) => {
       alt="TikTok"
       width={size} 
       height={size} 
-      className={`rounded-full bg-white p-1 ${className}`}
+      className={`${className}`}
       style={{ 
-        objectFit: 'cover',
+        objectFit: 'contain',
         aspectRatio: '1/1'
       }}
     />
