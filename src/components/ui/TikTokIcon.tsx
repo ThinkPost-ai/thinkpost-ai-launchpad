@@ -13,7 +13,7 @@ const TikTokIcon: React.FC<TikTokIconProps> = ({ className, size = 24 }) => {
       alt="TikTok"
       width={size} 
       height={size} 
-      className={`rounded-full ${className}`}
+      className={`rounded-full bg-white p-1 ${className}`}
       style={{ 
         objectFit: 'cover',
         aspectRatio: '1/1'
