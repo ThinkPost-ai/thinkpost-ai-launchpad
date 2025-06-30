@@ -472,32 +472,33 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                 </SelectTrigger>
                 <SelectContent>
                   {creatorInfo.privacy_level_options.map((option) => (
-                    <TooltipProvider key={option}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem 
-                            value={option}
-                            disabled={option === 'SELF_ONLY' && brandedContent}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Eye className="h-4 w-4" />
-                              {formatPrivacyOption(option)}
-                              {option === 'SELF_ONLY' && brandedContent && (
-                                <span className="text-xs text-muted-foreground">(Not available for branded content)</span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        </TooltipTrigger>
+                    <SelectItem 
+                      key={option}
+                      value={option}
+                      disabled={option === 'SELF_ONLY' && brandedContent}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        {formatPrivacyOption(option)}
                         {option === 'SELF_ONLY' && brandedContent && (
-                          <TooltipContent>
-                            <p>Branded content visibility cannot be set to private</p>
-                          </TooltipContent>
+                          <span className="text-xs text-muted-foreground">(Not available for branded content)</span>
                         )}
-                      </Tooltip>
-                    </TooltipProvider>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Warning message when branded content restricts privacy */}
+              {brandedContent && creatorInfo.privacy_level_options.includes('SELF_ONLY') && (
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-xs text-amber-800 flex items-center gap-1">
+                    <Info className="h-3 w-3" />
+                    "Only Me" privacy setting is not available for branded content
+                  </p>
+                </div>
+              )}
+              
               {brandedContent && privacyLevel === 'SELF_ONLY' && (
                 <p className="text-xs text-destructive mt-1">Branded content visibility cannot be set to private</p>
               )}
