@@ -186,19 +186,37 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
     return "By posting, you agree to TikTok's Music Usage Confirmation";
   };
 
-  // Handle commercial content toggle
-  const handleCommercialToggle = (checked: boolean) => {
-    setCommercialContentToggle(checked);
-    if (!checked) {
+  // Handle checkbox changes with proper CheckedState handling
+  const handleAllowCommentChange = (checked: boolean | "indeterminate") => {
+    setAllowComment(checked === true);
+  };
+
+  const handleAllowDuetChange = (checked: boolean | "indeterminate") => {
+    setAllowDuet(checked === true);
+  };
+
+  const handleAllowStitchChange = (checked: boolean | "indeterminate") => {
+    setAllowStitch(checked === true);
+  };
+
+  const handleCommercialToggle = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setCommercialContentToggle(isChecked);
+    if (!isChecked) {
       setYourBrand(false);
       setBrandedContent(false);
     }
   };
 
+  const handleYourBrandChange = (checked: boolean | "indeterminate") => {
+    setYourBrand(checked === true);
+  };
+
   // Handle branded content selection
-  const handleBrandedContentChange = (checked: boolean) => {
-    setBrandedContent(checked);
-    if (checked && privacyLevel === 'SELF_ONLY') {
+  const handleBrandedContentChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setBrandedContent(isChecked);
+    if (isChecked && privacyLevel === 'SELF_ONLY') {
       setPrivacyLevel(''); // Reset privacy if incompatible
     }
   };
@@ -483,7 +501,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                   <Checkbox 
                     id="allow-comment"
                     checked={allowComment}
-                    onCheckedChange={setAllowComment}
+                    onCheckedChange={handleAllowCommentChange}
                     disabled={creatorInfo.comment_disabled}
                   />
                   <label 
@@ -503,7 +521,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       <Checkbox 
                         id="allow-duet"
                         checked={allowDuet}
-                        onCheckedChange={setAllowDuet}
+                        onCheckedChange={handleAllowDuetChange}
                         disabled={creatorInfo.duet_disabled}
                       />
                       <label 
@@ -520,7 +538,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       <Checkbox 
                         id="allow-stitch"
                         checked={allowStitch}
-                        onCheckedChange={setAllowStitch}
+                        onCheckedChange={handleAllowStitchChange}
                         disabled={creatorInfo.stitch_disabled}
                       />
                       <label 
@@ -557,7 +575,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                     <Checkbox 
                       id="your-brand"
                       checked={yourBrand}
-                      onCheckedChange={setYourBrand}
+                      onCheckedChange={handleYourBrandChange}
                     />
                     <label htmlFor="your-brand" className="text-sm flex items-center gap-2">
                       <Building className="h-4 w-4" />
@@ -668,4 +686,4 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   );
 };
 
-export default TikTokCompliancePostForm; 
+export default TikTokCompliancePostForm;
