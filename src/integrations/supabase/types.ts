@@ -9,6 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cars: {
+        Row: {
+          brand: string
+          color: string | null
+          condition: string | null
+          created_at: string | null
+          description: string | null
+          drivetrain: string | null
+          engine_size: string | null
+          fuel_type: string
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          is_sold: boolean | null
+          mileage: number | null
+          model: string
+          price: number
+          showroom_id: string | null
+          transmission: string
+          updated_at: string | null
+          views: number | null
+          year: number
+        }
+        Insert: {
+          brand: string
+          color?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          drivetrain?: string | null
+          engine_size?: string | null
+          fuel_type: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
+          mileage?: number | null
+          model: string
+          price: number
+          showroom_id?: string | null
+          transmission: string
+          updated_at?: string | null
+          views?: number | null
+          year: number
+        }
+        Update: {
+          brand?: string
+          color?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          drivetrain?: string | null
+          engine_size?: string | null
+          fuel_type?: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
+          mileage?: number | null
+          model?: string
+          price?: number
+          showroom_id?: string | null
+          transmission?: string
+          updated_at?: string | null
+          views?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cars_showroom_id_fkey"
+            columns: ["showroom_id"]
+            isOneToOne: false
+            referencedRelation: "showrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       images: {
         Row: {
           caption: string | null
@@ -291,6 +368,60 @@ export type Database = {
           },
         ]
       }
+      showrooms: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          location: string
+          name: string
+          owner_id: string | null
+          phone: string | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string | null
+          website: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location: string
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       tiktok_oauth_states: {
         Row: {
           created_at: string
@@ -312,6 +443,30 @@ export type Database = {
           id?: string
           state_value?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string | null
+          user_id?: string
         }
         Relationships: []
       }
