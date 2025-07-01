@@ -429,10 +429,10 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
             <div>
               <CardTitle className="flex items-center gap-2">
                 Post to TikTok
-                <Badge variant="outline">@{creatorInfo.display_name}</Badge>
+                <Badge variant="outline">@{creatorInfo.username}</Badge>
               </CardTitle>
               <CardDescription>
-                Posting to: @{creatorInfo.display_name}
+                <span className="font-medium">TikTok Name:</span> {creatorInfo.display_name}
               </CardDescription>
             </div>
           </div>

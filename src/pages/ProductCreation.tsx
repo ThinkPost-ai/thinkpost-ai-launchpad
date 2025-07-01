@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +9,15 @@ import ProductCreationActions from '@/components/product/ProductCreationActions'
 import { useProductManagement } from '@/hooks/useProductManagement';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
 const ProductCreation = () => {
   const navigate = useNavigate();
-  const { tiktokProfile } = useTikTokConnection();
-  const { profile: instagramProfile } = useInstagramConnection();
+  const { tiktokProfile, isLoading: tiktokLoading } = useTikTokConnection();
+  const { instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
+  const { session } = useAuth();
   
   const {
     products,
@@ -28,6 +32,41 @@ const ProductCreation = () => {
     saveProductsOnly,
     saveProductsWithCaptions
   } = useProductManagement();
+
+  // TikTok display name state
+  const [tiktokDisplayName, setTikTokDisplayName] = useState<string | null>(null);
+  const [loadingDisplayName, setLoadingDisplayName] = useState(false);
+
+  // Fetch TikTok display name when connected
+  useEffect(() => {
+    const fetchTikTokDisplayName = async () => {
+      if (!tiktokProfile?.tiktok_connected || !session?.access_token) return;
+      
+      setLoadingDisplayName(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('tiktok-creator-info', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (error) {
+          console.error('Error fetching TikTok creator info:', error);
+          return;
+        }
+
+        if (data.success && data.creatorInfo) {
+          setTikTokDisplayName(data.creatorInfo.display_name);
+        }
+      } catch (error) {
+        console.error('Error fetching TikTok display name:', error);
+      } finally {
+        setLoadingDisplayName(false);
+      }
+    };
+
+    fetchTikTokDisplayName();
+  }, [tiktokProfile?.tiktok_connected, session?.access_token]);
 
   const isFormValid = validateProducts();
 
@@ -77,10 +116,18 @@ const ProductCreation = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {tiktokProfile?.tiktok_connected 
-                      ? `Connected as @${tiktokProfile.tiktok_username || 'TikTok User'}`
-                      : 'Not connected'
-                    }
+                    {tiktokProfile?.tiktok_connected ? (
+                      <span>
+                        <span className="font-medium">TikTok Name:</span>{' '}
+                        {loadingDisplayName ? (
+                          'Loading...'
+                        ) : (
+                          tiktokDisplayName || tiktokProfile.tiktok_username || 'TikTok User'
+                        )}
+                      </span>
+                    ) : (
+                      'Not connected'
+                    )}
                   </p>
                 </div>
               </div>
