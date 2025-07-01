@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,9 +148,10 @@ const Footer: React.FC = () => {
 
         {/* Bottom Section */}
         <div className={`flex flex-col md:flex-row justify-between items-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-          <p className="text-gray-300 dark:text-gray-400 text-xs sm:text-sm leading-relaxed">
-            {t('footer.copyright')}
-          </p>
+          <div className="text-gray-300 dark:text-gray-400 text-xs sm:text-sm leading-relaxed">
+            <p>© 2025 ThinkPost. All rights reserved.</p>
+            <p className="mt-1">By ANAS ABDULRAHMAN ALI ALMANA</p>
+          </div>
           <div className={`flex flex-wrap justify-center gap-4 sm:gap-6 mt-3 md:mt-0 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             <Link to="/privacy" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-gray-200 text-xs sm:text-sm transition-colors">
               {t('footer.bottomLinks.privacy')}
