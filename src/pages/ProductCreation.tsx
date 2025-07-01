@@ -1,13 +1,19 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, CheckCircle, Instagram } from 'lucide-react';
 import ProductCard from '@/components/product/ProductCard';
 import ProductCreationActions from '@/components/product/ProductCreationActions';
 import { useProductManagement } from '@/hooks/useProductManagement';
+import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useInstagramConnection } from '@/hooks/useInstagramConnection';
+import TikTokIcon from '@/components/ui/TikTokIcon';
 
 const ProductCreation = () => {
   const navigate = useNavigate();
+  const { tiktokProfile } = useTikTokConnection();
+  const { profile: instagramProfile } = useInstagramConnection();
+  
   const {
     products,
     saving,
@@ -43,6 +49,63 @@ const ProductCreation = () => {
             Add your delicious dishes with details and images to generate AI-powered captions
           </p>
         </div>
+
+        {/* Platform Connection Status */}
+        <Card className="mb-6">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Platform Connection Status</CardTitle>
+            <CardDescription>Current platform connections for posting</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* TikTok Connection Status */}
+              <div className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className={`p-2 rounded-lg ${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
+                  <TikTokIcon className="h-5 w-5 text-white" size={20} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">TikTok</span>
+                    {tiktokProfile?.tiktok_connected ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full bg-gray-400" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {tiktokProfile?.tiktok_connected 
+                      ? `Connected as @${tiktokProfile.tiktok_username || 'TikTok User'}`
+                      : 'Not connected'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Instagram Connection Status */}
+              <div className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className={`p-2 rounded-lg ${instagramProfile?.connected ? 'bg-green-600' : 'bg-gray-400'}`}>
+                  <Instagram className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Instagram</span>
+                    {instagramProfile?.connected ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full bg-gray-400" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {instagramProfile?.connected 
+                      ? `Connected as @${instagramProfile.username || 'Instagram User'}`
+                      : 'Not connected'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="space-y-6">
           {products.map((product, index) => (
