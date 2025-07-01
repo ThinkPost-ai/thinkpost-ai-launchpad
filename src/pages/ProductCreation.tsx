@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, CheckCircle, Instagram } from 'lucide-react';
 import ProductCard from '@/components/product/ProductCard';
 import ProductCreationActions from '@/components/product/ProductCreationActions';
@@ -60,9 +61,12 @@ const ProductCreation = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* TikTok Connection Status */}
               <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className={`p-2 rounded-lg ${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
-                  <TikTokIcon className="h-5 w-5 text-white" size={20} />
-                </div>
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={tiktokProfile?.tiktok_avatar_url || ''} />
+                  <AvatarFallback className={`${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
+                    <TikTokIcon className="h-5 w-5 text-white" size={20} />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">TikTok</span>
