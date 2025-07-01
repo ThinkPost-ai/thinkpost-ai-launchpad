@@ -35,13 +35,10 @@ import {
   Scissors,
   Building,
   DollarSign,
-  Info,
-  Instagram
+  Info
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useTikTokConnection } from '@/hooks/useTikTokConnection';
-import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 
 interface TikTokCreatorInfo {
   username: string;
@@ -73,10 +70,6 @@ interface TikTokCompliancePostFormProps {
 const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompliancePostFormProps) => {
   const { user, session } = useAuth();
   const { toast } = useToast();
-  
-  // Connection status hooks
-  const { tiktokProfile } = useTikTokConnection();
-  const { profile: instagramProfile } = useInstagramConnection();
   
   // Creator Info State
   const [creatorInfo, setCreatorInfo] = useState<TikTokCreatorInfo | null>(null);
@@ -426,63 +419,6 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
 
   return (
     <div className="w-full space-y-6">
-      {/* Connection Status Display */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Platform Connection Status</CardTitle>
-          <CardDescription>Current platform connections for posting</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* TikTok Connection Status */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <div className={`p-2 rounded-lg ${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
-                <TikTokIcon className="h-5 w-5 text-white" size={20} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">TikTok</span>
-                  {tiktokProfile?.tiktok_connected ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full bg-gray-400" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {tiktokProfile?.tiktok_connected 
-                    ? `Connected as @${tiktokProfile.tiktok_username || 'TikTok User'}`
-                    : 'Not connected'
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Instagram Connection Status */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <div className={`p-2 rounded-lg ${instagramProfile?.connected ? 'bg-green-600' : 'bg-gray-400'}`}>
-                <Instagram className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">Instagram</span>
-                  {instagramProfile?.connected ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full bg-gray-400" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {instagramProfile?.connected 
-                    ? `Connected as @${instagramProfile.username || 'Instagram User'}`
-                    : 'Not connected'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Header with Creator Info */}
       <Card>
         <CardHeader className="pb-4">
