@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,7 @@ import TikTokIcon from '@/components/ui/TikTokIcon';
 const ProductCreation = () => {
   const navigate = useNavigate();
   const { tiktokProfile, isLoading: tiktokLoading } = useTikTokConnection();
-  const { instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
+  const { profile: instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
   const { session } = useAuth();
   
   const {
