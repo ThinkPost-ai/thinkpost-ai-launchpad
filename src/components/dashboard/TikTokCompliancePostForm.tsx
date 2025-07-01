@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -34,10 +35,13 @@ import {
   Scissors,
   Building,
   DollarSign,
-  Info
+  Info,
+  Instagram
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 
 interface TikTokCreatorInfo {
   username: string;
@@ -69,6 +73,10 @@ interface TikTokCompliancePostFormProps {
 const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompliancePostFormProps) => {
   const { user, session } = useAuth();
   const { toast } = useToast();
+  
+  // Connection status hooks
+  const { tiktokProfile } = useTikTokConnection();
+  const { profile: instagramProfile } = useInstagramConnection();
   
   // Creator Info State
   const [creatorInfo, setCreatorInfo] = useState<TikTokCreatorInfo | null>(null);
@@ -180,14 +188,47 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
     return true;
   };
 
-  // Generate compliance declaration
+  // Generate compliance declaration with proper links
   const getComplianceDeclaration = () => {
     if (commercialContentToggle && brandedContent) {
       // When Branded Content is selected (alone or with Your Brand)
-      return "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation";
+      return (
+        <span>
+          By posting, you agree to TikTok's{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Branded Content Policy
+          </a>{' '}
+          and{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Music Usage Confirmation
+          </a>
+        </span>
+      );
     }
     // Default case (no commercial content, or only Your Brand selected)
-    return "By posting, you agree to TikTok's Music Usage Confirmation";
+    return (
+      <span>
+        By posting, you agree to TikTok's{' '}
+        <a 
+          href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          Music Usage Confirmation
+        </a>
+      </span>
+    );
   };
 
   // Handle checkbox changes with proper CheckedState handling
@@ -385,6 +426,63 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
 
   return (
     <div className="w-full space-y-6">
+      {/* Connection Status Display */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Platform Connection Status</CardTitle>
+          <CardDescription>Current platform connections for posting</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* TikTok Connection Status */}
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <div className={`p-2 rounded-lg ${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
+                <TikTokIcon className="h-5 w-5 text-white" size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">TikTok</span>
+                  {tiktokProfile?.tiktok_connected ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <div className="h-4 w-4 rounded-full bg-gray-400" />
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {tiktokProfile?.tiktok_connected 
+                    ? `Connected as @${tiktokProfile.tiktok_username || 'TikTok User'}`
+                    : 'Not connected'
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Instagram Connection Status */}
+            <div className="flex items-center gap-3 p-3 border rounded-lg">
+              <div className={`p-2 rounded-lg ${instagramProfile?.connected ? 'bg-green-600' : 'bg-gray-400'}`}>
+                <Instagram className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Instagram</span>
+                  {instagramProfile?.connected ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <div className="h-4 w-4 rounded-full bg-gray-400" />
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {instagramProfile?.connected 
+                    ? `Connected as @${instagramProfile.username || 'Instagram User'}`
+                    : 'Not connected'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header with Creator Info */}
       <Card>
         <CardHeader className="pb-4">
@@ -462,38 +560,59 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
           </CardHeader>
           <CardContent className="space-y-6">
             
-            {/* Privacy Level - REQUIRED */}
+            {/* Privacy Level - REQUIRED - Now using Radio Buttons */}
             <div>
-              <label className="text-sm font-medium mb-2 block flex items-center gap-1">
+              <label className="text-sm font-medium mb-3 block flex items-center gap-1">
                 Privacy Level 
                 <span className="text-red-500">*</span>
               </label>
-              <Select value={privacyLevel} onValueChange={handlePrivacyChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select privacy level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {creatorInfo.privacy_level_options.map((option) => (
-                    <SelectItem 
-                      key={option}
-                      value={option}
-                      disabled={option === 'SELF_ONLY' && brandedContent}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        {formatPrivacyOption(option)}
-                        {option === 'SELF_ONLY' && brandedContent && (
-                          <span className="text-xs text-muted-foreground">(Not available for branded content)</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <p className="text-xs text-muted-foreground mb-3">Users must manually select the privacy status from the options below:</p>
+              
+              <RadioGroup value={privacyLevel} onValueChange={handlePrivacyChange}>
+                {creatorInfo.privacy_level_options.map((option) => {
+                  const isDisabled = option === 'SELF_ONLY' && brandedContent;
+                  
+                  return (
+                    <div key={option} className="flex items-center space-x-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem 
+                                value={option}
+                                id={option}
+                                disabled={isDisabled}
+                                className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                              />
+                              <label 
+                                htmlFor={option}
+                                className={`text-sm flex items-center gap-2 cursor-pointer ${
+                                  isDisabled ? 'text-muted-foreground cursor-not-allowed' : ''
+                                }`}
+                              >
+                                <Eye className="h-4 w-4" />
+                                {formatPrivacyOption(option)}
+                                {isDisabled && (
+                                  <span className="text-xs text-muted-foreground">(Not available)</span>
+                                )}
+                              </label>
+                            </div>
+                          </TooltipTrigger>
+                          {isDisabled && (
+                            <TooltipContent>
+                              <p>Branded content visibility cannot be set to private.</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  );
+                })}
+              </RadioGroup>
               
               {/* Warning message when branded content restricts privacy */}
               {brandedContent && creatorInfo.privacy_level_options.includes('SELF_ONLY') && (
-                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex items-start gap-2">
                     <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
@@ -505,10 +624,6 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                     </div>
                   </div>
                 </div>
-              )}
-              
-              {brandedContent && privacyLevel === 'SELF_ONLY' && (
-                <p className="text-xs text-destructive mt-1">Branded content visibility cannot be set to private</p>
               )}
             </div>
 
@@ -524,7 +639,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                     checked={allowComment}
                     onCheckedChange={handleAllowCommentChange}
                     disabled={creatorInfo.comment_disabled}
-                    className="h-5 w-5"
+                    className="flex-shrink-0 h-4 w-4"
                   />
                   <label 
                     htmlFor="allow-comment" 
@@ -545,7 +660,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                         checked={allowDuet}
                         onCheckedChange={handleAllowDuetChange}
                         disabled={creatorInfo.duet_disabled}
-                        className="h-5 w-5"
+                        className="flex-shrink-0 h-4 w-4"
                       />
                       <label 
                         htmlFor="allow-duet" 
@@ -563,7 +678,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                         checked={allowStitch}
                         onCheckedChange={handleAllowStitchChange}
                         disabled={creatorInfo.stitch_disabled}
-                        className="h-5 w-5"
+                        className="flex-shrink-0 h-4 w-4"
                       />
                       <label 
                         htmlFor="allow-stitch" 
@@ -586,7 +701,7 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                   id="commercial-content"
                   checked={commercialContentToggle}
                   onCheckedChange={handleCommercialToggle}
-                  className="h-5 w-5"
+                  className="flex-shrink-0 h-4 w-4"
                 />
                 <label htmlFor="commercial-content" className="text-sm font-medium flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
@@ -670,9 +785,9 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
             {/* Compliance Declaration */}
             <div className="bg-muted p-4 rounded-lg">
               <h4 className="text-sm font-medium mb-2">Compliance Declaration</h4>
-              <p className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 {getComplianceDeclaration()}
-              </p>
+              </div>
             </div>
 
             {/* Action Buttons */}
