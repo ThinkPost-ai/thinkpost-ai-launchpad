@@ -281,67 +281,53 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   const handlePost = async () => {
     if (!isFormValid()) {
       toast({
-        title: "Form Validation Error",
-        description: "Please complete all required fields correctly",
+        title: "Form Validation Failed",
+        description: "Please check all fields and requirements",
         variant: "destructive"
       });
       return;
     }
 
-    setIsPosting(true);
-
     try {
-      // Prepare media if needed
-      let finalMediaUrl = mediaUrl;
+      setIsPosting(true);
       
-      if (mediaType === 'photo') {
-        toast({
-          title: "Preparing Image",
-          description: "Preparing your image for TikTok photo posting...",
-        });
-
-        const { data: processingData, error: processingError } = await supabase.functions.invoke('process-image-for-tiktok', {
-          body: {
-            imageUrl: mediaUrl,
-            scheduledPostId: post.id
-          },
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-        });
-
-        if (processingError) {
-          throw new Error(`Image processing failed: ${processingError.message}`);
-        }
-
-        if (!processingData.success || !processingData.proxyImageUrl) {
-          throw new Error('Image processing completed but no image URL received');
-        }
-
-        finalMediaUrl = processingData.proxyImageUrl;
-      }
-
       toast({
         title: "Posting to TikTok",
         description: "Uploading your content to TikTok...",
       });
+      
+      const finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`;
+      
+      // Prepare the request body
+      const requestBody: any = {
+        scheduledPostId: post.id,
+        videoUrl: finalMediaUrl,
+        privacyLevel: privacyLevel,
+        allowComment: allowComment,
+        allowDuet: allowDuet,
+        allowStitch: allowStitch,
+        commercialContent: commercialContentToggle,
+        yourBrand: yourBrand,
+        brandedContent: brandedContent,
+      };
 
-      // Post to TikTok with compliance data
+      // Only add title and description if they have content
+      if (mediaType === 'photo') {
+        if (title.trim()) {
+          requestBody.title = title.trim();
+        }
+        if (description.trim()) {
+          requestBody.description = description.trim();
+        }
+      } else {
+        // For videos, use caption as title if it has content
+        if (caption.trim()) {
+          requestBody.title = caption.trim();
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('post-to-tiktok', {
-        body: {
-          scheduledPostId: post.id,
-          videoUrl: finalMediaUrl,
-          title: mediaType === 'photo' ? title : caption,
-          description: mediaType === 'photo' ? description : caption,
-          caption: mediaType === 'video' ? caption : description,
-          privacyLevel: privacyLevel,
-          allowComment: allowComment,
-          allowDuet: allowDuet,
-          allowStitch: allowStitch,
-          commercialContent: commercialContentToggle,
-          yourBrand: yourBrand,
-          brandedContent: brandedContent,
-        },
+        body: requestBody,
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },

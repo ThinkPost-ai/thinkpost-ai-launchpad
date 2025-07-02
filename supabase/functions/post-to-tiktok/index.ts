@@ -210,22 +210,50 @@ serve(async (req) => {
       // Use TikTok's photo posting API - Official format from TikTok documentation
       console.log('Initializing TikTok photo post...');
       
+      // Ensure we have required values
+      const photoTitle = title || caption?.substring(0, 90) || '';
+      const photoDescription = description || caption || '';
+      
+      // Validate required fields
+      if (!videoUrl) {
+        throw new Error('Image URL is required for photo posting');
+      }
+      
+      if (!privacyLevel) {
+        throw new Error('Privacy level is required for photo posting');
+      }
+      
+      console.log('Photo posting details:', {
+        title: photoTitle,
+        description: photoDescription,
+        privacy_level: privacyLevel,
+        image_url: videoUrl
+      });
+      
       requestBody = {
         post_info: {
-          title: title || caption?.substring(0, 90) || '',
-          description: description || caption || '',
           privacy_level: privacyLevel,
           disable_comment: !allowComment,
-          auto_add_music: true,
+          auto_add_music: true
         },
         source_info: {
           source: 'PULL_FROM_URL',
           photo_cover_index: 0,
-          photo_images: [videoUrl],
+          photo_images: [videoUrl]
         },
         media_type: 'PHOTO',
-        post_mode: 'DIRECT_POST',
+        post_mode: 'DIRECT_POST'
       };
+      
+      // Add title only if not empty
+      if (photoTitle.trim()) {
+        requestBody.post_info.title = photoTitle.trim();
+      }
+      
+      // Add description only if not empty
+      if (photoDescription.trim()) {
+        requestBody.post_info.description = photoDescription.trim();
+      }
 
       // Add branded content info if specified
       if (commercialContent && brandedContent) {
