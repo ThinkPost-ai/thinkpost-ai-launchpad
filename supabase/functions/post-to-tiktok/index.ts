@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -228,12 +229,10 @@ serve(async (req) => {
         console.log('Using verified domain proxy URL:', proxyImageUrl);
       }
 
-      // Build request body using TikTok's official photo API format
+      // Build request body using TikTok's correct photo API format
       requestBody = {
         post_info: {
-          privacy_level: {
-            type: privacyLevel,
-          },
+          privacy_level: privacyLevel,
           disable_duet: false,
           disable_comment: !allowComment,
           disable_stitch: false,
