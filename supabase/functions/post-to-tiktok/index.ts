@@ -229,7 +229,7 @@ serve(async (req) => {
         console.log('Using verified domain proxy URL:', proxyImageUrl);
       }
 
-      // Build request body using TikTok's correct photo API format
+      // Build request body using TikTok's photo content posting API format
       requestBody = {
         post_info: {
           privacy_level: privacyLevel,
@@ -242,6 +242,8 @@ serve(async (req) => {
           source: 'PULL_FROM_URL',
           photo_images: [proxyImageUrl],
         },
+        post_mode: 'DIRECT_POST',
+        media_type: 'PHOTO',
       };
 
       // Add title and description only if they're not empty
@@ -261,7 +263,7 @@ serve(async (req) => {
 
       console.log('Sending photo upload request to TikTok...');
       
-      // Initialize photo upload
+      // Initialize photo upload using content/init endpoint
       initUploadResponse = await fetch(`https://open.tiktokapis.com/v2/post/publish/content/init/`, {
         method: 'POST',
         headers: {
