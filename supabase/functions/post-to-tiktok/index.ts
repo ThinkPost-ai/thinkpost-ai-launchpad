@@ -84,6 +84,8 @@ serve(async (req) => {
       scheduledPostId: reqScheduledPostId, 
       videoUrl, 
       caption,
+      title,
+      description,
       privacyLevel = 'PUBLIC_TO_EVERYONE',
       allowComment = false,
       allowDuet = false,
@@ -210,16 +212,16 @@ serve(async (req) => {
       
       requestBody = {
         post_info: {
-          title: caption,
+          title: title || caption?.substring(0, 90) || '',
+          description: description || caption || '',
           privacy_level: privacyLevel,
           disable_comment: !allowComment,
           auto_add_music: true,
-          video_cover_timestamp_ms: 1000
         },
         source_info: {
           source: 'PULL_FROM_URL',
-          photo_cover_index: 1,
-          photo_images: [videoUrl], // Official TikTok API format - using videoUrl parameter for compatibility
+          photo_cover_index: 0,
+          photo_images: [videoUrl],
         },
         media_type: 'PHOTO',
         post_mode: 'DIRECT_POST',

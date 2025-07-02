@@ -94,6 +94,10 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   const [mediaUrl, setMediaUrl] = useState<string>('');
   const [mediaDuration, setMediaDuration] = useState<number>(0);
 
+  // Add new state for title (add this near other state declarations)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState(post.caption || '');
+
   // Load creator info on component mount
   useEffect(() => {
     fetchCreatorInfo();
@@ -327,7 +331,9 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         body: {
           scheduledPostId: post.id,
           videoUrl: finalMediaUrl,
-          caption: caption,
+          title: mediaType === 'photo' ? title : caption,
+          description: mediaType === 'photo' ? description : caption,
+          caption: mediaType === 'video' ? caption : description,
           privacyLevel: privacyLevel,
           allowComment: allowComment,
           allowDuet: allowDuet,
@@ -473,17 +479,48 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
               </Alert>
             )}
 
-            {/* Editable Caption */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Caption (editable)</label>
-              <Textarea 
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Enter your caption..."
-                className="min-h-[80px]"
-                maxLength={2200}
-              />
-              <p className="text-xs text-muted-foreground mt-1">{caption.length}/2200 characters</p>
+            {/* Editable Content */}
+            <div className="space-y-4">
+              {mediaType === 'photo' ? (
+                // Photo posts: separate title and description
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Title (optional)</label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Add a catchy title..."
+                      maxLength={90}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{title.length}/90 characters</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Description</label>
+                    <Textarea 
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Enter your description with hashtags and mentions..."
+                      className="min-h-[80px]"
+                      maxLength={4000}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{description.length}/4000 characters</p>
+                  </div>
+                </>
+              ) : (
+                // Video posts: single caption field (becomes title)
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Caption</label>
+                  <Textarea 
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Enter your caption..."
+                    className="min-h-[80px]"
+                    maxLength={2200}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{caption.length}/2200 characters</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
