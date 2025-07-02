@@ -207,52 +207,51 @@ serve(async (req) => {
     let requestBody;
 
     if (mediaType === 'photo') {
-      // Use TikTok's photo posting API - Official format from TikTok documentation
-      console.log('Initializing TikTok photo post...');
-      
-      // Ensure we have required values
-      const photoTitle = title || caption?.substring(0, 90) || '';
-      const photoDescription = description || caption || '';
-      
-      // Validate required fields
-      if (!videoUrl) {
-        throw new Error('Image URL is required for photo posting');
-      }
-      
-      if (!privacyLevel) {
-        throw new Error('Privacy level is required for photo posting');
-      }
-      
-      console.log('Photo posting details:', {
-        title: photoTitle,
-        description: photoDescription,
-        privacy_level: privacyLevel,
-        image_url: videoUrl
+      console.log('Starting photo posting process...', {
+        videoUrl,
+        privacyLevel,
+        title: title || 'N/A',
+        description: description || 'N/A'
       });
-      
+
+      // Validate required fields
+      if (!videoUrl || !privacyLevel) {
+        throw new Error('Missing required fields for photo posting: videoUrl and privacyLevel are required');
+      }
+
+      // Convert Supabase storage URL to verified domain proxy URL
+      // Extract the file path from the Supabase URL
+      let proxyImageUrl = videoUrl;
+      if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
+        const filePath = videoUrl.split('restaurant-images/')[1];
+        proxyImageUrl = `https://thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
+        console.log('Using verified domain proxy URL:', proxyImageUrl);
+      }
+
+      // Build request body using TikTok's official photo API format
       requestBody = {
         post_info: {
-          privacy_level: privacyLevel,
+          privacy_level: {
+            type: privacyLevel,
+          },
+          disable_duet: false,
           disable_comment: !allowComment,
-          auto_add_music: true
+          disable_stitch: false,
+          photo_cover_index: 0,
         },
         source_info: {
           source: 'PULL_FROM_URL',
-          photo_cover_index: 0,
-          photo_images: [videoUrl]
+          photo_images: [proxyImageUrl],
         },
-        media_type: 'PHOTO',
-        post_mode: 'DIRECT_POST'
       };
-      
-      // Add title only if not empty
-      if (photoTitle.trim()) {
-        requestBody.post_info.title = photoTitle.trim();
+
+      // Add title and description only if they're not empty
+      if (title && title.trim()) {
+        requestBody.post_info.title = title.trim().substring(0, 90); // TikTok limit: 90 characters
       }
       
-      // Add description only if not empty
-      if (photoDescription.trim()) {
-        requestBody.post_info.description = photoDescription.trim();
+      if (description && description.trim()) {
+        requestBody.post_info.description = description.trim().substring(0, 4000); // TikTok limit: 4000 characters
       }
 
       // Add branded content info if specified
@@ -261,11 +260,14 @@ serve(async (req) => {
         requestBody.post_info.brand_organic_toggle = yourBrand;
       }
 
-      initUploadResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/content/init/', {
+      console.log('Sending photo upload request to TikTok...');
+      
+      // Initialize photo upload
+      initUploadResponse = await fetch(`https://open.tiktokapis.com/v2/post/publish/content/init/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${tiktokAccessToken}`,
-          'Content-Type': 'application/json; charset=UTF-8',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
