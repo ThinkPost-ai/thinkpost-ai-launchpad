@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -158,6 +157,8 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         return 'Friends';
       case 'FOLLOWER_OF_CREATOR':
         return 'Public';
+      case 'SELF_ONLY':
+        return 'Only me';
       default:
         return option;
     }
@@ -528,10 +529,8 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
               
               <RadioGroup value={privacyLevel} onValueChange={handlePrivacyChange}>
                 {creatorInfo.privacy_level_options.map((option) => {
-                  // Skip SELF_ONLY option completely
-                  if (option === 'SELF_ONLY') return null;
-                  
-                  const isDisabled = false; // No options disabled now since we removed SELF_ONLY
+                  // Handle SELF_ONLY restrictions for branded content
+                  const isDisabled = option === 'SELF_ONLY' && brandedContent;
                   
                   return (
                     <div key={option} className="flex items-center space-x-2">
@@ -543,10 +542,11 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                         />
                         <label 
                           htmlFor={option}
-                          className="text-sm flex items-center gap-2 cursor-pointer"
+                          className={`text-sm flex items-center gap-2 cursor-pointer ${isDisabled ? 'text-muted-foreground' : ''}`}
                         >
                           <Eye className="h-4 w-4" />
                           {formatPrivacyOption(option)}
+                          {isDisabled && <Badge variant="secondary" className="text-xs">Not available for branded content</Badge>}
                         </label>
                       </div>
                     </div>
