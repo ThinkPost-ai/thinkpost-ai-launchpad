@@ -222,12 +222,17 @@ serve(async (req) => {
 
       // Convert Supabase storage URL to verified domain proxy URL
       let proxyImageUrl = videoUrl;
-      if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
-        const filePath = videoUrl.split('restaurant-images/')[1];
-        proxyImageUrl = `https://thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
-        console.log('Using verified domain proxy URL:', proxyImageUrl);
-        console.log('Original Supabase URL:', videoUrl);
-        console.log('Extracted file path:', filePath);
+      if (videoUrl.includes('supabase.co/storage/v1/object/public/')) {
+        // Extract bucket and file path from Supabase URL
+        // Format: https://xxx.supabase.co/storage/v1/object/public/bucket/path
+        const urlParts = videoUrl.split('/storage/v1/object/public/');
+        if (urlParts.length === 2) {
+          const bucketAndPath = urlParts[1]; // e.g., "restaurant-images/user-id/filename.jpg"
+          proxyImageUrl = `https://thinkpost.co/functions/v1/media-proxy/${bucketAndPath}`;
+          console.log('Using verified domain proxy URL:', proxyImageUrl);
+          console.log('Original Supabase URL:', videoUrl);
+          console.log('Extracted bucket and path:', bucketAndPath);
+        }
       }
 
       // Build request body using TikTok's photo content posting API format
