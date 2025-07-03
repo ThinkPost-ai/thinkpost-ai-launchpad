@@ -220,15 +220,13 @@ serve(async (req) => {
       }
 
       // Convert Supabase storage URL to verified domain media URL
-      // Extract the filename from the Supabase URL
+      // Extract the full file path from the Supabase URL
       let proxyImageUrl = videoUrl;
       if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
         const filePath = videoUrl.split('restaurant-images/')[1];
-        // Extract just the filename (last part of the path)
-        const filename = filePath.split('/').pop();
         
-        // Use your verified domain with simple media path
-        proxyImageUrl = `https://thinkpost.co/media/${filename}`;
+        // Use your verified subdomain with full media-proxy path
+        proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
       }
 
       // Build request body using TikTok's photo content posting API format
