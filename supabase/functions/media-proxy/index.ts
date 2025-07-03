@@ -29,7 +29,7 @@ serve(async (req) => {
     // Expected format: /media-proxy/bucket/file-path
     // Or: /media-proxy/restaurant-images/user-id/filename.jpg
     if (pathSegments.length < 3 || pathSegments[0] !== 'media-proxy') {
-      console.log('Invalid path format:', url.pathname);
+      console.log('[MEDIA-PROXY] Invalid path format:', url.pathname);
       return new Response('Not Found', { 
         status: 404,
         headers: { 'Content-Type': 'text/plain' }
@@ -42,18 +42,27 @@ serve(async (req) => {
 
     console.log(`[MEDIA-PROXY] Serving media from bucket: ${bucket}, path: ${filePath}`);
 
-    // Initialize Supabase client with service role key for storage access
-    // This bypasses all authentication and RLS requirements
+    // Check if authorization header is present, if not use anonymous key
+    const authHeader = req.headers.get('Authorization');
+    const useAnonKey = !authHeader;
+    
+    if (useAnonKey) {
+      console.log('[MEDIA-PROXY] No auth header found, using anonymous access for external services');
+    }
+
+    // Initialize Supabase client with appropriate key
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      useAnonKey ? Deno.env.get('SUPABASE_ANON_KEY') ?? '' : Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
           persistSession: false
         },
         global: {
-          headers: {
+          headers: useAnonKey ? {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+          } : {
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
           }
         }

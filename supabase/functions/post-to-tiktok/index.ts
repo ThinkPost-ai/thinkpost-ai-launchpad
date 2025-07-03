@@ -220,14 +220,12 @@ serve(async (req) => {
       }
 
       // Convert Supabase storage URL to verified domain media URL
-      // Extract the full file path from the Supabase URL
-      let proxyImageUrl = videoUrl;
-      if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
-        const filePath = videoUrl.split('restaurant-images/')[1];
-        
-        // Use your verified subdomain with full media-proxy path
-        proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
-      }
+      const urlParts = videoUrl.split('/');
+      const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+      const filePath = urlParts.slice(bucketIndex + 1).join('/');
+      
+      // Use verified domain with anonymous key for TikTok access
+      const proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
 
       // Build request body using TikTok's photo content posting API format
       requestBody = {
@@ -277,6 +275,17 @@ serve(async (req) => {
       // Use TikTok's video posting API (original logic)
       console.log('Initializing TikTok video direct post with PULL_FROM_URL...');
       
+      // Convert Supabase storage URL to verified domain media URL for videos too
+      let proxyVideoUrl = videoUrl;
+      if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
+        const urlParts = videoUrl.split('/');
+        const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+        const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        
+        // Use verified domain with anonymous key for TikTok access
+        proxyVideoUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+      }
+      
       requestBody = {
         post_info: {
           title: caption,
@@ -288,7 +297,7 @@ serve(async (req) => {
         },
         source_info: {
           source: 'PULL_FROM_URL',
-          video_url: videoUrl, // Must be a public, verified domain
+          video_url: proxyVideoUrl, // Must be a public, verified domain
         },
       };
 
