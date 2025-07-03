@@ -152,11 +152,11 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   const formatPrivacyOption = (option: string) => {
     switch (option) {
       case 'PUBLIC_TO_EVERYONE':
-        return 'Everyone';
+        return 'Public';
       case 'MUTUAL_FOLLOW_FRIENDS':
         return 'Friends';
       case 'FOLLOWER_OF_CREATOR':
-        return 'Public';
+        return 'Followers';
       case 'SELF_ONLY':
         return 'Only me';
       default:

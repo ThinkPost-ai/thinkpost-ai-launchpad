@@ -174,19 +174,20 @@ serve(async (req) => {
 
     const creatorInfo = creatorInfoData.data;
 
-    // Filter out SELF_ONLY from privacy options and ensure PUBLIC_TO_EVERYONE is available
+    // Ensure all main privacy options are available according to TikTok guidelines
     let privacyOptions = creatorInfo.privacy_level_options || [
+      'SELF_ONLY',
       'MUTUAL_FOLLOW_FRIENDS', 
       'PUBLIC_TO_EVERYONE'
     ];
     
-    // Remove SELF_ONLY if it exists
-    privacyOptions = privacyOptions.filter((option: string) => option !== 'SELF_ONLY');
-    
-    // Ensure PUBLIC_TO_EVERYONE is always available
-    if (!privacyOptions.includes('PUBLIC_TO_EVERYONE')) {
-      privacyOptions.push('PUBLIC_TO_EVERYONE');
-    }
+    // Ensure all three main privacy levels are available
+    const requiredOptions = ['SELF_ONLY', 'MUTUAL_FOLLOW_FRIENDS', 'PUBLIC_TO_EVERYONE'];
+    requiredOptions.forEach(option => {
+      if (!privacyOptions.includes(option)) {
+        privacyOptions.push(option);
+      }
+    });
 
     return new Response(JSON.stringify({
       success: true,
