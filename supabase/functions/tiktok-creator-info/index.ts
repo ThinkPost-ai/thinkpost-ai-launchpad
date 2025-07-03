@@ -174,6 +174,20 @@ serve(async (req) => {
 
     const creatorInfo = creatorInfoData.data;
 
+    // Filter out SELF_ONLY from privacy options and ensure PUBLIC_TO_EVERYONE is available
+    let privacyOptions = creatorInfo.privacy_level_options || [
+      'MUTUAL_FOLLOW_FRIENDS', 
+      'PUBLIC_TO_EVERYONE'
+    ];
+    
+    // Remove SELF_ONLY if it exists
+    privacyOptions = privacyOptions.filter((option: string) => option !== 'SELF_ONLY');
+    
+    // Ensure PUBLIC_TO_EVERYONE is always available
+    if (!privacyOptions.includes('PUBLIC_TO_EVERYONE')) {
+      privacyOptions.push('PUBLIC_TO_EVERYONE');
+    }
+
     return new Response(JSON.stringify({
       success: true,
       creatorInfo: {
@@ -181,11 +195,7 @@ serve(async (req) => {
         display_name: creatorInfo.creator_nickname || profile.tiktok_username,
         can_post: true, // TikTok API doesn't always return this field reliably
         max_video_post_duration_sec: creatorInfo.max_video_post_duration_sec || 180, // Default 3 minutes
-        privacy_level_options: creatorInfo.privacy_level_options || [
-          'SELF_ONLY',
-          'MUTUAL_FOLLOW_FRIENDS', 
-          'PUBLIC_TO_EVERYONE'
-        ],
+        privacy_level_options: privacyOptions,
         comment_disabled: creatorInfo.comment_disabled || false,
         duet_disabled: creatorInfo.duet_disabled || false,
         stitch_disabled: creatorInfo.stitch_disabled || false,
@@ -205,4 +215,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-}); 
+});

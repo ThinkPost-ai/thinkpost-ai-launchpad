@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -151,12 +152,10 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   // Privacy level formatting
   const formatPrivacyOption = (option: string) => {
     switch (option) {
-      case 'SELF_ONLY':
-        return 'Only Me';
-      case 'MUTUAL_FOLLOW_FRIENDS':
-        return 'Friends';
       case 'PUBLIC_TO_EVERYONE':
         return 'Everyone';
+      case 'MUTUAL_FOLLOW_FRIENDS':
+        return 'Friends';
       case 'FOLLOWER_OF_CREATOR':
         return 'Public';
       default:
@@ -529,61 +528,31 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
               
               <RadioGroup value={privacyLevel} onValueChange={handlePrivacyChange}>
                 {creatorInfo.privacy_level_options.map((option) => {
-                  const isDisabled = option === 'SELF_ONLY' && brandedContent;
+                  // Skip SELF_ONLY option completely
+                  if (option === 'SELF_ONLY') return null;
+                  
+                  const isDisabled = false; // No options disabled now since we removed SELF_ONLY
                   
                   return (
                     <div key={option} className="flex items-center space-x-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem 
-                                value={option}
-                                id={option}
-                                disabled={isDisabled}
-                                className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-                              />
-                              <label 
-                                htmlFor={option}
-                                className={`text-sm flex items-center gap-2 cursor-pointer ${
-                                  isDisabled ? 'text-muted-foreground cursor-not-allowed' : ''
-                                }`}
-                              >
-                                <Eye className="h-4 w-4" />
-                                {formatPrivacyOption(option)}
-                                {isDisabled && (
-                                  <span className="text-xs text-muted-foreground">(Not available)</span>
-                                )}
-                              </label>
-                            </div>
-                          </TooltipTrigger>
-                          {isDisabled && (
-                            <TooltipContent>
-                              <p>Branded content visibility cannot be set to private.</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem 
+                          value={option}
+                          id={option}
+                          disabled={isDisabled}
+                        />
+                        <label 
+                          htmlFor={option}
+                          className="text-sm flex items-center gap-2 cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4" />
+                          {formatPrivacyOption(option)}
+                        </label>
+                      </div>
                     </div>
                   );
                 })}
               </RadioGroup>
-              
-              {/* Warning message when branded content restricts privacy */}
-              {brandedContent && creatorInfo.privacy_level_options.includes('SELF_ONLY') && (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-amber-800">Privacy Restriction</p>
-                      <p className="text-xs text-amber-700 mt-1">
-                        "Only Me" privacy setting is not available for branded content. 
-                        Branded content visibility cannot be set to private.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Interaction Settings */}
@@ -688,7 +657,6 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
                       id="branded-content"
                       checked={brandedContent}
                       onCheckedChange={handleBrandedContentChange}
-                      disabled={privacyLevel === 'SELF_ONLY'}
                       className="flex-shrink-0 h-4 w-4"
                     />
                     <label htmlFor="branded-content" className="text-sm flex items-center gap-2">
