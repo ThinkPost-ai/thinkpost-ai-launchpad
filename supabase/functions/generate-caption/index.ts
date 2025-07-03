@@ -84,20 +84,28 @@ serve(async (req) => {
     
     console.log('Caption generation request:', { productName, price, description });
 
-    const prompt = `You are a creative social media content creator specializing in food and restaurant marketing. Create an engaging, mouth-watering caption for the following dish:
+    const prompt = `أنت صانع محتوى محترف ومبدع من السعودية، ومتخصص في التسويق للمطاعم والأكلات على وسائل التواصل الاجتماعي.
+اكتب وصف جذاب ومشهي (بين 100 إلى 200 حرف) لمنشور على إنستغرام عن الطبق التالي:
 
-Product Name: ${productName}
-Price: $${price}
-Description: ${description}
+اسم المنتج: ${productName}
 
-Write a compelling social media caption that:
-- Highlights the most appealing aspects of the dish
-- Uses sensory language to make readers crave the food
-- Includes relevant food hashtags
-- Maintains an enthusiastic but professional tone
-- Is optimized for social media engagement
+السعر: $${price}
 
-Keep the caption between 100-200 characters for optimal social media performance.`;
+الوصف: ${description}
+
+التعليمات:
+
+استخدم كلمات سعودية حسّية توصف الطعم أو الريحة أو الملمس بشكل يخلّي المتابع يشتهي الطبق.
+
+وضّح وش يميز الطبق عن غيره بطريقة مشوّقة.
+
+أضف هاشتاقات محلية مشهورة مثل: #مطاعم_السعودية #جدة_ذوق #الرياض_تايمز
+
+لازم تكون النبرة حماسية، محلية، لكن مرتبة ومحترفة.
+
+لا تستخدم عبارات عامة أو مكررة، خلك واقعي وودود كأنك تتكلم مع الناس في سناب أو إنستا.
+
+عدد الأحرف بين 100 و200 كحد أقصى.`;
 
     console.log('Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
