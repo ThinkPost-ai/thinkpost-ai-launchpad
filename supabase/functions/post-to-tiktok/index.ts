@@ -221,7 +221,6 @@ serve(async (req) => {
       }
 
       // Convert Supabase storage URL to verified domain proxy URL
-      // Extract the file path from the Supabase URL
       let proxyImageUrl = videoUrl;
       if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
         const filePath = videoUrl.split('restaurant-images/')[1];
@@ -369,4 +368,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-}); 
+});
