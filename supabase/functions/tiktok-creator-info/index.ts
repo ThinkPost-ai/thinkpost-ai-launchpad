@@ -174,16 +174,15 @@ serve(async (req) => {
 
     const creatorInfo = creatorInfoData.data;
 
-    // Ensure all main privacy options are available according to TikTok guidelines
-    let privacyOptions = creatorInfo.privacy_level_options || [
-      'SELF_ONLY',
-      'MUTUAL_FOLLOW_FRIENDS', 
-      'PUBLIC_TO_EVERYONE'
-    ];
+    // Ensure only the main 3 privacy options are available according to TikTok guidelines
+    let privacyOptions = creatorInfo.privacy_level_options || [];
+    
+    // Filter to only include the main 3 privacy levels and remove redundant options
+    const allowedOptions = ['SELF_ONLY', 'MUTUAL_FOLLOW_FRIENDS', 'PUBLIC_TO_EVERYONE'];
+    privacyOptions = privacyOptions.filter(option => allowedOptions.includes(option));
     
     // Ensure all three main privacy levels are available
-    const requiredOptions = ['SELF_ONLY', 'MUTUAL_FOLLOW_FRIENDS', 'PUBLIC_TO_EVERYONE'];
-    requiredOptions.forEach(option => {
+    allowedOptions.forEach(option => {
       if (!privacyOptions.includes(option)) {
         privacyOptions.push(option);
       }
