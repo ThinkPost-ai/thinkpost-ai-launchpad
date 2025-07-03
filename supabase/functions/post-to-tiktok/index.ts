@@ -219,14 +219,16 @@ serve(async (req) => {
         throw new Error('Missing required fields for photo posting: videoUrl and privacyLevel are required');
       }
 
-      // Convert Supabase storage URL to verified domain proxy URL
-      // Extract the file path from the Supabase URL
+      // Convert Supabase storage URL to verified domain media URL
+      // Extract the filename from the Supabase URL
       let proxyImageUrl = videoUrl;
       if (videoUrl.includes('supabase.co/storage/v1/object/public/restaurant-images/')) {
         const filePath = videoUrl.split('restaurant-images/')[1];
-        // Temporarily use Supabase domain for testing - TODO: Fix custom domain routing
-        proxyImageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
-        console.log('Using Supabase domain proxy URL for testing:', proxyImageUrl);
+        // Extract just the filename (last part of the path)
+        const filename = filePath.split('/').pop();
+        
+        // Use your verified domain with simple media path
+        proxyImageUrl = `https://thinkpost.co/media/${filename}`;
       }
 
       // Build request body using TikTok's photo content posting API format
