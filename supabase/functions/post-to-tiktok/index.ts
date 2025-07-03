@@ -227,6 +227,8 @@ serve(async (req) => {
         const filePath = videoUrl.split('restaurant-images/')[1];
         proxyImageUrl = `https://thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}`;
         console.log('Using verified domain proxy URL:', proxyImageUrl);
+        console.log('Original Supabase URL:', videoUrl);
+        console.log('Extracted file path:', filePath);
       }
 
       // Build request body using TikTok's photo content posting API format
@@ -262,6 +264,7 @@ serve(async (req) => {
       }
 
       console.log('Sending photo upload request to TikTok...');
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
       
       // Initialize photo upload using content/init endpoint
       initUploadResponse = await fetch(`https://open.tiktokapis.com/v2/post/publish/content/init/`, {
@@ -306,8 +309,6 @@ serve(async (req) => {
         body: JSON.stringify(requestBody),
       });
     }
-
-    console.log(`Request body for TikTok ${mediaType} init:`, JSON.stringify(requestBody, null, 2));
 
     const initUploadData = await initUploadResponse.json();
     console.log(`TikTok init ${mediaType} response status:`, initUploadResponse.status);
