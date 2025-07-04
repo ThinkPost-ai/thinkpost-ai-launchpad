@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -77,6 +76,13 @@ export const useTikTokConnection = () => {
       }
 
       console.log('✅ Valid session found, calling tiktok-auth function');
+      console.log('🔍 Session details:', {
+        userId: sessionData.session.user?.id,
+        email: sessionData.session.user?.email,
+        tokenLength: sessionData.session.access_token?.length,
+        expiresAt: sessionData.session.expires_at,
+        currentTime: Math.floor(Date.now() / 1000)
+      });
       
       const { data, error } = await supabase.functions.invoke('tiktok-auth', {
         headers: {
@@ -85,6 +91,12 @@ export const useTikTokConnection = () => {
       });
 
       console.log('📡 Supabase function response:', { data, error });
+      console.log('📡 Function response details:', {
+        dataKeys: data ? Object.keys(data) : null,
+        errorMessage: error?.message,
+        errorDetails: error?.details || error?.context,
+        errorStatus: error?.status
+      });
 
       if (error) {
         console.error('❌ Supabase function error:', error);
@@ -194,4 +206,50 @@ export const useTikTokConnection = () => {
     disconnectTikTok,
     refetch: fetchTikTokProfile,
   };
+};
+
+// Debug function to test session validity (can be called from browser console)
+// @ts-ignore
+window.testTikTokAuth = async () => {
+  console.log('🧪 Testing TikTok auth session...');
+  
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(
+    'https://eztbwukcnddtvcairvpz.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dGJ3dWtjbmRkdHZjYWlydnB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NzM3ODAsImV4cCI6MjA2NDI0OTc4MH0.LbbYUDrZmSMTyIcZ8M9RKY-5mNnETdA6VDQI3wxyzAQ'
+  );
+  
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  
+  console.log('🔍 Session test results:', {
+    hasSession: !!sessionData.session,
+    sessionError: sessionError?.message,
+    userId: sessionData.session?.user?.id,
+    email: sessionData.session?.user?.email,
+    tokenLength: sessionData.session?.access_token?.length,
+    expiresAt: sessionData.session?.expires_at,
+    currentTime: Math.floor(Date.now() / 1000),
+    isExpired: sessionData.session?.expires_at ? sessionData.session.expires_at < Math.floor(Date.now() / 1000) : 'unknown'
+  });
+  
+  if (sessionData.session) {
+    console.log('🧪 Testing function call...');
+    try {
+      const { data, error } = await supabase.functions.invoke('tiktok-auth', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+      
+      console.log('🔍 Function test results:', {
+        success: !error,
+        data: data,
+        error: error?.message,
+        errorDetails: error?.details || error?.context,
+        errorStatus: error?.status
+      });
+    } catch (err) {
+      console.error('🔍 Function test error:', err);
+    }
+  }
 };
