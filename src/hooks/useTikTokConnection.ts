@@ -49,6 +49,7 @@ export const useTikTokConnection = () => {
 
   const connectTikTok = async () => {
     if (!user) {
+      console.error('❌ No user found for TikTok connection');
       toast({
         title: "Authentication Required",
         description: "Please log in to connect your TikTok account.",
@@ -60,8 +61,28 @@ export const useTikTokConnection = () => {
     setIsConnecting(true);
     try {
       console.log('🚀 Initiating TikTok OAuth for user:', user.id);
+      console.log('📡 Current user session:', await supabase.auth.getSession());
       
-      const { data, error } = await supabase.functions.invoke('tiktok-auth');
+      // Get current session to ensure we have a valid auth token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('❌ No valid session found:', sessionError);
+        toast({
+          title: "Authentication Error",
+          description: "Please log out and log back in, then try connecting TikTok again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('✅ Valid session found, calling tiktok-auth function');
+      
+      const { data, error } = await supabase.functions.invoke('tiktok-auth', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      });
 
       console.log('📡 Supabase function response:', { data, error });
 
@@ -86,6 +107,9 @@ export const useTikTokConnection = () => {
       }
 
       console.log('✅ Redirecting to TikTok OAuth URL:', data.authUrl);
+      
+      // Store that we're attempting TikTok connection
+      localStorage.setItem('tiktok_connection_attempt', 'true');
       
       // Redirect to TikTok OAuth
       window.location.href = data.authUrl;
@@ -149,6 +173,18 @@ export const useTikTokConnection = () => {
       fetchTikTokProfile();
     }
   }, [user]);
+
+  // Check if we're returning from a TikTok connection attempt
+  useEffect(() => {
+    if (localStorage.getItem('tiktok_connection_attempt') === 'true') {
+      localStorage.removeItem('tiktok_connection_attempt');
+      console.log('🔍 Returned from TikTok OAuth attempt, refreshing profile...');
+      // Small delay to allow for database updates
+      setTimeout(() => {
+        fetchTikTokProfile();
+      }, 1000);
+    }
+  }, []);
 
   return {
     tiktokProfile,
