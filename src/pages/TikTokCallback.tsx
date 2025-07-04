@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -11,10 +10,17 @@ const TikTokCallback = () => {
         const code = currentUrl.searchParams.get('code');
         const state = currentUrl.searchParams.get('state');
 
-        console.log('TikTok callback received on domain proxy:', { code: !!code, state: !!state });
+        console.log('🔄 TikTok callback received on domain proxy:', { 
+          code: !!code, 
+          state: !!state,
+          fullUrl: window.location.href,
+          codeLength: code?.length,
+          stateLength: state?.length
+        });
 
         if (!code || !state) {
-          console.error('Missing code or state parameter');
+          console.error('❌ Missing code or state parameter');
+          console.log('🔍 Available URL parameters:', Object.fromEntries(currentUrl.searchParams.entries()));
           window.location.href = '/tiktok-login-callback?error=missing_parameters';
           return;
         }
@@ -22,7 +28,7 @@ const TikTokCallback = () => {
         // Forward the request to the Supabase edge function
         const supabaseCallbackUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
         
-        console.log('Forwarding to Supabase edge function:', supabaseCallbackUrl);
+        console.log('🚀 Forwarding to Supabase edge function:', supabaseCallbackUrl);
 
         // Make the request to the Supabase edge function
         const response = await fetch(supabaseCallbackUrl, {
@@ -32,22 +38,41 @@ const TikTokCallback = () => {
           }
         });
 
-        console.log('Supabase edge function response status:', response.status);
+        console.log('📡 Supabase edge function response:', {
+          status: response.status,
+          statusText: response.statusText,
+          redirected: response.redirected,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
         if (response.redirected) {
           // If the edge function returned a redirect, follow it
+          console.log('✅ Following redirect to:', response.url);
           window.location.href = response.url;
         } else if (response.ok) {
           // If successful but no redirect, go to success page
+          console.log('✅ Success response, going to success page');
+          const responseText = await response.text();
+          console.log('📥 Response body:', responseText);
           window.location.href = '/tiktok-login-callback?tiktok=connected';
         } else {
           // If there was an error, go to error page
-          console.error('Supabase edge function error:', response.status, response.statusText);
+          console.error('❌ Supabase edge function error:', response.status, response.statusText);
+          
+          try {
+            const errorText = await response.text();
+            console.error('❌ Error response body:', errorText);
+          } catch (e) {
+            console.error('❌ Could not read error response body:', e);
+          }
+          
           window.location.href = '/tiktok-login-callback?error=callback_failed';
         }
 
       } catch (error) {
-        console.error('Error in TikTok callback proxy:', error);
+        console.error('💥 Error in TikTok callback proxy:', error);
+        console.error('💥 Error stack:', error.stack);
         window.location.href = '/tiktok-login-callback?error=proxy_error';
       }
     };

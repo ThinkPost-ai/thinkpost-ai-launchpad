@@ -253,3 +253,67 @@ window.testTikTokAuth = async () => {
     }
   }
 };
+
+// Test the actual connect flow (simulates clicking the connect button)
+// @ts-ignore
+window.testTikTokConnect = async () => {
+  console.log('🧪 Testing actual TikTok connect flow...');
+  
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(
+    'https://eztbwukcnddtvcairvpz.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dGJ3dWtjbmRkdHZjYWlydnB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NzM3ODAsImV4cCI6MjA2NDI0OTc4MH0.LbbYUDrZmSMTyIcZ8M9RKY-5mNnETdA6VDQI3wxyzAQ'
+  );
+  
+  try {
+    console.log('🚀 Initiating TikTok OAuth test...');
+    
+    // Get current session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      console.error('❌ No valid session found:', sessionError);
+      return;
+    }
+
+    console.log('✅ Valid session found, calling tiktok-auth function');
+    console.log('🔍 Session details:', {
+      userId: sessionData.session.user?.id,
+      email: sessionData.session.user?.email,
+      tokenLength: sessionData.session.access_token?.length,
+      expiresAt: sessionData.session.expires_at,
+      currentTime: Math.floor(Date.now() / 1000)
+    });
+    
+    const { data, error } = await supabase.functions.invoke('tiktok-auth', {
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
+
+    console.log('📡 Supabase function response:', { data, error });
+    console.log('📡 Function response details:', {
+      dataKeys: data ? Object.keys(data) : null,
+      errorMessage: error?.message,
+      errorDetails: error?.details || error?.context,
+      errorStatus: error?.status
+    });
+
+    if (error) {
+      console.error('❌ Supabase function error:', error);
+      return;
+    }
+
+    if (!data?.authUrl) {
+      console.error('❌ No auth URL received:', data);
+      return;
+    }
+
+    console.log('✅ Auth URL received:', data.authUrl);
+    console.log('🔗 Would redirect to:', data.authUrl);
+    console.log('🎯 Test completed successfully! In real flow, this would redirect to TikTok.');
+    
+  } catch (error) {
+    console.error('💥 TikTok connection test error:', error);
+  }
+};
