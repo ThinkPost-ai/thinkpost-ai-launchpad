@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const TikTokCallback = () => {
   useEffect(() => {
@@ -25,16 +26,31 @@ const TikTokCallback = () => {
           return;
         }
 
+        // Get current session for authorization
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !sessionData.session) {
+          console.error('❌ No valid session found for callback:', sessionError);
+          window.location.href = '/tiktok-login-callback?error=no_session';
+          return;
+        }
+
+        console.log('✅ Valid session found for callback:', {
+          userId: sessionData.session.user?.id,
+          tokenLength: sessionData.session.access_token?.length
+        });
+
         // Forward the request to the Supabase edge function
         const supabaseCallbackUrl = `https://eztbwukcnddtvcairvpz.supabase.co/functions/v1/tiktok-callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
         
         console.log('🚀 Forwarding to Supabase edge function:', supabaseCallbackUrl);
 
-        // Make the request to the Supabase edge function
+        // Make the request to the Supabase edge function WITH AUTHORIZATION
         const response = await fetch(supabaseCallbackUrl, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session.access_token}`
           }
         });
 
