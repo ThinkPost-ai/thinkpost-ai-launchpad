@@ -59,30 +59,42 @@ export const useTikTokConnection = () => {
 
     setIsConnecting(true);
     try {
-      console.log('Initiating TikTok OAuth...');
+      console.log('🚀 Initiating TikTok OAuth for user:', user.id);
       
       const { data, error } = await supabase.functions.invoke('tiktok-auth');
 
+      console.log('📡 Supabase function response:', { data, error });
+
       if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error('Failed to initiate TikTok OAuth');
+        console.error('❌ Supabase function error:', error);
+        toast({
+          title: "Connection Failed",
+          description: `Failed to initiate TikTok OAuth: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
       }
 
       if (!data?.authUrl) {
-        console.error('No auth URL received:', data);
-        throw new Error('No authorization URL received');
+        console.error('❌ No auth URL received:', data);
+        toast({
+          title: "Connection Failed",
+          description: "No authorization URL received from server.",
+          variant: "destructive"
+        });
+        return;
       }
 
-      console.log('Redirecting to TikTok OAuth URL:', data.authUrl);
+      console.log('✅ Redirecting to TikTok OAuth URL:', data.authUrl);
       
       // Redirect to TikTok OAuth
       window.location.href = data.authUrl;
       
     } catch (error) {
-      console.error('TikTok connection error:', error);
+      console.error('💥 TikTok connection error:', error);
       toast({
         title: "Connection Failed",
-        description: "Failed to connect to TikTok. Please try again.",
+        description: `Unexpected error: ${error.message}. Please try again.`,
         variant: "destructive"
       });
     } finally {
@@ -101,6 +113,8 @@ export const useTikTokConnection = () => {
           tiktok_username: null,
           tiktok_avatar_url: null,
           tiktok_access_token: null,
+          tiktok_refresh_token: null,
+          tiktok_token_expires_at: null,
           tiktok_connected: false
         })
         .eq('id', user.id);
