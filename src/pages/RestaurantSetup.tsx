@@ -32,11 +32,67 @@ const restaurantCategories: { value: RestaurantCategory; label: string }[] = [
   { value: 'other', label: 'Other' }
 ];
 
+// Saudi regions data
+const regions = {
+  en: [
+    "Riyadh",
+    "Makkah", 
+    "Madinah",
+    "Qassim",
+    "Eastern Province",
+    "Asir",
+    "Tabuk",
+    "Hail",
+    "Northern Borders",
+    "Jazan",
+    "Najran",
+    "Al Bahah",
+    "Al Jouf"
+  ],
+  ar: [
+    "الرياض",
+    "مكة المكرمة",
+    "المدينة المنورة", 
+    "القصيم",
+    "المنطقة الشرقية",
+    "عسير",
+    "تبوك",
+    "حائل",
+    "الحدود الشمالية",
+    "جازان",
+    "نجران",
+    "الباحة",
+    "الجوف"
+  ]
+};
+
+// Map Arabic regions to English for database storage
+const regionMapping: { [key: string]: string } = {
+  "الرياض": "Riyadh",
+  "مكة المكرمة": "Makkah",
+  "المدينة المنورة": "Madinah",
+  "القصيم": "Qassim",
+  "المنطقة الشرقية": "Eastern Province",
+  "عسير": "Asir",
+  "تبوك": "Tabuk",
+  "حائل": "Hail",
+  "الحدود الشمالية": "Northern Borders",
+  "جازان": "Jazan",
+  "نجران": "Najran",
+  "الباحة": "Al Bahah",
+  "الجوف": "Al Jouf"
+};
+
+// Reverse mapping for displaying stored English values in Arabic
+const reverseRegionMapping: { [key: string]: string } = Object.fromEntries(
+  Object.entries(regionMapping).map(([ar, en]) => [en, ar])
+);
+
 const RestaurantSetup = () => {
   const { user, loading, checkUserProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -47,6 +103,9 @@ const RestaurantSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+
+  // Get current regions based on language
+  const currentRegions = regions[language] || regions.en;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,9 +129,14 @@ const RestaurantSetup = () => {
       if (error) throw error;
 
       if (data) {
+        // Display location in current language
+        const displayLocation = language === 'ar' && reverseRegionMapping[data.location] 
+          ? reverseRegionMapping[data.location] 
+          : data.location;
+          
         setFormData({
           name: data.name,
-          location: data.location,
+          location: displayLocation,
           category: data.category,
           vision: data.vision || ''
         });
@@ -93,12 +157,15 @@ const RestaurantSetup = () => {
     setIsSubmitting(true);
 
     try {
+      // Convert location to English for database storage
+      const locationForDb = regionMapping[formData.location] || formData.location;
+      
       if (isEditing && restaurantId) {
         const { error } = await supabase
           .from('restaurants')
           .update({
             name: formData.name,
-            location: formData.location,
+            location: locationForDb,
             category: formData.category,
             vision: formData.vision || null
           })
@@ -116,7 +183,7 @@ const RestaurantSetup = () => {
           .insert({
             owner_id: user?.id,
             name: formData.name,
-            location: formData.location,
+            location: locationForDb,
             category: formData.category,
             vision: formData.vision || null
           });
@@ -185,14 +252,25 @@ const RestaurantSetup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium">{t('restaurant.location')}</Label>
-                <Input
-                  id="location"
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder={t('restaurant.locationPlaceholder')}
-                  className="h-11 text-base"
-                />
+                <Select 
+                  value={formData.location} 
+                  onValueChange={(value: string) => setFormData({ ...formData, location: value })}
+                >
+                  <SelectTrigger className="h-11 text-base">
+                    <SelectValue placeholder={t('restaurant.locationPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                    {currentRegions.map((region) => (
+                      <SelectItem 
+                        key={region} 
+                        value={region}
+                        className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        {region}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
