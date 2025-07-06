@@ -37,6 +37,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     setIsLoading(false);
     
     if (!error) {
+      // User is now automatically signed in, close the dialog
       onSuccess?.();
     }
   };

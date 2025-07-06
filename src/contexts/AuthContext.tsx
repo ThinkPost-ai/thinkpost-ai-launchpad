@@ -101,11 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`,
           data: {
             full_name: fullName
           }
@@ -117,10 +116,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email to confirm your account before signing in."
-      });
+      // If user is immediately confirmed (no email confirmation required)
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Account created successfully!",
+          description: "Welcome to ThinkPost! You can now start using your account."
+        });
+      } else {
+        toast({
+          title: "Welcome to ThinkPost!",
+          description: "Your account has been created and you're now signed in."
+        });
+      }
 
       return { error: null };
     } catch (error: any) {
