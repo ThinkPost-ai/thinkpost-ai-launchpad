@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 
 interface Product {
   id?: string;
@@ -11,12 +13,16 @@ interface Product {
   description: string;
   image: File | null;
   imagePreview: string | null;
+  tiktokEnabled: boolean;
+  instagramEnabled: boolean;
 }
 
 export const useProductManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tiktokProfile } = useTikTokConnection();
+  const { profile: instagramProfile } = useInstagramConnection();
   
   const [products, setProducts] = useState<Product[]>([
     {
@@ -24,7 +30,9 @@ export const useProductManagement = () => {
       price: '',
       description: '',
       image: null,
-      imagePreview: null
+      imagePreview: null,
+      tiktokEnabled: false,
+      instagramEnabled: false
     }
   ]);
   const [saving, setSaving] = useState(false);
@@ -36,7 +44,9 @@ export const useProductManagement = () => {
       price: '',
       description: '',
       image: null,
-      imagePreview: null
+      imagePreview: null,
+      tiktokEnabled: false,
+      instagramEnabled: false
     }]);
   };
 
@@ -99,10 +109,15 @@ export const useProductManagement = () => {
   }, []);
 
   const validateProducts = () => {
-    return products.every(product => 
-      product.name.trim() && 
-      product.image
-    );
+    const isTikTokConnected = tiktokProfile?.tiktok_connected || false;
+    const isInstagramConnected = instagramProfile?.connected || false;
+    
+    return products.every(product => {
+      const hasBasicInfo = product.name.trim() && product.image;
+      const hasConnectedPlatform = (product.tiktokEnabled && isTikTokConnected) || 
+                                  (product.instagramEnabled && isInstagramConnected);
+      return hasBasicInfo && hasConnectedPlatform;
+    });
   };
 
   const uploadImage = async (file: File): Promise<string> => {
@@ -122,7 +137,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in the product name and add an image for all products",
+        description: "Please fill in the product name, add an image, and connect & enable at least one social media platform for all products",
         variant: "destructive"
       });
       return;
@@ -179,7 +194,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in the product name and add an image for all products",
+        description: "Please fill in the product name, add an image, and connect & enable at least one social media platform for all products",
         variant: "destructive"
       });
       return;
