@@ -53,8 +53,8 @@ const InstagramConnection = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-2 hover:shadow-lg transition-shadow min-h-[320px]">
-        <CardContent className="flex items-center justify-center py-8">
+      <Card className="border-2 hover:shadow-lg transition-shadow">
+        <CardContent className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
         </CardContent>
       </Card>
@@ -62,7 +62,7 @@ const InstagramConnection = () => {
   }
 
   return (
-    <Card className={`border-2 hover:shadow-lg transition-shadow min-h-[320px] ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
+    <Card className={`border-2 hover:shadow-lg transition-shadow ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${profile.connected ? 'bg-green-600' : 'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500'}`}>
@@ -76,7 +76,7 @@ const InstagramConnection = () => {
             <CardDescription>
               {profile.connected 
                 ? `Connected as @${profile.username}`
-                : "Connect your Instagram Business account to get started."
+                : "Ready to connect"
               }
             </CardDescription>
           </div>
@@ -109,13 +109,10 @@ const InstagramConnection = () => {
           </div>
         ) : (
           <div className="space-y-4">            
-            <div className="text-center py-4">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
-                <Instagram className="h-8 w-8 text-white" />
+            <div className="text-center py-2">
+              <div className="mx-auto w-12 h-12 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 rounded-full flex items-center justify-center mb-3">
+                <Instagram className="h-6 w-6 text-white" />
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Connect your Instagram Business account to automatically post content.
-              </p>
             </div>
             
             <Button 
@@ -135,15 +132,6 @@ const InstagramConnection = () => {
                 </>
               )}
             </Button>
-            
-            <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>Requirements:</p>
-              <ul className="text-left space-y-1 ml-4">
-                <li>• Instagram Business account</li>
-                <li>• Connected to Facebook Page</li>
-                <li>• Page admin access</li>
-              </ul>
-            </div>
           </div>
         )}
       </CardContent>

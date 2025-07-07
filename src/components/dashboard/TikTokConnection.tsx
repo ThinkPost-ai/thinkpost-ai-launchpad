@@ -12,8 +12,8 @@ const TikTokConnection = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-2 hover:shadow-lg transition-shadow min-h-[320px]">
-        <CardContent className="flex items-center justify-center py-8">
+      <Card className="border-2 hover:shadow-lg transition-shadow">
+        <CardContent className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
         </CardContent>
       </Card>
@@ -23,7 +23,7 @@ const TikTokConnection = () => {
   const isConnected = tiktokProfile?.tiktok_connected;
 
   return (
-    <Card className={`border-2 hover:shadow-lg transition-shadow min-h-[320px] ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
+    <Card className={`border-2 hover:shadow-lg transition-shadow ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${isConnected ? 'bg-green-600' : 'bg-black'}`}>
@@ -37,7 +37,7 @@ const TikTokConnection = () => {
             <CardDescription>
               {isConnected 
                 ? t('dashboard.tiktok.connectedAs', { username: tiktokProfile.tiktok_username || 'TikTok User' })
-                : t('dashboard.tiktok.description')
+                : "Ready to connect"
               }
             </CardDescription>
           </div>
@@ -70,13 +70,10 @@ const TikTokConnection = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-                <TikTokIcon className="h-8 w-8 text-white" size={32} />
+            <div className="text-center py-2">
+              <div className="mx-auto w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mb-3">
+                <TikTokIcon className="h-6 w-6 text-white" size={24} />
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('dashboard.tiktok.connectDescription')}
-              </p>
             </div>
             
             <Button 
@@ -96,15 +93,6 @@ const TikTokConnection = () => {
                 </>
               )}
             </Button>
-
-            <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>Benefits:</p>
-              <ul className="text-left space-y-1 ml-4">
-                <li>• Automatic content posting</li>
-                <li>• Schedule posts in advance</li>
-                <li>• Cross-platform management</li>
-              </ul>
-            </div>
           </div>
         )}
       </CardContent>
