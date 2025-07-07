@@ -9,8 +9,6 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
 import StatisticsCards from '@/components/dashboard/StatisticsCards';
 import MediaManagement from '@/components/dashboard/MediaManagement';
-import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
-import ScheduledPosts from '@/components/dashboard/ScheduledPosts';
 import QuickActions from '@/components/dashboard/QuickActions';
 import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import InstagramConnection from '@/components/dashboard/InstagramConnection';
@@ -24,7 +22,7 @@ const UserDashboard = () => {
   const [checkingRestaurant, setCheckingRestaurant] = useState(true);
 
   // Use custom hooks for data management
-  const { restaurant, stats, isLoading, handleCreditsUpdate } = useDashboardData();
+  const { restaurant, stats, isLoading } = useDashboardData();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -80,19 +78,13 @@ const UserDashboard = () => {
     );
   }
 
-  // Handle Quick Actions clicks - open content in modal/dialog instead of switching tabs
+  // Handle Quick Actions clicks - navigate to dedicated pages
   const handleCaptionsClick = () => {
-    // You can implement a modal/dialog here or navigate to a dedicated page
-    console.log('View Captions clicked');
-    // For now, you could navigate to a dedicated captions page
-    // navigate('/captions');
+    navigate('/captions');
   };
 
   const handleScheduleClick = () => {
-    // You can implement a modal/dialog here or navigate to a dedicated page
-    console.log('Schedule Post clicked');
-    // For now, you could navigate to a dedicated schedule page
-    // navigate('/schedule');
+    navigate('/schedule');
   };
 
   return (

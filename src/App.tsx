@@ -14,6 +14,8 @@ import ProfileSettings from "./pages/ProfileSettings";
 import AccountSettings from "./pages/AccountSettings";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
+import CaptionsPage from "./pages/CaptionsPage";
+import SchedulePage from "./pages/SchedulePage";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -45,6 +47,8 @@ const App = () => {
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/account-settings" element={<AccountSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />
+                  <Route path="/captions" element={<CaptionsPage />} />
+                  <Route path="/schedule" element={<SchedulePage />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/tiktok-callback" element={<TikTokCallback />} />
