@@ -15,6 +15,7 @@ interface Product {
   imagePreview: string | null;
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
+  is_new?: boolean;
 }
 
 export const useProductManagement = () => {
@@ -234,7 +235,8 @@ export const useProductManagement = () => {
           price: product.price ? parseFloat(product.price) : null,
           description: product.description || null,
           image_path: imagePath,
-          caption: null
+          caption: null,
+          is_new: true // Mark new products
         };
 
         const { data: insertedProduct, error: dbError } = await supabase
@@ -320,32 +322,6 @@ export const useProductManagement = () => {
             });
           }
 
-          // Schedule the post with the generated caption
-          const scheduledDate = new Date();
-          scheduledDate.setHours(scheduledDate.getHours() + 24); // Schedule for 24 hours from now
-
-          const { error: scheduleError } = await supabase
-            .from('scheduled_posts')
-            .insert({
-              user_id: user.id,
-              product_id: product.id,
-              caption: caption,
-              platform: 'tiktok',
-              scheduled_date: scheduledDate.toISOString(),
-              status: 'scheduled'
-            });
-
-          if (scheduleError) {
-            console.error('Schedule error:', scheduleError);
-            toast({
-              title: "Scheduling Failed",
-              description: `Failed to schedule post for ${product.name}`,
-              variant: "destructive"
-            });
-          } else {
-            console.log(`Successfully scheduled post for ${product.name}`);
-          }
-
           return { ...product, caption };
         } catch (error) {
           console.error('Failed to generate caption for product:', product.name, error);
@@ -362,11 +338,11 @@ export const useProductManagement = () => {
 
       toast({
         title: "Success!",
-        description: `${products.length} product(s) saved, captions generated, and posts scheduled successfully`
+        description: `${products.length} product(s) saved and captions generated successfully`
       });
 
-      // Redirect to Schedule tab in user dashboard
-      navigate('/user-dashboard?tab=schedule');
+      // Redirect to captions page
+      navigate('/captions');
     } catch (error: any) {
       console.error('Save with captions error:', error);
       toast({

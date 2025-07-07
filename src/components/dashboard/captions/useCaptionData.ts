@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -126,6 +125,7 @@ export const useCaptionData = () => {
           created_at: product.created_at,
           status,
           type: 'product' as const,
+          is_new: product.is_new || false,
           social_stats: {
             instagram_views: Math.floor(Math.random() * 1000) + 100,
             instagram_likes: Math.floor(Math.random() * 100) + 10,

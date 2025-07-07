@@ -1,4 +1,3 @@
-
 export interface CaptionData {
   id: string;
   image_path: string;
@@ -10,6 +9,7 @@ export interface CaptionData {
   created_at: string;
   status: 'draft' | 'scheduled' | 'posted';
   type: 'image' | 'product';
+  is_new?: boolean;
   social_stats?: {
     instagram_views?: number;
     instagram_likes?: number;

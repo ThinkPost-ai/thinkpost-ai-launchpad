@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 
@@ -57,7 +56,7 @@ const ProductCreationActions = ({
               Generating & Scheduling...
             </>
           ) : (
-            'Generate Caption & Schedule Posts'
+            'Save & Generate Captions'
           )}
         </Button>
       </div>
