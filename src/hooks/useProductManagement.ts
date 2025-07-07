@@ -38,9 +38,10 @@ export const useProductManagement = () => {
   ]);
   const [saving, setSaving] = useState(false);
   const [generatingCaptions, setGeneratingCaptions] = useState(false);
+  const [tiktokValidationStates, setTiktokValidationStates] = useState<boolean[]>([true]);
 
   const addProduct = () => {
-    setProducts(prevProducts => [...prevProducts, {
+    setProducts(prev => [...prev, {
       name: '',
       price: '',
       description: '',
@@ -49,11 +50,15 @@ export const useProductManagement = () => {
       tiktokEnabled: false,
       instagramEnabled: false
     }]);
+    // Add validation state for new product
+    setTiktokValidationStates(prev => [...prev, true]);
   };
 
   const removeProduct = (index: number) => {
     if (products.length > 1) {
-      setProducts(prevProducts => prevProducts.filter((_, i) => i !== index));
+      setProducts(prev => prev.filter((_, i) => i !== index));
+      // Remove validation state for removed product
+      setTiktokValidationStates(prev => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -113,11 +118,21 @@ export const useProductManagement = () => {
     const isTikTokConnected = tiktokProfile?.tiktok_connected || false;
     const isInstagramConnected = instagramProfile?.connected || false;
     
-    return products.every(product => {
+    return products.every((product, index) => {
       const hasBasicInfo = product.name.trim() && product.image;
       const hasConnectedPlatform = (product.tiktokEnabled && isTikTokConnected) || 
                                   (product.instagramEnabled && isInstagramConnected);
-      return hasBasicInfo && hasConnectedPlatform;
+      const isTikTokValid = tiktokValidationStates[index] !== false;
+      
+      return hasBasicInfo && hasConnectedPlatform && isTikTokValid;
+    });
+  };
+
+  const handleTikTokValidationChange = (index: number, isValid: boolean) => {
+    setTiktokValidationStates(prev => {
+      const newStates = [...prev];
+      newStates[index] = isValid;
+      return newStates;
     });
   };
 
@@ -138,7 +153,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in the product name, add an image, and connect & enable at least one social media platform for all products",
+        description: "Please fill in the product name, add an image, connect & enable at least one social media platform for all products, and complete TikTok commercial content settings if applicable",
         variant: "destructive"
       });
       return;
@@ -195,7 +210,7 @@ export const useProductManagement = () => {
     if (!user || !validateProducts()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in the product name, add an image, and connect & enable at least one social media platform for all products",
+        description: "Please fill in the product name, add an image, connect & enable at least one social media platform for all products, and complete TikTok commercial content settings if applicable",
         variant: "destructive"
       });
       return;
@@ -365,6 +380,7 @@ export const useProductManagement = () => {
     handleImageSelect,
     removeImage,
     validateProducts,
+    handleTikTokValidationChange,
     saveProductsOnly,
     saveProductsWithCaptions
   };

@@ -24,6 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { useState, useEffect } from 'react';
 
 interface Product {
   name: string;
@@ -43,6 +44,7 @@ interface ProductCardProps {
   onRemoveProduct: (index: number) => void;
   onImageSelect: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
+  onTikTokValidationChange?: (index: number, isValid: boolean) => void;
 }
 
 const ProductCard = ({
@@ -52,7 +54,8 @@ const ProductCard = ({
   onUpdateProduct,
   onRemoveProduct,
   onImageSelect,
-  onRemoveImage
+  onRemoveImage,
+  onTikTokValidationChange
 }: ProductCardProps) => {
   const { tiktokProfile } = useTikTokConnection();
   const { profile: instagramProfile } = useInstagramConnection();
@@ -63,6 +66,40 @@ const ProductCard = ({
   // Check if user has enabled any platforms
   const hasEnabledPlatforms = (product.tiktokEnabled && isTikTokConnected) || 
                               (product.instagramEnabled && isInstagramConnected);
+
+  const [tiktokSettings, setTiktokSettings] = useState({
+    privacyLevel: 'public' as 'public' | 'friends' | 'only_me',
+    allowComments: true,
+    commercialContent: false,
+    yourBrand: false,
+    brandedContent: false
+  });
+
+  // TikTok validation logic
+  const isTikTokValidationValid = () => {
+    if (!product.tiktokEnabled || !isTikTokConnected) {
+      return true; // If TikTok is not enabled, no validation needed
+    }
+    
+    if (!tiktokSettings.commercialContent) {
+      return true; // If commercial content is not checked, validation passes
+    }
+    
+    // If commercial content is checked, at least one sub-option must be selected
+    return tiktokSettings.yourBrand || tiktokSettings.brandedContent;
+  };
+
+  // Update validation when settings change
+  useEffect(() => {
+    const isValid = isTikTokValidationValid();
+    onTikTokValidationChange?.(index, isValid);
+  }, [tiktokSettings, product.tiktokEnabled, isTikTokConnected, index, onTikTokValidationChange]);
+
+  const showTikTokValidationWarning = product.tiktokEnabled && 
+                                      isTikTokConnected && 
+                                      tiktokSettings.commercialContent && 
+                                      !tiktokSettings.yourBrand && 
+                                      !tiktokSettings.brandedContent;
 
   return (
     <TooltipProvider>
@@ -221,11 +258,71 @@ const ProductCard = ({
                                 </div>
 
                                 {/* Commercial Content */}
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox id={`commercial-content-${index}`} />
-                                  <Label htmlFor={`commercial-content-${index}`} className="text-sm">
-                                    This content promotes a brand, product or service
-                                  </Label>
+                                <div className="space-y-3">
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      id={`commercial-${index}`}
+                                      checked={tiktokSettings.commercialContent}
+                                      onCheckedChange={(checked) => 
+                                        setTiktokSettings(prev => ({ 
+                                          ...prev, 
+                                          commercialContent: checked as boolean,
+                                          // Reset sub-options when unchecked
+                                          yourBrand: checked ? prev.yourBrand : false,
+                                          brandedContent: checked ? prev.brandedContent : false
+                                        }))
+                                      }
+                                    />
+                                    <Label htmlFor={`commercial-${index}`}>
+                                      This content promotes a brand, product or service
+                                    </Label>
+                                  </div>
+
+                                  {/* Conditional sub-checkboxes */}
+                                  {tiktokSettings.commercialContent && (
+                                    <div className="ml-6 space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox 
+                                          id={`your-brand-${index}`}
+                                          checked={tiktokSettings.yourBrand}
+                                          onCheckedChange={(checked) => 
+                                            setTiktokSettings(prev => ({ 
+                                              ...prev, 
+                                              yourBrand: checked as boolean 
+                                            }))
+                                          }
+                                        />
+                                        <Label htmlFor={`your-brand-${index}`}>
+                                          Your Brand
+                                        </Label>
+                                      </div>
+                                      
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox 
+                                          id={`branded-content-${index}`}
+                                          checked={tiktokSettings.brandedContent}
+                                          onCheckedChange={(checked) => 
+                                            setTiktokSettings(prev => ({ 
+                                              ...prev, 
+                                              brandedContent: checked as boolean 
+                                            }))
+                                          }
+                                        />
+                                        <Label htmlFor={`branded-content-${index}`}>
+                                          Branded Content
+                                        </Label>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Validation warning */}
+                                  {showTikTokValidationWarning && (
+                                    <div className="ml-6 mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                                      <p className="text-sm text-red-700 dark:text-red-300">
+                                        ⚠️ You need to indicate if your content promotes yourself, a third party, or both.
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </AccordionContent>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,7 @@ const ProductCreation = () => {
     handleImageSelect,
     removeImage,
     validateProducts,
+    handleTikTokValidationChange,
     saveProductsOnly,
     saveProductsWithCaptions
   } = useProductManagement();
@@ -170,6 +170,7 @@ const ProductCreation = () => {
               onRemoveProduct={removeProduct}
               onImageSelect={handleImageSelect}
               onRemoveImage={removeImage}
+              onTikTokValidationChange={handleTikTokValidationChange}
             />
           ))}
 
