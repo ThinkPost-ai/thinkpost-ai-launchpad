@@ -1,9 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Instagram, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Instagram, CheckCircle, Loader2 } from 'lucide-react';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -54,7 +53,7 @@ const InstagramConnection = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-2 hover:shadow-lg transition-shadow">
+      <Card className="border-2 hover:shadow-lg transition-shadow min-h-[320px]">
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
         </CardContent>
@@ -63,7 +62,7 @@ const InstagramConnection = () => {
   }
 
   return (
-    <Card className={`border-2 hover:shadow-lg transition-shadow ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
+    <Card className={`border-2 hover:shadow-lg transition-shadow min-h-[320px] ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${profile.connected ? 'bg-green-600' : 'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500'}`}>
@@ -109,15 +108,8 @@ const InstagramConnection = () => {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Instagram Business Account Required:</strong> Make sure you have an Instagram Business account connected to a Facebook Page before connecting.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center py-6">
+          <div className="space-y-4">            
+            <div className="text-center py-4">
               <div className="mx-auto w-16 h-16 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
                 <Instagram className="h-8 w-8 text-white" />
               </div>
@@ -147,8 +139,8 @@ const InstagramConnection = () => {
             <div className="text-xs text-muted-foreground text-center space-y-1">
               <p>Requirements:</p>
               <ul className="text-left space-y-1 ml-4">
-                <li>• Instagram Business or Creator account</li>
-                <li>• Connected to a Facebook Page</li>
+                <li>• Instagram Business account</li>
+                <li>• Connected to Facebook Page</li>
                 <li>• Page admin access</li>
               </ul>
             </div>
