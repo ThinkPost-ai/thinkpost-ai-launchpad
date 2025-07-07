@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Restaurant {
@@ -32,7 +31,6 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [notifications] = useState(3); // Mock notification count
 
   const handleSignOut = async () => {
     await signOut();
@@ -52,16 +50,6 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
 
   return (
     <div className="flex items-center space-x-4">
-      {/* Notifications */}
-      <Button variant="ghost" size="icon" className="relative">
-        <Bell className="h-5 w-5" />
-        {notifications > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500">
-            {notifications}
-          </Badge>
-        )}
-      </Button>
-
       {/* User Profile Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

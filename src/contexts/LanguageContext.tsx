@@ -232,7 +232,7 @@ const getTranslations = () => {
       'dashboard.tabs.media': 'Media',
       'dashboard.tabs.captions': 'Captions',
       'dashboard.tabs.schedule': 'Schedule',
-      'dashboard.tabs.notifications': 'Notifications',
+      'dashboard.tabs.statistics': 'Statistics',
       
       // Overview Cards
       'dashboard.overview.totalPosts': 'Total Posts',
@@ -598,7 +598,7 @@ const getTranslations = () => {
       'dashboard.tabs.media': 'الوسائط',
       'dashboard.tabs.captions': 'توليد المحتوى',
       'dashboard.tabs.schedule': 'الجدولة',
-      'dashboard.tabs.notifications': 'الإشعارات',
+      'dashboard.tabs.statistics': 'الإحصائيات',
       
       // Overview Cards
       'dashboard.overview.totalPosts': 'إجمالي المنشورات',

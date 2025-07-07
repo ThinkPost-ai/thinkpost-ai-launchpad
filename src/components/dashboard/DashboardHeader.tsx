@@ -1,7 +1,7 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import UserProfilePanel from '@/components/dashboard/UserProfilePanel';
 import LanguageToggle from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Restaurant {
@@ -38,6 +38,7 @@ const DashboardHeader = ({ restaurant }: DashboardHeaderProps) => {
           
           <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <LanguageToggle />
+            <ThemeToggle />
             <UserProfilePanel restaurant={restaurant} />
           </div>
         </div>

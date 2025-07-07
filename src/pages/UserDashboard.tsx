@@ -7,10 +7,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
+import StatisticsCards from '@/components/dashboard/StatisticsCards';
 import MediaManagement from '@/components/dashboard/MediaManagement';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
 import ScheduledPosts from '@/components/dashboard/ScheduledPosts';
-import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
 import QuickActions from '@/components/dashboard/QuickActions';
 import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import InstagramConnection from '@/components/dashboard/InstagramConnection';
@@ -67,7 +67,7 @@ const UserDashboard = () => {
   // Handle tab from URL parameters
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['overview', 'media', 'captions', 'schedule', 'notifications'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'media', 'statistics'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
@@ -80,6 +80,21 @@ const UserDashboard = () => {
     );
   }
 
+  // Handle Quick Actions clicks - open content in modal/dialog instead of switching tabs
+  const handleCaptionsClick = () => {
+    // You can implement a modal/dialog here or navigate to a dedicated page
+    console.log('View Captions clicked');
+    // For now, you could navigate to a dedicated captions page
+    // navigate('/captions');
+  };
+
+  const handleScheduleClick = () => {
+    // You can implement a modal/dialog here or navigate to a dedicated page
+    console.log('Schedule Post clicked');
+    // For now, you could navigate to a dedicated schedule page
+    // navigate('/schedule');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
       <DashboardHeader restaurant={restaurant} />
@@ -87,38 +102,38 @@ const UserDashboard = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <TabsList className="grid w-max min-w-full grid-cols-5 h-11 sm:h-10 mx-3 sm:mx-0 sm:w-full lg:w-auto">
+            <TabsList className="grid w-max min-w-full grid-cols-3 h-11 sm:h-10 mx-3 sm:mx-0 sm:w-full lg:w-auto">
               <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                 {t('dashboard.tabs.overview')}
               </TabsTrigger>
               <TabsTrigger value="media" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
                 {t('dashboard.tabs.media')}
               </TabsTrigger>
-              <TabsTrigger value="captions" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
-                {t('dashboard.tabs.captions')}
-              </TabsTrigger>
-              <TabsTrigger value="schedule" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
-                {t('dashboard.tabs.schedule')}
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
-                {t('dashboard.tabs.notifications')}
+              <TabsTrigger value="statistics" className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                {t('dashboard.tabs.statistics')}
               </TabsTrigger>
             </TabsList>
           </div>
 
           {/* Quick Actions - positioned below tabs and above content */}
           <QuickActions 
-            onCaptionsClick={() => setActiveTab('captions')}
-            onScheduleClick={() => setActiveTab('schedule')}
+            onCaptionsClick={handleCaptionsClick}
+            onScheduleClick={handleScheduleClick}
           />
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            <OverviewCards stats={stats} />
-            
-            {/* Social Media Connections */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <TikTokConnection />
-              <InstagramConnection />
+            {/* Social Media Connections and Caption Credits - positioned below tabs */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
+              {/* TikTok and Instagram cards - smaller (30% reduction) */}
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TikTokConnection />
+                <InstagramConnection />
+              </div>
+              
+              {/* Caption Credits - bigger, takes more space */}
+              <div className="lg:col-span-3">
+                <OverviewCards stats={stats} />
+              </div>
             </div>
           </TabsContent>
 
@@ -126,16 +141,8 @@ const UserDashboard = () => {
             <MediaManagement />
           </TabsContent>
 
-          <TabsContent value="captions">
-            <GeneratedCaptions onCreditsUpdate={handleCreditsUpdate} />
-          </TabsContent>
-
-          <TabsContent value="schedule">
-            <ScheduledPosts />
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <NotificationsPanel />
+          <TabsContent value="statistics">
+            <StatisticsCards stats={stats} />
           </TabsContent>
         </Tabs>
       </div>
