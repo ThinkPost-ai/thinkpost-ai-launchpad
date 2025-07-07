@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Plus, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTikTokConnection } from '@/hooks/useTikTokConnection';
+import { useInstagramConnection } from '@/hooks/useInstagramConnection';
+import { useToast } from '@/hooks/use-toast';
 
 interface QuickActionsProps {
   onCaptionsClick: () => void;
@@ -12,6 +15,29 @@ interface QuickActionsProps {
 const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Get social media connection status
+  const { tiktokProfile } = useTikTokConnection();
+  const { profile: instagramProfile } = useInstagramConnection();
+
+  const handleStartAddProducts = () => {
+    // Check if at least one social media account is connected
+    const isTikTokConnected = tiktokProfile?.tiktok_connected || false;
+    const isInstagramConnected = instagramProfile?.connected || false;
+    
+    if (!isTikTokConnected && !isInstagramConnected) {
+      toast({
+        title: "Social Media Connection Required",
+        description: "Please connect at least 1 social media account (TikTok or Instagram) before adding products.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // If at least one platform is connected, proceed to upload page
+    navigate('/upload');
+  };
 
   return (
     <Card>
@@ -29,7 +55,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
               1
             </div>
             <Button 
-              onClick={() => navigate('/upload')}
+              onClick={handleStartAddProducts}
               className="w-full h-16 bg-gradient-primary hover:opacity-90 flex flex-col gap-1 relative"
             >
               <Plus className="h-5 w-5" />
