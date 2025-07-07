@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -109,9 +108,16 @@ const CaptionTableRow = ({
             className="h-12 w-12 object-cover rounded-md"
           />
           <div>
-            <p className="text-sm font-medium text-deep-blue dark:text-white">
-              {caption.name || caption.original_filename}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-deep-blue dark:text-white">
+                {caption.name || caption.original_filename}
+              </p>
+              {caption.is_new && caption.type === 'product' && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs px-2 py-1">
+                  New
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               {caption.type === 'product' ? 'Product' : 'Image'} • {new Date(caption.created_at).toLocaleDateString()}
             </p>

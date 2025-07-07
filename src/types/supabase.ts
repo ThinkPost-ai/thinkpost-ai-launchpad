@@ -7,8 +7,90 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
+      cars: {
+        Row: {
+          brand: string
+          color: string | null
+          condition: string | null
+          created_at: string | null
+          description: string | null
+          drivetrain: string | null
+          engine_size: string | null
+          fuel_type: string
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          is_sold: boolean | null
+          mileage: number | null
+          model: string
+          price: number
+          showroom_id: string | null
+          transmission: string
+          updated_at: string | null
+          views: number | null
+          year: number
+        }
+        Insert: {
+          brand: string
+          color?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          drivetrain?: string | null
+          engine_size?: string | null
+          fuel_type: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
+          mileage?: number | null
+          model: string
+          price: number
+          showroom_id?: string | null
+          transmission: string
+          updated_at?: string | null
+          views?: number | null
+          year: number
+        }
+        Update: {
+          brand?: string
+          color?: string | null
+          condition?: string | null
+          created_at?: string | null
+          description?: string | null
+          drivetrain?: string | null
+          engine_size?: string | null
+          fuel_type?: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
+          mileage?: number | null
+          model?: string
+          price?: number
+          showroom_id?: string | null
+          transmission?: string
+          updated_at?: string | null
+          views?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cars_showroom_id_fkey"
+            columns: ["showroom_id"]
+            isOneToOne: false
+            referencedRelation: "showrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       images: {
         Row: {
           caption: string | null
@@ -70,6 +152,7 @@ export type Database = {
           description: string | null
           id: string
           image_path: string | null
+          is_new: boolean | null
           name: string
           price: number | null
           updated_at: string
@@ -81,6 +164,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_path?: string | null
+          is_new?: boolean | null
           name: string
           price?: number | null
           updated_at?: string
@@ -92,6 +176,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_path?: string | null
+          is_new?: boolean | null
           name?: string
           price?: number | null
           updated_at?: string
@@ -121,6 +206,8 @@ export type Database = {
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
           tiktok_open_id: string | null
+          tiktok_refresh_token: string | null
+          tiktok_token_expires_at: string | null
           tiktok_username: string | null
           updated_at: string
         }
@@ -145,6 +232,8 @@ export type Database = {
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           tiktok_username?: string | null
           updated_at?: string
         }
@@ -169,6 +258,8 @@ export type Database = {
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
           tiktok_open_id?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           tiktok_username?: string | null
           updated_at?: string
         }
@@ -213,9 +304,12 @@ export type Database = {
           created_at: string
           id: string
           image_id: string | null
+          image_url: string | null
+          media_type: string | null
           platform: string
           processing_status: string | null
           product_id: string | null
+          proxy_image_url: string | null
           proxy_video_url: string | null
           scheduled_date: string
           status: string
@@ -230,9 +324,12 @@ export type Database = {
           created_at?: string
           id?: string
           image_id?: string | null
+          image_url?: string | null
+          media_type?: string | null
           platform: string
           processing_status?: string | null
           product_id?: string | null
+          proxy_image_url?: string | null
           proxy_video_url?: string | null
           scheduled_date: string
           status?: string
@@ -247,9 +344,12 @@ export type Database = {
           created_at?: string
           id?: string
           image_id?: string | null
+          image_url?: string | null
+          media_type?: string | null
           platform?: string
           processing_status?: string | null
           product_id?: string | null
+          proxy_image_url?: string | null
           proxy_video_url?: string | null
           scheduled_date?: string
           status?: string
@@ -276,6 +376,60 @@ export type Database = {
           },
         ]
       }
+      showrooms: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          location: string
+          name: string
+          owner_id: string | null
+          phone: string | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string | null
+          website: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location: string
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       tiktok_oauth_states: {
         Row: {
           created_at: string
@@ -297,6 +451,30 @@ export type Database = {
           id?: string
           state_value?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -337,21 +515,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -369,14 +551,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -392,14 +576,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -415,14 +601,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -430,14 +618,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

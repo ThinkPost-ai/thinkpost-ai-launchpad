@@ -49,6 +49,9 @@ export const useCaptionData = () => {
 
       if (productsError) throw productsError;
 
+      // Mark new products as viewed
+      await markNewProductsAsViewed();
+
       // Fetch scheduled posts to determine real status
       const { data: scheduledPosts, error: postsError } = await supabase
         .from('scheduled_posts')
@@ -148,6 +151,22 @@ export const useCaptionData = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markNewProductsAsViewed = async () => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_new: false })
+        .eq('user_id', user?.id)
+        .eq('is_new', true);
+
+      if (error) {
+        console.error('Error marking products as viewed:', error);
+      }
+    } catch (error) {
+      console.error('Failed to mark products as viewed:', error);
     }
   };
 
