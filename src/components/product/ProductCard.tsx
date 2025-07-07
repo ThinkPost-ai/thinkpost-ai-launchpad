@@ -2,7 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, Eye, MessageCircle, Copy, Scissors, DollarSign, Building } from 'lucide-react';
 import ProductForm from './ProductForm';
 import ProductImageUpload from './ProductImageUpload';
 import TikTokIcon from '@/components/ui/TikTokIcon';
@@ -15,6 +18,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 interface Product {
   name: string;
@@ -107,37 +116,124 @@ const ProductCard = ({
                 
                 <div className="space-y-4">
                   {/* TikTok Toggle */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className={`flex items-center justify-between p-4 border rounded-lg ${isTikTokConnected ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60 cursor-not-allowed'}`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${isTikTokConnected ? 'bg-black' : 'bg-gray-400'}`}>
-                            <TikTokIcon className="h-6 w-6 text-white" size={24} />
+                  <div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className={`flex items-center justify-between p-4 border rounded-lg ${isTikTokConnected ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60 cursor-not-allowed'}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isTikTokConnected ? 'bg-black' : 'bg-gray-400'}`}>
+                              <TikTokIcon className="h-6 w-6 text-white" size={24} />
+                            </div>
+                            <div>
+                              <Label className="text-base font-medium">TikTok</Label>
+                              <p className="text-sm text-muted-foreground">
+                                {isTikTokConnected ? 'Post to TikTok' : 'Connect TikTok account first'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <Label className="text-base font-medium">TikTok</Label>
-                            <p className="text-sm text-muted-foreground">
-                              {isTikTokConnected ? 'Post to TikTok' : 'Connect TikTok account first'}
-                            </p>
-                          </div>
+                          <Switch
+                            checked={product.tiktokEnabled && isTikTokConnected}
+                            onCheckedChange={(checked) => {
+                              if (isTikTokConnected) {
+                                onUpdateProduct(index, 'tiktokEnabled', checked);
+                              }
+                            }}
+                            disabled={!isTikTokConnected}
+                          />
                         </div>
-                        <Switch
-                          checked={product.tiktokEnabled && isTikTokConnected}
-                          onCheckedChange={(checked) => {
-                            if (isTikTokConnected) {
-                              onUpdateProduct(index, 'tiktokEnabled', checked);
-                            }
-                          }}
-                          disabled={!isTikTokConnected}
-                        />
+                      </TooltipTrigger>
+                      {!isTikTokConnected && (
+                        <TooltipContent>
+                          <p>Connect your TikTok account from dashboard to enable posting to this app.</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+
+                    {/* TikTok Compliance Declaration - directly under TikTok card */}
+                    {product.tiktokEnabled && isTikTokConnected && (
+                      <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <h4 className="text-sm font-medium mb-2">Compliance Declaration</h4>
+                        <p className="text-sm text-muted-foreground">
+                          By posting, you agree to TikTok's{' '}
+                          <a 
+                            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Music Usage Confirmation
+                          </a>
+                        </p>
                       </div>
-                    </TooltipTrigger>
-                    {!isTikTokConnected && (
-                      <TooltipContent>
-                        <p>Connect your TikTok account from dashboard to enable posting to this app.</p>
-                      </TooltipContent>
                     )}
-                  </Tooltip>
+
+                    {/* TikTok Posting Settings Accordion - directly under TikTok card */}
+                    {product.tiktokEnabled && isTikTokConnected && (
+                      <div className="mt-2">
+                        <Accordion type="single" collapsible className="border rounded-lg">
+                          <AccordionItem value="posting-settings" className="border-0">
+                            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                              <div className="flex items-center gap-2">
+                                <TikTokIcon className="h-4 w-4" size={16} />
+                                <span className="text-sm font-medium">Posting Settings</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-4 pb-4">
+                              <div className="space-y-4 text-sm">
+                                {/* Privacy Level */}
+                                <div>
+                                  <Label className="font-medium flex items-center gap-1 mb-3">
+                                    Privacy Level:
+                                  </Label>
+                                  <RadioGroup defaultValue="PUBLIC" className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="PUBLIC" id={`public-${index}`} />
+                                      <Label htmlFor={`public-${index}`} className="text-sm">
+                                        Public
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="MUTUAL_FOLLOW_FRIEND" id={`friends-${index}`} />
+                                      <Label htmlFor={`friends-${index}`} className="text-sm">
+                                        Friends
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="SELF_ONLY" id={`only-me-${index}`} />
+                                      <Label htmlFor={`only-me-${index}`} className="text-sm">
+                                        Only me
+                                      </Label>
+                                    </div>
+                                  </RadioGroup>
+                                </div>
+
+                                {/* Interaction Settings */}
+                                <div>
+                                  <Label className="font-medium mb-3 block">
+                                    Interaction Settings
+                                  </Label>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox id={`allow-comments-${index}`} defaultChecked />
+                                    <Label htmlFor={`allow-comments-${index}`} className="text-sm">
+                                      Allow Comments
+                                    </Label>
+                                  </div>
+                                </div>
+
+                                {/* Commercial Content */}
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox id={`commercial-content-${index}`} />
+                                  <Label htmlFor={`commercial-content-${index}`} className="text-sm">
+                                    This content promotes a brand, product or service
+                                  </Label>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Instagram Toggle */}
                   <Tooltip>
