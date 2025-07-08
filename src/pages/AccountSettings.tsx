@@ -120,7 +120,11 @@ const AccountSettings = () => {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'DELETE') {
-      toast.error('Please type "DELETE" to confirm account deletion');
+      toast({
+        title: "Error",
+        description: "Please type 'DELETE' to confirm account deletion",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -129,9 +133,15 @@ const AccountSettings = () => {
 
     try {
       if (!user) {
-        toast.error('No user found');
+        toast({
+          title: "Error",
+          description: "No user found",
+          variant: "destructive"
+        });
         return;
       }
+
+      console.log('User ID to delete:', user.id);
 
       // Delete storage files first (before deleting user data)
       console.log('Deleting storage files...');
@@ -173,14 +183,21 @@ const AccountSettings = () => {
 
       if (deleteError) {
         console.error('Error deleting user data:', deleteError);
-        toast.error('Failed to delete account. Please try again.');
+        toast({
+          title: "Error",
+          description: "Failed to delete account. Please try again.",
+          variant: "destructive"
+        });
         return;
       }
 
       console.log('Account deletion completed successfully');
       
       // Show success message immediately
-      toast.success('Account deleted successfully');
+      toast({
+        title: "Success",
+        description: "Account deleted successfully"
+      });
       
       // Create a function to handle the redirect with timeout
       const handleRedirect = () => {
@@ -227,7 +244,11 @@ const AccountSettings = () => {
       
     } catch (error) {
       console.error('Unexpected error during account deletion:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsDeleting(false);
     }
