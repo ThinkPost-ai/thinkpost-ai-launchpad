@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SignUpFormProps {
   onSuccess?: () => void;
@@ -20,8 +21,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [passwordMatchError, setPasswordMatchError] = useState('');
+  const [signupError, setSignupError] = useState('');
   const { signUp } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   // Password validation function
   const validatePassword = (password: string) => {
@@ -50,32 +54,75 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     // Validate password and set error message
     const error = validatePassword(newPassword);
     setPasswordError(error);
+    
+    // Check password match if confirm password is already filled
+    if (confirmPassword && newPassword !== confirmPassword) {
+      setPasswordMatchError('Passwords do not match');
+    } else {
+      setPasswordMatchError('');
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    
+    // Check if passwords match
+    if (password && password !== newConfirmPassword) {
+      setPasswordMatchError('Passwords do not match');
+    } else {
+      setPasswordMatchError('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSignupError(''); // Clear previous errors
+    
+    console.log('🚀 Starting signup process...', {
+      name,
+      email,
+      passwordLength: password.length,
+      hasConfirmPassword: !!confirmPassword
+    });
     
     // Validate password before submission
     const passwordValidationError = validatePassword(password);
     if (passwordValidationError) {
       setPasswordError(passwordValidationError);
+      console.error('❌ Password validation failed:', passwordValidationError);
       return;
     }
     
+    // Check if passwords match
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      setPasswordMatchError('Passwords do not match');
+      console.error('❌ Passwords do not match');
       return;
     }
     
     setIsLoading(true);
     
-    const { error } = await signUp(email, password, name);
-    
-    setIsLoading(false);
-    
-    if (!error) {
-      // User is now automatically signed in, close the dialog
-      onSuccess?.();
+    try {
+      console.log('📡 Calling signUp function...');
+      const { error } = await signUp(email, password, name);
+      
+      console.log('📡 SignUp response:', { error });
+      
+      if (error) {
+        console.error('❌ Signup error:', error);
+        setSignupError(error.message || 'Failed to create account');
+      } else {
+        console.log('✅ Signup successful! User should be logged in.');
+        // User is now automatically signed in, close the dialog
+        onSuccess?.();
+        navigate('/dashboard'); // Redirect to dashboard after successful signup
+      }
+    } catch (error: any) {
+      console.error('❌ Unexpected signup error:', error);
+      setSignupError(error.message || 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -165,9 +212,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder={t('auth.confirmYourPassword')}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={handleConfirmPasswordChange}
                 required
-                className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 pr-10"
+                className={`border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 pr-10 ${
+                  passwordMatchError ? 'border-red-500 dark:border-red-400' : ''
+                }`}
               />
               <button
                 type="button"
@@ -177,6 +226,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {passwordMatchError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {passwordMatchError}
+              </p>
+            )}
           </div>
 
           <div className="text-xs text-gray-600 dark:text-gray-400 pt-2">
@@ -200,9 +254,17 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             </a>
           </div>
 
+          {signupError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {signupError}
+              </p>
+            </div>
+          )}
+
           <Button
             type="submit"
-            disabled={isLoading || !!passwordError}
+            disabled={isLoading || !!passwordError || !!passwordMatchError}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5 mt-6"
           >
             {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
