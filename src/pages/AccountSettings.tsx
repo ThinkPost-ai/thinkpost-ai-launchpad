@@ -130,26 +130,144 @@ const AccountSettings = () => {
 
     setIsDeleting(true);
     try {
-      // First, delete user's restaurant if it exists
-      if (user?.id) {
-        await supabase
-          .from('restaurants')
-          .delete()
-          .eq('owner_id', user.id);
+      if (!user?.id) {
+        throw new Error('User not found');
       }
 
-      // Delete user's images/products
-      if (user?.id) {
-        await supabase
-          .from('images')
+      console.log('Starting comprehensive account deletion for user:', user.id);
+
+      // Delete in order to respect foreign key constraints
+      
+      // 1. Delete scheduled posts (references products and images)
+      console.log('Deleting scheduled posts...');
+      const { error: scheduledPostsError } = await supabase
+        .from('scheduled_posts')
+        .delete()
+        .eq('user_id', user.id);
+      if (scheduledPostsError) throw scheduledPostsError;
+
+      // 2. Delete products
+      console.log('Deleting products...');
+      const { error: productsError } = await supabase
+        .from('products')
+        .delete()
+        .eq('user_id', user.id);
+      if (productsError) throw productsError;
+
+      // 3. Delete images
+      console.log('Deleting images...');
+      const { error: imagesError } = await supabase
+        .from('images')
+        .delete()
+        .eq('user_id', user.id);
+      if (imagesError) throw imagesError;
+
+      // 4. Delete cars (if user owns showrooms)
+      console.log('Deleting cars from user showrooms...');
+      const { data: userShowrooms } = await supabase
+        .from('showrooms')
+        .select('id')
+        .eq('owner_id', user.id);
+      
+      if (userShowrooms && userShowrooms.length > 0) {
+        const showroomIds = userShowrooms.map(showroom => showroom.id);
+        const { error: carsError } = await supabase
+          .from('cars')
           .delete()
-          .eq('user_id', user.id);
+          .in('showroom_id', showroomIds);
+        if (carsError) throw carsError;
       }
 
-      // Note: Supabase doesn't allow direct user deletion from client-side
-      // The user will be signed out, which effectively removes their access
-      // In a production environment, you'd typically need a server-side function
-      // to properly delete the user account from the auth.users table
+      // 5. Delete showrooms
+      console.log('Deleting showrooms...');
+      const { error: showroomsError } = await supabase
+        .from('showrooms')
+        .delete()
+        .eq('owner_id', user.id);
+      if (showroomsError) throw showroomsError;
+
+      // 6. Delete restaurants
+      console.log('Deleting restaurants...');
+      const { error: restaurantsError } = await supabase
+        .from('restaurants')
+        .delete()
+        .eq('owner_id', user.id);
+      if (restaurantsError) throw restaurantsError;
+
+      // 7. Delete user favorites
+      console.log('Deleting user favorites...');
+      const { error: favoritesError } = await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('user_id', user.id);
+      if (favoritesError) throw favoritesError;
+
+      // 8. Delete OAuth states
+      console.log('Deleting OAuth states...');
+      const { error: tiktokStatesError } = await supabase
+        .from('tiktok_oauth_states')
+        .delete()
+        .eq('user_id', user.id);
+      if (tiktokStatesError) throw tiktokStatesError;
+
+      const { error: instagramStatesError } = await supabase
+        .from('instagram_oauth_states')
+        .delete()
+        .eq('user_id', user.id);
+      if (instagramStatesError) throw instagramStatesError;
+
+      // 9. Delete user profile (contains social media connections)
+      console.log('Deleting user profile...');
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+      if (profileError) throw profileError;
+
+      // 10. Delete storage files (user's uploaded media)
+      console.log('Deleting storage files...');
+      try {
+        // List all files in user's folder
+        const { data: userFiles, error: listError } = await supabase.storage
+          .from('user-uploads')
+          .list(`${user.id}/`);
+
+        if (listError) {
+          console.warn('Error listing user files:', listError);
+        } else if (userFiles && userFiles.length > 0) {
+          // Delete all files in user's folder
+          const filePaths = userFiles.map(file => `${user.id}/${file.name}`);
+          const { error: deleteFilesError } = await supabase.storage
+            .from('user-uploads')
+            .remove(filePaths);
+          
+          if (deleteFilesError) {
+            console.warn('Error deleting storage files:', deleteFilesError);
+          }
+        }
+
+        // Also check for any files in other possible storage locations
+        const storageBuckets = ['product-images', 'user-avatars', 'videos'];
+        for (const bucket of storageBuckets) {
+          try {
+            const { data: bucketFiles } = await supabase.storage
+              .from(bucket)
+              .list(`${user.id}/`);
+            
+            if (bucketFiles && bucketFiles.length > 0) {
+              const filePaths = bucketFiles.map(file => `${user.id}/${file.name}`);
+              await supabase.storage.from(bucket).remove(filePaths);
+            }
+          } catch (bucketError) {
+            console.warn(`Error deleting files from ${bucket}:`, bucketError);
+          }
+        }
+      } catch (storageError) {
+        console.warn('Error during storage cleanup:', storageError);
+        // Don't throw - storage cleanup is best effort
+      }
+
+      console.log('Account deletion completed successfully');
 
       toast({
         title: t('accountSettings.accountDeleted'),
@@ -160,6 +278,7 @@ const AccountSettings = () => {
       await signOut();
       navigate('/');
     } catch (error: any) {
+      console.error('Error during account deletion:', error);
       toast({
         title: t('accountSettings.error'),
         description: error.message || t('accountSettings.failedToDeleteAccount'),
