@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { 
   Edit, 
   Play, 
-  Eye,
-  Heart,
   Wand2,
   Loader2,
   X,
@@ -24,8 +21,6 @@ interface CaptionTableRowProps {
   onRegenerateCaption: (itemId: string, itemType: 'image' | 'product') => void;
   generatingCaption: string | null;
   userCredits: number;
-  mealNames: {[key: string]: string};
-  onUpdateMealName: (itemId: string, mealName: string) => void;
 }
 
 const CaptionTableRow = ({ 
@@ -33,9 +28,7 @@ const CaptionTableRow = ({
   onCaptionUpdate, 
   onRegenerateCaption,
   generatingCaption,
-  userCredits,
-  mealNames,
-  onUpdateMealName
+  userCredits
 }: CaptionTableRowProps) => {
   const { toast } = useToast();
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
@@ -43,20 +36,6 @@ const CaptionTableRow = ({
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      draft: 'secondary',
-      scheduled: 'default',
-      posted: 'outline'
-    } as const;
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
   };
 
   const startEditing = () => {
@@ -159,49 +138,6 @@ const CaptionTableRow = ({
             )}
           </p>
         )}
-      </TableCell>
-      <TableCell>
-        {caption.type === 'product' ? (
-          <div className="space-y-1">
-            {caption.price && (
-              <p className="text-sm font-medium">${caption.price}</p>
-            )}
-            {caption.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {caption.description}
-              </p>
-            )}
-          </div>
-        ) : (
-          <Input
-            value={mealNames[caption.id] || ''}
-            onChange={(e) => onUpdateMealName(caption.id, e.target.value)}
-            placeholder="اسم الوجبة"
-            className="w-32 text-right"
-            dir="rtl"
-          />
-        )}
-      </TableCell>
-      <TableCell>
-        {getStatusBadge(caption.status)}
-      </TableCell>
-      <TableCell>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-pink-500">IG:</span>
-            <Eye className="h-3 w-3" />
-            <span>{caption.social_stats?.instagram_views}</span>
-            <Heart className="h-3 w-3" />
-            <span>{caption.social_stats?.instagram_likes}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-black">TT:</span>
-            <Eye className="h-3 w-3" />
-            <span>{caption.social_stats?.tiktok_views}</span>
-            <Heart className="h-3 w-3" />
-            <span>{caption.social_stats?.tiktok_likes}</span>
-          </div>
-        </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">

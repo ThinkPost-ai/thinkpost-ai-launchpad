@@ -296,6 +296,7 @@ const getTranslations = () => {
       'captions.addProducts': 'Add some products with images to generate AI captions',
       'captions.addFirst': 'Add Your First Product',
       'captions.addMore': 'Add More Content',
+      'captions.schedule': 'Schedule',
 
       // Table Headers
       'table.content': 'Content',
@@ -662,6 +663,7 @@ const getTranslations = () => {
       'captions.addProducts': 'أضف منتجات مع صور لتوليد محتوى بالذكاء الاصطناعي',
       'captions.addFirst': 'أضف أول منتج',
       'captions.addMore': 'إضافة المزيد من المحتوى',
+      'captions.schedule': 'جدولة',
 
       // Table Headers
       'table.content': 'المحتوى',

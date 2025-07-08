@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCaptionData } from './captions/useCaptionData';
@@ -30,7 +30,6 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   } = useCaptionData();
   
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
-  const [mealNames, setMealNames] = useState<{[key: string]: string}>({});
 
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
     // Check credits before attempting to generate
@@ -60,7 +59,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       } else {
         requestBody = { 
           imageId: itemId,
-          mealName: mealNames[itemId] || 'وجبة مميزة'
+          mealName: 'وجبة مميزة'
         };
       }
 
@@ -135,12 +134,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     }
   };
 
-  const updateMealName = (itemId: string, mealName: string) => {
-    setMealNames(prev => ({
-      ...prev,
-      [itemId]: mealName
-    }));
-  };
+
 
   const handleCaptionUpdate = (id: string, newCaption: string) => {
     setCaptions(prev => prev.map(caption =>
@@ -171,11 +165,11 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
               </CardDescription>
             </div>
             <Button 
-              onClick={() => window.location.href = '/upload'}
+              onClick={() => window.location.href = '/schedule'}
               className="bg-gradient-primary hover:opacity-90"
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {t('captions.addMore')}
+              <Calendar className="h-4 w-4 mr-2" />
+              {t('captions.schedule')}
             </Button>
           </div>
         </CardHeader>
@@ -189,9 +183,6 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                   <TableRow>
                     <TableHead>{t('table.content')}</TableHead>
                     <TableHead>{t('table.caption')}</TableHead>
-                    <TableHead>{t('table.details')}</TableHead>
-                    <TableHead>{t('table.status')}</TableHead>
-                    <TableHead>{t('table.performance')}</TableHead>
                     <TableHead>{t('table.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -204,8 +195,6 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                       onRegenerateCaption={regenerateCaption}
                       generatingCaption={generatingCaption}
                       userCredits={userCredits}
-                      mealNames={mealNames}
-                      onUpdateMealName={updateMealName}
                     />
                   ))}
                 </TableBody>
