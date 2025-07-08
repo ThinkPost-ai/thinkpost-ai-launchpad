@@ -192,8 +192,8 @@ export const useProductManagement = () => {
         description: `${products.length} product(s) saved successfully`
       });
 
-      // Redirect to Media tab in user dashboard
-      navigate('/user-dashboard?tab=media');
+      // Redirect to review content page
+      navigate('/review-content');
     } catch (error: any) {
       console.error('Save error:', error);
       toast({
@@ -356,8 +356,8 @@ export const useProductManagement = () => {
         description: `${products.length} product(s) saved and captions generated successfully`
       });
 
-      // Redirect to captions page
-      navigate('/captions');
+      // Redirect to review content page
+      navigate('/review-content');
     } catch (error: any) {
       console.error('Save with captions error:', error);
       toast({

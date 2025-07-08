@@ -80,7 +80,7 @@ const UserDashboard = () => {
 
   // Handle Quick Actions clicks - navigate to dedicated pages
   const handleCaptionsClick = () => {
-    navigate('/captions');
+    navigate('/review-content');
   };
 
   const handleScheduleClick = () => {

@@ -47,7 +47,7 @@ const App = () => {
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/account-settings" element={<AccountSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />
-                  <Route path="/captions" element={<CaptionsPage />} />
+                  <Route path="/review-content" element={<CaptionsPage />} />
                   <Route path="/schedule" element={<SchedulePage />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/terms" element={<Terms />} />

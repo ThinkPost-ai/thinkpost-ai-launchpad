@@ -19,11 +19,48 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const { signUp } = useAuth();
   const { t } = useLanguage();
 
+  // Password validation function
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    
+    if (!hasUpperCase) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    
+    if (!hasLowerCase) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    
+    return '';
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    // Validate password and set error message
+    const error = validatePassword(newPassword);
+    setPasswordError(error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password before submission
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
     
     if (password !== confirmPassword) {
       alert('Passwords do not match');
@@ -94,9 +131,11 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('auth.createStrongPassword')}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required
-                className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 pr-10"
+                className={`border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 pr-10 ${
+                  passwordError ? 'border-red-500 dark:border-red-400' : ''
+                }`}
               />
               <button
                 type="button"
@@ -105,6 +144,14 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+            </div>
+            {passwordError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {passwordError}
+              </p>
+            )}
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Password must be at least 8 characters with one uppercase and one lowercase letter
             </div>
           </div>
 
@@ -134,18 +181,28 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
           <div className="text-xs text-gray-600 dark:text-gray-400 pt-2">
             {t('auth.agreeToTerms')}{' '}
-            <a href="#" className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium">
+            <a 
+              href="https://thinkpost.co/terms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium"
+            >
               {t('auth.termsOfService')}
             </a>{' '}
             {t('auth.and')}{' '}
-            <a href="#" className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium">
+            <a 
+              href="https://thinkpost.co/privacy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-vibrant-purple hover:text-deep-blue dark:text-purple-400 dark:hover:text-purple-300 font-medium"
+            >
               {t('auth.privacyPolicy')}
             </a>
           </div>
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !!passwordError}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5 mt-6"
           >
             {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
