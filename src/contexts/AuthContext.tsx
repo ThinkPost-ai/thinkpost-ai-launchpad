@@ -130,9 +130,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      // User should be automatically confirmed and logged in
-      if (data.user) {
-        console.log('✅ AuthContext: User created and auto-confirmed');
+      if (!data.user) {
+        console.error('❌ AuthContext: No user returned from signup');
+        return { error: { message: 'Failed to create user account' } };
+      }
+
+      // If user was created but no session was returned, sign them in
+      if (!data.session) {
+        console.log('🔄 AuthContext: User created but no session, attempting sign-in...');
+        
+        // Wait for the database trigger to process the user confirmation
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Attempt to sign in with the credentials
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (signInError) {
+          console.error('❌ AuthContext: Auto sign-in failed:', signInError);
+          
+          // If sign-in fails, try to get the current session
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData.session) {
+            console.log('✅ AuthContext: Found existing session after signup');
+            toast({
+              title: "Welcome to ThinkPost!",
+              description: "Your account has been created and you're now signed in."
+            });
+            return { error: null };
+          }
+          
+          return { error: signInError };
+        }
+
+        if (signInData.user && signInData.session) {
+          console.log('✅ AuthContext: Auto sign-in successful');
+          toast({
+            title: "Welcome to ThinkPost!",
+            description: "Your account has been created and you're now signed in."
+          });
+        } else {
+          console.error('❌ AuthContext: Sign-in succeeded but no session created');
+          return { error: { message: 'Failed to create session after signup' } };
+        }
+      } else {
+        // User was created and session exists (immediate confirmation)
+        console.log('✅ AuthContext: User created and auto-confirmed with session');
         toast({
           title: "Welcome to ThinkPost!",
           description: "Your account has been created and you're now signed in."

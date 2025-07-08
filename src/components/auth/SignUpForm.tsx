@@ -116,7 +116,10 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         console.log('✅ Signup successful! User should be logged in.');
         // User is now automatically signed in, close the dialog
         onSuccess?.();
-        navigate('/home'); // Redirect to home after successful signup
+        // Small delay to ensure auth state is updated before navigation
+        setTimeout(() => {
+          navigate('/home');
+        }, 500);
       }
     } catch (error: any) {
       console.error('❌ Unexpected signup error:', error);
@@ -267,7 +270,17 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             disabled={isLoading || !!passwordError || !!passwordMatchError}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5 mt-6"
           >
-            {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating account...
+              </span>
+            ) : (
+              t('auth.createAccount')
+            )}
           </Button>
         </form>
       </CardContent>
