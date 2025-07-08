@@ -116,7 +116,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         console.log('✅ Signup successful! User should be logged in.');
         // User is now automatically signed in, close the dialog
         onSuccess?.();
-        navigate('/dashboard'); // Redirect to dashboard after successful signup
+        navigate('/home'); // Redirect to home after successful signup
       }
     } catch (error: any) {
       console.error('❌ Unexpected signup error:', error);

@@ -130,20 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      // Check if user is immediately confirmed and logged in
-      if (data.user && data.session) {
-        console.log('✅ AuthContext: User immediately confirmed and logged in');
-        toast({
-          title: "Welcome to ThinkPost!",
-          description: "Your account has been created and you're now signed in."
-        });
-      } else if (data.user && !data.user.email_confirmed_at) {
-        console.log('⏳ AuthContext: User created but needs email confirmation');
-        toast({
-          title: "Account created successfully!",
-          description: "Please check your email to confirm your account."
-        });
-      } else {
+      // User should be automatically confirmed and logged in
+      if (data.user) {
         console.log('✅ AuthContext: User created and auto-confirmed');
         toast({
           title: "Welcome to ThinkPost!",
