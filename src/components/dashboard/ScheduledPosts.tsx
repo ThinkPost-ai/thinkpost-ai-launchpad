@@ -78,6 +78,7 @@ const ScheduledPosts = () => {
   const [selectedHour, setSelectedHour] = useState<string>('12');
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
   const [postingNow, setPostingNow] = useState<string | null>(null);
+  const [postsLocked, setPostsLocked] = useState(false);
   
   // New state for TikTok compliance form
   const [showTikTokComplianceForm, setShowTikTokComplianceForm] = useState(false);
@@ -292,6 +293,22 @@ const ScheduledPosts = () => {
     setSelectedPostForCompliance(null);
   };
 
+  const handleReviewedAndSubmitted = () => {
+    setPostsLocked(true);
+    toast({
+      title: "Posts Locked",
+      description: "All scheduled posts have been locked and are no longer editable.",
+    });
+  };
+
+  const handleCancelScheduledPostsAndEdits = () => {
+    setPostsLocked(false);
+    toast({
+      title: "Posts Unlocked",
+      description: "All scheduled posts are now editable again.",
+    });
+  };
+
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
@@ -446,11 +463,11 @@ const ScheduledPosts = () => {
                 {t('schedule.description')}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button 
                 variant="outline"
                 onClick={cancelAllScheduledPosts}
-                disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0}
+                disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0 || postsLocked}
               >
                 {cancellingAll ? (
                   <>
@@ -467,7 +484,7 @@ const ScheduledPosts = () => {
               <Button 
                 className="bg-gradient-primary hover:opacity-90"
                 onClick={scheduleAutomaticPosts}
-                disabled={scheduling}
+                disabled={scheduling || postsLocked}
               >
                 {scheduling ? (
                   <>
@@ -508,6 +525,31 @@ const ScheduledPosts = () => {
                         DayContent: DayContent
                       }}
                     />
+                    
+                    {/* Lock/Unlock Buttons - Only show if there are scheduled posts */}
+                    {scheduledPosts.filter(p => p.status === 'scheduled').length > 0 && (
+                      <div className="mt-4 flex flex-col gap-2">
+                        {!postsLocked ? (
+                          <Button 
+                            variant="default"
+                            onClick={handleReviewedAndSubmitted}
+                            className="bg-green-600 hover:bg-green-700 w-full"
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {t('schedule.reviewedAndSubmitted')}
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline"
+                            onClick={handleCancelScheduledPostsAndEdits}
+                            className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:hover:text-red-300 w-full"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            {t('schedule.cancelScheduledPostsAndEdits')}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -554,7 +596,7 @@ const ScheduledPosts = () => {
                                     size="sm" 
                                     className="bg-gradient-primary hover:opacity-90"
                                     onClick={() => startTikTokComplianceFlow(post)}
-                                    disabled={postingNow === post.id}
+                                    disabled={postingNow === post.id || postsLocked}
                                   >
                                     {postingNow === post.id ? (
                                       <>
@@ -573,6 +615,7 @@ const ScheduledPosts = () => {
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => startEditDate(post)}
+                                  disabled={postsLocked}
                                 >
                                   <Edit className="h-3 w-3 mr-1" />
                                   {t('schedule.editDate')}
@@ -581,6 +624,7 @@ const ScheduledPosts = () => {
                                   size="sm" 
                                   variant="destructive"
                                   onClick={() => deletePost(post.id)}
+                                  disabled={postsLocked}
                                 >
                                   {t('schedule.delete')}
                                 </Button>

@@ -416,6 +416,8 @@ const getTranslations = () => {
       'schedule.dailyView': 'Daily View',
       'schedule.weeklyView': 'Weekly View',
       'schedule.calendar': 'Calendar',
+      'schedule.reviewedAndSubmitted': 'Reviewed and Submitted',
+      'schedule.cancelScheduledPostsAndEdits': 'Cancel Scheduled Posts and Edits',
 
       // Notifications
       'notifications.title': 'Notifications',
@@ -783,6 +785,8 @@ const getTranslations = () => {
       'schedule.dailyView': 'العرض اليومي',
       'schedule.weeklyView': 'العرض الأسبوعي',
       'schedule.calendar': 'التقويم',
+      'schedule.reviewedAndSubmitted': 'تمت المراجعة والإرسال',
+      'schedule.cancelScheduledPostsAndEdits': 'إلغاء جدولة المشاركات والتعديلات',
 
       // Notifications
       'notifications.title': 'الإشعارات',
