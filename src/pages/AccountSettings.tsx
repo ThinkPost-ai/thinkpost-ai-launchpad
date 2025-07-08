@@ -216,15 +216,7 @@ const AccountSettings = () => {
         .eq('user_id', user.id);
       if (instagramStatesError) throw instagramStatesError;
 
-      // 9. Delete user profile (contains social media connections)
-      console.log('Deleting user profile...');
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-      if (profileError) throw profileError;
-
-      // 10. Delete storage files (user's uploaded media)
+      // 9. Delete storage files (user's uploaded media)
       console.log('Deleting storage files...');
       try {
         // List all files in user's folder
@@ -267,15 +259,29 @@ const AccountSettings = () => {
         // Don't throw - storage cleanup is best effort
       }
 
+      // 10. Show success message before signing out
       console.log('Account deletion completed successfully');
-
       toast({
         title: t('accountSettings.accountDeleted'),
         description: t('accountSettings.accountDeletedDescription'),
       });
 
-      // Sign out and redirect
+      // 11. Sign out user BEFORE deleting profile (to avoid auth session issues)
+      console.log('Signing out user...');
       await signOut();
+
+      // 12. Delete user profile (this happens after sign out to avoid session conflicts)
+      console.log('Deleting user profile...');
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+      if (profileError) {
+        console.warn('Error deleting profile after sign out:', profileError);
+        // Don't throw - user is already signed out
+      }
+
+      // Redirect to home
       navigate('/');
     } catch (error: any) {
       console.error('Error during account deletion:', error);
