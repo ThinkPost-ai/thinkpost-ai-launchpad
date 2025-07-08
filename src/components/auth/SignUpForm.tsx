@@ -111,6 +111,14 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       if (error) {
         console.error('❌ Signup error:', error);
+        
+        // Handle special case where account was created but auto sign-in failed
+        if (error.message === 'ACCOUNT_CREATED_SIGNIN_REQUIRED') {
+          // Account was created successfully, but user needs to sign in manually
+          onSuccess?.();
+          return;
+        }
+        
         setSignupError(error.message || 'Failed to create account');
       } else {
         console.log('✅ Signup successful! User should be logged in.');

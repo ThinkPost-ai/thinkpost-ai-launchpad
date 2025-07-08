@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      console.log('🚀 AuthContext: Starting signup process...', { email, fullName });
+      console.log('🚀 AuthContext: Starting signup process...', { email, fullName, passwordLength: password.length });
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -122,11 +122,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } : null,
           session: data.session ? 'session_exists' : null
         } : null,
-        error 
+        error: error ? {
+          message: error.message,
+          status: error.status
+        } : null
       });
 
       if (error) {
         console.error('❌ AuthContext: Signup error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('already registered')) {
+          return { error: { message: 'Email already exists. Please log in or reset your password.' } };
+        }
+        
         return { error };
       }
 
@@ -138,42 +147,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If user was created but no session was returned, sign them in
       if (!data.session) {
         console.log('🔄 AuthContext: User created but no session, attempting sign-in...');
+        console.log('🔄 AuthContext: Using credentials - email:', email, 'password length:', password.length);
         
-        // Wait for the database trigger to process the user confirmation
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Wait longer for the database trigger to process the user confirmation
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Attempt to sign in with the credentials
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+        // Try multiple sign-in attempts with different approaches
+        let signInSuccess = false;
+        let lastError = null;
+        
+        // First attempt: Normal sign-in
+        try {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password: password
+          });
 
-        if (signInError) {
-          console.error('❌ AuthContext: Auto sign-in failed:', signInError);
-          
-          // If sign-in fails, try to get the current session
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData.session) {
-            console.log('✅ AuthContext: Found existing session after signup');
-            toast({
-              title: "Welcome to ThinkPost!",
-              description: "Your account has been created and you're now signed in."
-            });
-            return { error: null };
+          if (!signInError && signInData.user && signInData.session) {
+            console.log('✅ AuthContext: Auto sign-in successful on first attempt');
+            signInSuccess = true;
+          } else {
+            lastError = signInError;
+            console.log('❌ AuthContext: First sign-in attempt failed:', signInError);
           }
-          
-          return { error: signInError };
+        } catch (err) {
+          lastError = err;
+          console.log('❌ AuthContext: First sign-in attempt threw error:', err);
         }
 
-        if (signInData.user && signInData.session) {
-          console.log('✅ AuthContext: Auto sign-in successful');
+        // Second attempt: Try after another delay if first failed
+        if (!signInSuccess) {
+          console.log('🔄 AuthContext: Trying second sign-in attempt...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          try {
+            const { data: signInData2, error: signInError2 } = await supabase.auth.signInWithPassword({
+              email: email.trim().toLowerCase(),
+              password: password
+            });
+
+            if (!signInError2 && signInData2.user && signInData2.session) {
+              console.log('✅ AuthContext: Auto sign-in successful on second attempt');
+              signInSuccess = true;
+            } else {
+              lastError = signInError2;
+              console.log('❌ AuthContext: Second sign-in attempt failed:', signInError2);
+            }
+          } catch (err) {
+            lastError = err;
+            console.log('❌ AuthContext: Second sign-in attempt threw error:', err);
+          }
+        }
+
+        if (!signInSuccess) {
+          console.error('❌ AuthContext: All auto sign-in attempts failed');
+          
+          // Check if user was actually created and confirmed
+          // Since we can't query auth.users directly, we'll assume the user was created
+          // and provide a helpful message
+          toast({
+            title: "Account Created Successfully!",
+            description: "Your account has been created. Please sign in with your credentials.",
+            variant: "default"
+          });
+          return { error: { message: 'ACCOUNT_CREATED_SIGNIN_REQUIRED' } };
+        }
+
+        if (signInSuccess) {
           toast({
             title: "Welcome to ThinkPost!",
             description: "Your account has been created and you're now signed in."
           });
-        } else {
-          console.error('❌ AuthContext: Sign-in succeeded but no session created');
-          return { error: { message: 'Failed to create session after signup' } };
         }
       } else {
         // User was created and session exists (immediate confirmation)
