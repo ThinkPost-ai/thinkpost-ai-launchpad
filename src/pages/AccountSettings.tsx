@@ -120,176 +120,114 @@ const AccountSettings = () => {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'DELETE') {
-      toast({
-        title: t('accountSettings.error'),
-        description: t('accountSettings.deleteConfirmationError'),
-        variant: "destructive"
-      });
+      toast.error('Please type "DELETE" to confirm account deletion');
       return;
     }
 
     setIsDeleting(true);
+    console.log('Starting account deletion process...');
+
     try {
-      if (!user?.id) {
-        throw new Error('User not found');
+      if (!user) {
+        toast.error('No user found');
+        return;
       }
 
-      console.log('Starting comprehensive account deletion for user:', user.id);
-
-      // Delete in order to respect foreign key constraints
-      
-      // 1. Delete scheduled posts (references products and images)
-      console.log('Deleting scheduled posts...');
-      const { error: scheduledPostsError } = await supabase
-        .from('scheduled_posts')
-        .delete()
-        .eq('user_id', user.id);
-      if (scheduledPostsError) throw scheduledPostsError;
-
-      // 2. Delete products
-      console.log('Deleting products...');
-      const { error: productsError } = await supabase
-        .from('products')
-        .delete()
-        .eq('user_id', user.id);
-      if (productsError) throw productsError;
-
-      // 3. Delete images
-      console.log('Deleting images...');
-      const { error: imagesError } = await supabase
-        .from('images')
-        .delete()
-        .eq('user_id', user.id);
-      if (imagesError) throw imagesError;
-
-      // 4. Delete cars (if user owns showrooms)
-      console.log('Deleting cars from user showrooms...');
-      const { data: userShowrooms } = await supabase
-        .from('showrooms')
-        .select('id')
-        .eq('owner_id', user.id);
-      
-      if (userShowrooms && userShowrooms.length > 0) {
-        const showroomIds = userShowrooms.map(showroom => showroom.id);
-        const { error: carsError } = await supabase
-          .from('cars')
-          .delete()
-          .in('showroom_id', showroomIds);
-        if (carsError) throw carsError;
-      }
-
-      // 5. Delete showrooms
-      console.log('Deleting showrooms...');
-      const { error: showroomsError } = await supabase
-        .from('showrooms')
-        .delete()
-        .eq('owner_id', user.id);
-      if (showroomsError) throw showroomsError;
-
-      // 6. Delete restaurants
-      console.log('Deleting restaurants...');
-      const { error: restaurantsError } = await supabase
-        .from('restaurants')
-        .delete()
-        .eq('owner_id', user.id);
-      if (restaurantsError) throw restaurantsError;
-
-      // 7. Delete user favorites
-      console.log('Deleting user favorites...');
-      const { error: favoritesError } = await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('user_id', user.id);
-      if (favoritesError) throw favoritesError;
-
-      // 8. Delete OAuth states
-      console.log('Deleting OAuth states...');
-      const { error: tiktokStatesError } = await supabase
-        .from('tiktok_oauth_states')
-        .delete()
-        .eq('user_id', user.id);
-      if (tiktokStatesError) throw tiktokStatesError;
-
-      const { error: instagramStatesError } = await supabase
-        .from('instagram_oauth_states')
-        .delete()
-        .eq('user_id', user.id);
-      if (instagramStatesError) throw instagramStatesError;
-
-      // 9. Delete storage files (user's uploaded media)
+      // Delete storage files first (before deleting user data)
       console.log('Deleting storage files...');
       try {
-        // List all files in user's folder
-        const { data: userFiles, error: listError } = await supabase.storage
-          .from('user-uploads')
-          .list(`${user.id}/`);
-
-        if (listError) {
-          console.warn('Error listing user files:', listError);
-        } else if (userFiles && userFiles.length > 0) {
-          // Delete all files in user's folder
-          const filePaths = userFiles.map(file => `${user.id}/${file.name}`);
-          const { error: deleteFilesError } = await supabase.storage
-            .from('user-uploads')
-            .remove(filePaths);
-          
-          if (deleteFilesError) {
-            console.warn('Error deleting storage files:', deleteFilesError);
-          }
-        }
-
-        // Also check for any files in other possible storage locations
-        const storageBuckets = ['product-images', 'user-avatars', 'videos'];
-        for (const bucket of storageBuckets) {
+        // List and delete files from user's folder in different buckets
+        const buckets = ['user-uploads', 'product-images', 'user-avatars', 'videos'];
+        
+        for (const bucketName of buckets) {
           try {
-            const { data: bucketFiles } = await supabase.storage
-              .from(bucket)
-              .list(`${user.id}/`);
+            const { data: files } = await supabase.storage
+              .from(bucketName)
+              .list(user.id);
             
-            if (bucketFiles && bucketFiles.length > 0) {
-              const filePaths = bucketFiles.map(file => `${user.id}/${file.name}`);
-              await supabase.storage.from(bucket).remove(filePaths);
+            if (files && files.length > 0) {
+              const filePaths = files.map(file => `${user.id}/${file.name}`);
+              const { error: deleteError } = await supabase.storage
+                .from(bucketName)
+                .remove(filePaths);
+              
+              if (deleteError) {
+                console.error(`Error deleting files from ${bucketName}:`, deleteError);
+              } else {
+                console.log(`Successfully deleted ${files.length} files from ${bucketName}`);
+              }
             }
           } catch (bucketError) {
-            console.warn(`Error deleting files from ${bucket}:`, bucketError);
+            console.error(`Error accessing bucket ${bucketName}:`, bucketError);
           }
         }
       } catch (storageError) {
-        console.warn('Error during storage cleanup:', storageError);
-        // Don't throw - storage cleanup is best effort
+        console.error('Error deleting storage files:', storageError);
       }
 
-      // 10. Show success message before signing out
+      // Call the database function to delete user and all associated data
+      console.log('Calling database function to delete user and data...');
+      const { error: deleteError } = await supabase.rpc('delete_user_and_data', {
+        user_id_to_delete: user.id
+      });
+
+      if (deleteError) {
+        console.error('Error deleting user data:', deleteError);
+        toast.error('Failed to delete account. Please try again.');
+        return;
+      }
+
       console.log('Account deletion completed successfully');
-      toast({
-        title: t('accountSettings.accountDeleted'),
-        description: t('accountSettings.accountDeletedDescription'),
-      });
-
-      // 11. Sign out user BEFORE deleting profile (to avoid auth session issues)
-      console.log('Signing out user...');
-      await signOut();
-
-      // 12. Delete user profile (this happens after sign out to avoid session conflicts)
-      console.log('Deleting user profile...');
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-      if (profileError) {
-        console.warn('Error deleting profile after sign out:', profileError);
-        // Don't throw - user is already signed out
+      
+      // Show success message immediately
+      toast.success('Account deleted successfully');
+      
+      // Create a function to handle the redirect with timeout
+      const handleRedirect = () => {
+        console.log('Redirecting to home page...');
+        navigate('/', { replace: true });
+        
+        // Additional cleanup - clear any local storage items
+        try {
+          localStorage.removeItem('supabase.auth.token');
+          localStorage.removeItem('sb-' + supabase.supabaseUrl.split('//')[1] + '-auth-token');
+          sessionStorage.clear();
+        } catch (e) {
+          console.error('Error clearing storage:', e);
+        }
+      };
+      
+      // Try to sign out, but don't wait too long
+      try {
+        console.log('Clearing session data...');
+        
+        // Set a timeout to ensure redirect happens
+        const redirectTimeout = setTimeout(handleRedirect, 2000);
+        
+        // Try to sign out
+        await Promise.race([
+          supabase.auth.signOut(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500))
+        ]);
+        
+        // Clear the timeout if sign out was successful
+        clearTimeout(redirectTimeout);
+        
+        // Call the signOut function from context
+        await signOut();
+        
+        // Redirect immediately after successful sign out
+        handleRedirect();
+        
+      } catch (signOutError) {
+        console.error('Error during sign out:', signOutError);
+        // Still redirect even if sign out fails
+        handleRedirect();
       }
-
-      // Redirect to home
-      navigate('/');
-    } catch (error: any) {
-      console.error('Error during account deletion:', error);
-      toast({
-        title: t('accountSettings.error'),
-        description: error.message || t('accountSettings.failedToDeleteAccount'),
-        variant: "destructive"
-      });
+      
+    } catch (error) {
+      console.error('Unexpected error during account deletion:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsDeleting(false);
     }

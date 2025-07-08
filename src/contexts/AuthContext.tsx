@@ -101,10 +101,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      console.log('🚀 AuthContext: Starting signup process...', { email, fullName, passwordLength: password.length });
+      // Normalize email consistently
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      console.log('🚀 AuthContext: Starting signup process...', { 
+        originalEmail: email,
+        normalizedEmail, 
+        fullName, 
+        passwordLength: password.length 
+      });
       
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {
@@ -147,77 +155,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If user was created but no session was returned, sign them in
       if (!data.session) {
         console.log('🔄 AuthContext: User created but no session, attempting sign-in...');
-        console.log('🔄 AuthContext: Using credentials - email:', email, 'password length:', password.length);
+        console.log('🔄 AuthContext: Using credentials - email:', normalizedEmail, 'password length:', password.length);
         
-        // Wait longer for the database trigger to process the user confirmation
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Wait for the database trigger to process the user confirmation
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Try multiple sign-in attempts with different approaches
-        let signInSuccess = false;
-        let lastError = null;
-        
-        // First attempt: Normal sign-in
+        // Try to sign in with the same normalized email
         try {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: email.trim().toLowerCase(),
+            email: normalizedEmail,
             password: password
           });
 
           if (!signInError && signInData.user && signInData.session) {
-            console.log('✅ AuthContext: Auto sign-in successful on first attempt');
-            signInSuccess = true;
+            console.log('✅ AuthContext: Auto sign-in successful');
+            toast({
+              title: "Welcome to ThinkPost!",
+              description: "Your account has been created and you're now signed in."
+            });
+            return { error: null };
           } else {
-            lastError = signInError;
-            console.log('❌ AuthContext: First sign-in attempt failed:', signInError);
+            console.log('❌ AuthContext: Auto sign-in failed:', signInError);
+            
+            // Account was created but auto sign-in failed
+            toast({
+              title: "Account Created Successfully!",
+              description: "Your account has been created. Please sign in with your credentials.",
+              variant: "default"
+            });
+            return { error: { message: 'ACCOUNT_CREATED_SIGNIN_REQUIRED' } };
           }
         } catch (err) {
-          lastError = err;
-          console.log('❌ AuthContext: First sign-in attempt threw error:', err);
-        }
-
-        // Second attempt: Try after another delay if first failed
-        if (!signInSuccess) {
-          console.log('🔄 AuthContext: Trying second sign-in attempt...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log('❌ AuthContext: Auto sign-in threw error:', err);
           
-          try {
-            const { data: signInData2, error: signInError2 } = await supabase.auth.signInWithPassword({
-              email: email.trim().toLowerCase(),
-              password: password
-            });
-
-            if (!signInError2 && signInData2.user && signInData2.session) {
-              console.log('✅ AuthContext: Auto sign-in successful on second attempt');
-              signInSuccess = true;
-            } else {
-              lastError = signInError2;
-              console.log('❌ AuthContext: Second sign-in attempt failed:', signInError2);
-            }
-          } catch (err) {
-            lastError = err;
-            console.log('❌ AuthContext: Second sign-in attempt threw error:', err);
-          }
-        }
-
-        if (!signInSuccess) {
-          console.error('❌ AuthContext: All auto sign-in attempts failed');
-          
-          // Check if user was actually created and confirmed
-          // Since we can't query auth.users directly, we'll assume the user was created
-          // and provide a helpful message
+          // Account was created but auto sign-in failed
           toast({
             title: "Account Created Successfully!",
             description: "Your account has been created. Please sign in with your credentials.",
             variant: "default"
           });
           return { error: { message: 'ACCOUNT_CREATED_SIGNIN_REQUIRED' } };
-        }
-
-        if (signInSuccess) {
-          toast({
-            title: "Welcome to ThinkPost!",
-            description: "Your account has been created and you're now signed in."
-          });
         }
       } else {
         // User was created and session exists (immediate confirmation)
@@ -237,16 +214,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      // Normalize email consistently
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      console.log('🚀 AuthContext: Starting signin process...', { 
+        originalEmail: email,
+        normalizedEmail, 
+        passwordLength: password.length 
+      });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
         password
       });
 
+      console.log('📡 AuthContext: Supabase signIn response:', { 
+        data: data ? {
+          user: data.user ? {
+            id: data.user.id,
+            email: data.user.email
+          } : null,
+          session: data.session ? 'session_exists' : null
+        } : null,
+        error: error ? {
+          message: error.message,
+          status: error.status
+        } : null
+      });
+
       if (error) {
-        // Don't show toast here, let the form handle it
+        console.error('❌ AuthContext: Signin error:', error);
         return { error };
       }
 
+      console.log('✅ AuthContext: Signin successful');
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully."
@@ -254,6 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
+      console.error('❌ AuthContext: Unexpected signin error:', error);
       return { error };
     }
   };

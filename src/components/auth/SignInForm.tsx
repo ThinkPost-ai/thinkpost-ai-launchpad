@@ -28,11 +28,21 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
     setError(null);
     setNeedsEmailConfirmation(false);
     
+    console.log('🚀 SignInForm: Starting signin process...', { 
+      email, 
+      normalizedEmail: email.trim().toLowerCase(),
+      passwordLength: password.length 
+    });
+    
     const { error: signInError } = await signIn(email, password);
+    
+    console.log('📡 SignInForm: SignIn response:', { error: signInError });
     
     setIsLoading(false);
     
     if (signInError) {
+      console.error('❌ SignInForm: Signin error:', signInError);
+      
       if (signInError.message.includes('Email not confirmed')) {
         setNeedsEmailConfirmation(true);
         setError(t('auth.checkEmailConfirmation'));
@@ -42,6 +52,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
         setError(signInError.message);
       }
     } else {
+      console.log('✅ SignInForm: Signin successful');
       onSuccess?.();
     }
   };
