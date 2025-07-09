@@ -102,9 +102,14 @@ serve(async (req) => {
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
 
+    // If no auth header and we have a scheduledPostId, use service role for database access
+    const supabaseKey = authHeader ? 
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '' : 
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '', // Use anon key for client-side functionality
+      supabaseKey,
       {
         global: {
           headers: authHeader ? { Authorization: authHeader } : {},
