@@ -39,7 +39,6 @@ import { useToast } from '@/hooks/use-toast';
 import { DayContentProps } from 'react-day-picker';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import TikTokCompliancePostForm from './TikTokCompliancePostForm';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
 interface ScheduledPost {
@@ -52,6 +51,9 @@ interface ScheduledPost {
   status: 'scheduled' | 'posted' | 'failed';
   image_path?: string;
   product_name?: string;
+  video_url?: string;
+  image_url?: string;
+  video_path?: string;
   tiktok_settings?: {
     enabled: boolean;
     privacyLevel: string;
@@ -88,10 +90,6 @@ const ScheduledPosts = () => {
   const [postingNow, setPostingNow] = useState<string | null>(null);
   const [postsLocked, setPostsLocked] = useState(false);
   
-  // New state for TikTok compliance form
-  const [showTikTokComplianceForm, setShowTikTokComplianceForm] = useState(false);
-  const [selectedPostForCompliance, setSelectedPostForCompliance] = useState<ScheduledPost | null>(null);
-
   useEffect(() => {
     if (user) {
       fetchScheduledPosts();
@@ -131,6 +129,9 @@ const ScheduledPosts = () => {
         status: post.status as 'scheduled' | 'posted' | 'failed',
         image_path: post.products?.image_path || post.images?.file_path,
         product_name: post.products?.name,
+        video_url: post.video_url,
+        image_url: post.image_url,
+        video_path: post.video_path,
         // Include TikTok settings if available
         tiktok_settings: post.products ? {
           enabled: post.products.tiktok_enabled,
@@ -303,20 +304,126 @@ const ScheduledPosts = () => {
     }
   };
 
-  const startTikTokComplianceFlow = (post: ScheduledPost) => {
-    setSelectedPostForCompliance(post);
-    setShowTikTokComplianceForm(true);
-  };
+  // Direct TikTok posting function using stored settings
+  const postToTikTokDirectly = async (post: ScheduledPost) => {
+    try {
+      setPostingNow(post.id);
+      
+      toast({
+        title: "Posting to TikTok",
+        description: "Uploading your content to TikTok...",
+      });
 
-  const handleTikTokPostSuccess = async () => {
-    setShowTikTokComplianceForm(false);
-    setSelectedPostForCompliance(null);
-    await fetchScheduledPosts();
-  };
+      // Get TikTok settings from the post's associated product
+      let tiktokSettings = post.tiktok_settings;
+      
+      // If no TikTok settings on the post, fetch from the product
+      if (!tiktokSettings && post.product_id) {
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('tiktok_enabled, tiktok_privacy_level, tiktok_allow_comments, tiktok_commercial_content, tiktok_your_brand, tiktok_branded_content')
+          .eq('id', post.product_id)
+          .single();
 
-  const handleTikTokComplianceCancel = () => {
-    setShowTikTokComplianceForm(false);
-    setSelectedPostForCompliance(null);
+        if (productError) {
+          throw new Error('Failed to fetch product TikTok settings');
+        }
+
+        if (productData && productData.tiktok_enabled) {
+          tiktokSettings = {
+            enabled: productData.tiktok_enabled,
+            privacyLevel: productData.tiktok_privacy_level || 'public',
+            allowComments: productData.tiktok_allow_comments || true,
+            commercialContent: productData.tiktok_commercial_content || false,
+            yourBrand: productData.tiktok_your_brand || false,
+            brandedContent: productData.tiktok_branded_content || false,
+          };
+        }
+      }
+
+      // Use default settings if no TikTok settings found
+      if (!tiktokSettings) {
+        tiktokSettings = {
+          enabled: true,
+          privacyLevel: 'public',
+          allowComments: true,
+          commercialContent: false,
+          yourBrand: false,
+          brandedContent: false,
+        };
+      }
+
+      // Map privacy level from frontend format to TikTok API format
+      const privacyMapping: { [key: string]: string } = {
+        'public': 'PUBLIC_TO_EVERYONE',
+        'friends': 'MUTUAL_FOLLOW_FRIENDS',
+        'only_me': 'SELF_ONLY'
+      };
+
+      // Get the media URL - check for video first, then image, then fallback to product image
+      let finalMediaUrl = '';
+      
+      // Check for direct video or image URLs first
+      if (post.video_url) {
+        finalMediaUrl = post.video_url;
+      } else if (post.image_url) {
+        finalMediaUrl = post.image_url;
+      } else if (post.video_path) {
+        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.video_path}`;
+      } else if (post.image_path) {
+        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`;
+      }
+
+      if (!finalMediaUrl) {
+        throw new Error('No media URL found for this post');
+      }
+
+      // Prepare the request body with stored settings
+      const requestBody: any = {
+        scheduledPostId: post.id,
+        videoUrl: finalMediaUrl,
+        privacyLevel: privacyMapping[tiktokSettings.privacyLevel] || 'PUBLIC_TO_EVERYONE',
+        allowComment: tiktokSettings.allowComments,
+        allowDuet: true, // Default to true, can be enhanced to store this setting
+        allowStitch: true, // Default to true, can be enhanced to store this setting
+        commercialContent: tiktokSettings.commercialContent,
+        yourBrand: tiktokSettings.yourBrand,
+        brandedContent: tiktokSettings.brandedContent,
+      };
+
+      // Add caption as title
+      if (post.caption && post.caption.trim()) {
+        requestBody.title = post.caption.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke('post-to-tiktok', {
+        body: requestBody,
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast({
+        title: "Posted to TikTok!",
+        description: "Your post has been successfully published to TikTok",
+      });
+
+      // Refresh the posts list
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      console.error('Error posting to TikTok:', error);
+      toast({
+        title: "Posting Failed",
+        description: error.message || "Failed to post to TikTok",
+        variant: "destructive"
+      });
+    } finally {
+      setPostingNow(null);
+    }
   };
 
   const handleReviewedAndSubmitted = () => {
@@ -621,7 +728,7 @@ const ScheduledPosts = () => {
                                   <Button 
                                     size="sm" 
                                     className="bg-gradient-primary hover:opacity-90"
-                                    onClick={() => startTikTokComplianceFlow(post)}
+                                    onClick={() => postToTikTokDirectly(post)}
                                     disabled={postingNow === post.id || postsLocked}
                                   >
                                     {postingNow === post.id ? (
@@ -798,25 +905,6 @@ const ScheduledPosts = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* TikTok Compliance Form */}
-      <Dialog open={showTikTokComplianceForm} onOpenChange={setShowTikTokComplianceForm}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>TikTok Compliance Settings</DialogTitle>
-            <DialogDescription>
-              Configure your post according to TikTok's Content Sharing Guidelines
-            </DialogDescription>
-          </DialogHeader>
-          {selectedPostForCompliance && (
-            <TikTokCompliancePostForm
-              post={selectedPostForCompliance}
-              onPostSuccess={handleTikTokPostSuccess}
-              onCancel={handleTikTokComplianceCancel}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>
