@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
@@ -89,6 +90,13 @@ const ScheduledPosts = () => {
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
   const [postingNow, setPostingNow] = useState<string | null>(null);
   const [postsLocked, setPostsLocked] = useState(false);
+  const [showSchedulingModal, setShowSchedulingModal] = useState(false);
+  const [schedulingPreferences, setSchedulingPreferences] = useState({
+    days: '4-weekly' as '2-weekly' | '4-weekly' | 'daily' | 'custom' | 'every-x',
+    customDays: [] as string[],
+    everyXDays: 3,
+    timeSlot: 'morning' as 'morning' | 'lunch' | 'evening' | 'night' | 'random'
+  });
   
   useEffect(() => {
     if (user) {
@@ -226,6 +234,86 @@ const ScheduledPosts = () => {
     return schedule;
   };
 
+  const generateScheduleWithPreferences = () => {
+    const schedule = [];
+    const now = new Date();
+    const startDate = new Date(now.getTime() + (2 * 60 * 60 * 1000)); // Start 2 hours from now
+    
+    // Time slot mappings
+    const timeSlotRanges = {
+      morning: { start: 7, end: 9 },
+      lunch: { start: 12, end: 14 },
+      evening: { start: 16, end: 18 },
+      night: { start: 19, end: 23 }
+    };
+
+    let currentDate = new Date(startDate);
+    let postsGenerated = 0;
+    const maxPosts = 28; // Generate up to 28 posts
+
+    while (postsGenerated < maxPosts) {
+      let shouldScheduleToday = false;
+
+      // Determine if we should schedule on this day based on preferences
+      switch (schedulingPreferences.days) {
+        case '2-weekly':
+          // Schedule 2 days per week (e.g., Monday and Thursday)
+          shouldScheduleToday = currentDate.getDay() === 1 || currentDate.getDay() === 4;
+          break;
+        case '4-weekly':
+          // Schedule 4 days per week (Monday, Tuesday, Thursday, Friday)
+          shouldScheduleToday = [1, 2, 4, 5].includes(currentDate.getDay());
+          break;
+        case 'daily':
+          shouldScheduleToday = true;
+          break;
+        case 'custom':
+          // Check if current day is in custom selected days
+          const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          shouldScheduleToday = schedulingPreferences.customDays.includes(dayNames[currentDate.getDay()]);
+          break;
+        case 'every-x':
+          // Schedule every X days
+          const daysDiff = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          shouldScheduleToday = daysDiff % schedulingPreferences.everyXDays === 0;
+          break;
+      }
+
+      if (shouldScheduleToday) {
+        if (postsGenerated >= maxPosts) return;
+        
+        const scheduleDate = new Date(currentDate);
+        let selectedTimeSlot = schedulingPreferences.timeSlot;
+        
+        // If random is selected, pick a random time slot for this post
+        if (selectedTimeSlot === 'random') {
+          const timeSlotOptions = ['morning', 'lunch', 'evening', 'night'];
+          selectedTimeSlot = timeSlotOptions[Math.floor(Math.random() * timeSlotOptions.length)] as keyof typeof timeSlotRanges;
+        }
+        
+        const timeRange = timeSlotRanges[selectedTimeSlot as keyof typeof timeSlotRanges];
+        
+        // Random time within the slot
+        const randomHour = Math.floor(Math.random() * (timeRange.end - timeRange.start)) + timeRange.start;
+        const randomMinute = Math.floor(Math.random() * 60);
+        
+        scheduleDate.setHours(randomHour, randomMinute, 0, 0);
+        schedule.push(scheduleDate);
+        postsGenerated++;
+      }
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+      
+      // Safety break after 60 days
+      if (currentDate.getTime() - startDate.getTime() > 60 * 24 * 60 * 60 * 1000) {
+        break;
+      }
+    }
+
+    return schedule;
+  };
+
   const scheduleAutomaticPosts = async () => {
     setScheduling(true);
 
@@ -241,7 +329,7 @@ const ScheduledPosts = () => {
         return;
       }
 
-      const schedule = generateSchedule();
+      const schedule = generateScheduleWithPreferences();
 
       const postsToCreate = schedule.map((date, index) => {
         const mediaItem = mediaItems[index % mediaItems.length];
@@ -308,6 +396,11 @@ const ScheduledPosts = () => {
     } finally {
       setCancellingAll(false);
     }
+  };
+
+  const handleSchedulingConfirm = async () => {
+    setShowSchedulingModal(false);
+    await scheduleAutomaticPosts();
   };
 
   // Direct TikTok posting function using stored settings
@@ -622,7 +715,7 @@ const ScheduledPosts = () => {
               </Button>
               <Button 
                 className="bg-gradient-primary hover:opacity-90"
-                onClick={scheduleAutomaticPosts}
+                onClick={() => setShowSchedulingModal(true)}
                 disabled={scheduling || postsLocked}
               >
                 {scheduling ? (
@@ -911,10 +1004,192 @@ const ScheduledPosts = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+                  </DialogContent>
+        </Dialog>
+
+        {/* Scheduling Preferences Modal */}
+        <Dialog open={showSchedulingModal} onOpenChange={setShowSchedulingModal}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{t('schedule.preferences.title')}</DialogTitle>
+              <DialogDescription>
+                {t('schedule.preferences.description')}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Scheduling Days */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium">{t('schedule.preferences.days')}</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="2-weekly"
+                      name="schedulingDays"
+                      checked={schedulingPreferences.days === '2-weekly'}
+                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: '2-weekly' }))}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="2-weekly" className="text-sm font-medium">
+                      {t('schedule.preferences.days.2weekly')}
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="4-weekly"
+                      name="schedulingDays"
+                      checked={schedulingPreferences.days === '4-weekly'}
+                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: '4-weekly' }))}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="4-weekly" className="text-sm font-medium">
+                      {t('schedule.preferences.days.4weekly')}
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="daily"
+                      name="schedulingDays"
+                      checked={schedulingPreferences.days === 'daily'}
+                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: 'daily' }))}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="daily" className="text-sm font-medium">
+                      {t('schedule.preferences.days.daily')}
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="custom"
+                      name="schedulingDays"
+                      checked={schedulingPreferences.days === 'custom'}
+                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: 'custom' }))}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="custom" className="text-sm font-medium">
+                      {t('schedule.preferences.days.custom')}
+                    </label>
+                  </div>
+                  
+                  {schedulingPreferences.days === 'custom' && (
+                    <div className="ml-6 grid grid-cols-2 gap-2">
+                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                        <div key={day} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`custom-${day}`}
+                            checked={schedulingPreferences.customDays.includes(day)}
+                            onCheckedChange={(checked) => {
+                              setSchedulingPreferences(prev => ({
+                                ...prev,
+                                customDays: checked
+                                  ? [...prev.customDays, day]
+                                  : prev.customDays.filter(d => d !== day)
+                              }));
+                            }}
+                          />
+                          <label htmlFor={`custom-${day}`} className="text-sm">
+                            {t(`schedule.preferences.customDays.${day}`)}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="every-x"
+                      name="schedulingDays"
+                      checked={schedulingPreferences.days === 'every-x'}
+                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: 'every-x' }))}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="every-x" className="text-sm font-medium">
+                      {t('schedule.preferences.days.everyX')}
+                    </label>
+                  </div>
+                  
+                  {schedulingPreferences.days === 'every-x' && (
+                    <div className="ml-6 flex items-center space-x-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={schedulingPreferences.everyXDays}
+                        onChange={(e) => setSchedulingPreferences(prev => ({ 
+                          ...prev, 
+                          everyXDays: parseInt(e.target.value) || 1 
+                        }))}
+                        className="w-20"
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {t('schedule.preferences.everyXDays', { x: schedulingPreferences.everyXDays })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Posting Times */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium">{t('schedule.preferences.times')}</h3>
+                <div className="space-y-2">
+                  {['morning', 'lunch', 'evening', 'night', 'random'].map(timeSlot => (
+                    <div key={timeSlot} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id={`time-${timeSlot}`}
+                        name="postingTimes"
+                        checked={schedulingPreferences.timeSlot === timeSlot}
+                        onChange={() => setSchedulingPreferences(prev => ({ ...prev, timeSlot: timeSlot as any }))}
+                        className="h-4 w-4"
+                      />
+                      <label htmlFor={`time-${timeSlot}`} className="text-sm font-medium">
+                        {t(`schedule.preferences.times.${timeSlot}`)}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowSchedulingModal(false)}
+                >
+                  {t('schedule.preferences.cancel')}
+                </Button>
+                <Button 
+                  onClick={handleSchedulingConfirm}
+                  disabled={schedulingPreferences.days === 'custom' && schedulingPreferences.customDays.length === 0}
+                  className="bg-gradient-primary hover:opacity-90"
+                >
+                  {scheduling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Scheduling...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('schedule.preferences.confirm')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
 
 export default ScheduledPosts;
