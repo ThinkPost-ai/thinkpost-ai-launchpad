@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Info, Sun, Moon, Languages } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { MultiSelect, type Option } from '../components/ui/multi-select';
+import { useToast } from '../components/ui/use-toast';
+import { Loader2, Sun, Moon, Languages, Info } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useTheme } from '@/contexts/ThemeContext';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
@@ -56,37 +57,55 @@ const brandCategories = {
 // Saudi cities data
 const saudiCities = {
   en: [
-    "Riyadh",
-    "Makkah", 
-    "Madinah",
-    "Qassim",
-    "Eastern Province",
-    "Asir",
-    "Tabuk",
-    "Hail",
-    "Northern Borders",
-    "Jazan",
-    "Najran",
-    "Al Bahah",
-    "Al Jouf",
+    "Riyadh", "Al Kharj", "Al Majmaah",
+
+    "Jeddah", "Makkah", "Taif",
+
+    "Madinah", "Yanbu", "Al-Ula",
+
+    "Buraidah", "Unaizah", "Ar Rass",
+
+    "Dammam", "Al Khobar", "Al Ahsa",
+
+    "Abha", "Khamis Mushait", "Bisha",
+
+    "Tabuk", "Duba", "Haql",
+
+    "Hail", "Baqqa", "Al-Ghazalah",
+
+    "Arar", "Rafha", "Turaif",
+    
+    "Abha", "Khamis Mushait", "Mahayel",
+    
+    "Jazan", "Sabya", "Abu Arish",
+
+    "Najran", "Sharurah", "Habona",
+
+    "Al Bahah", "Baljurashi", "Al Mandaq",
+
+    "Sakaka", "Dumat Al-Jandal", "Tabarjal",
+
     "Other"
   ],
-  ar: [
-    "الرياض",
-    "مكة المكرمة",
-    "المدينة المنورة", 
-    "القصيم",
-    "المنطقة الشرقية",
-    "عسير",
-    "تبوك",
-    "حائل",
-    "الحدود الشمالية",
-    "جازان",
-    "نجران",
-    "الباحة",
-    "الجوف",
+  ar: [ 
+    "الرياض", "الخرج", "المجمعة",
+    "جدة", "مكة", "الطائف",
+    "المدينة المنورة", "ينبع", "العلا",
+    "بريدة", "عنيزة", "الرس",
+    "الدمام", "الخبر", "الأحساء",
+    "أبها", "خميس مشيط", "بيشة",
+    "تبوك", "ضباء", "حقل",
+    "حائل", "بقعاء", "الغزالة",
+    "عرعر", "رفحاء", "طريف",
+    "أبها", "خميس مشيط", "محايل",
+    "جازان", "صبياء", "أبو عريش",
+    "نجران", "شرورة", "حبونا",
+    "الباحة", "بلجرشي", "المندق",
+    "سكاكا", "دومة الجندل", "طبرجل",
+
     "أخرى"
-  ]
+]
+
 };
 
 // Map Arabic cities to English for database storage
@@ -188,15 +207,6 @@ const BrandSetup = () => {
     if (category === 'cafe') return 'coffee';
     if (category === 'bakery') return 'bakery';
     return 'restaurant';
-  };
-
-  const handleLocationChange = (city: string) => {
-    setFormData(prev => {
-      const newLocations = prev.locations.includes(city)
-        ? prev.locations.filter(loc => loc !== city)
-        : [...prev.locations, city];
-      return { ...prev, locations: newLocations };
-    });
   };
 
   const handleBrandTypeChange = (brandType: string) => {
@@ -375,21 +385,16 @@ const BrandSetup = () => {
               {/* Brand Location (Multi-select) */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Brand Location</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
-                  {currentCities.map((city) => (
-                    <div
-                      key={city}
-                      className={`p-2 text-sm rounded cursor-pointer transition-colors ${
-                        formData.locations.includes(city)
-                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-700'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                      }`}
-                      onClick={() => handleLocationChange(city)}
-                    >
-                      {city}
-                    </div>
-                  ))}
-                </div>
+                <MultiSelect
+                  options={currentCities.map(city => ({ value: city, label: city }))}
+                  selected={formData.locations}
+                  onChange={(values: string[]) => setFormData(prev => ({
+                    ...prev,
+                    locations: values
+                  }))}
+                  placeholder="Select locations"
+                  className="h-11 text-base"
+                />
                 {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
                   <Input
                     type="text"
