@@ -45,21 +45,6 @@ const CaptionsPage = () => {
         return;
       }
 
-      if (!restaurant) {
-        navigate('/brand-setup');
-        return;
-      }
-
-      if (!restaurant.has_restaurant) {
-        navigate('/brand-setup');
-        return;
-      }
-
-      if (!restaurant.restaurant_name) {
-        navigate('/brand-setup');
-        return;
-      }
-
       setCheckingRestaurant(false);
     } catch (error) {
       console.error('Error in checkRestaurantExists:', error);
@@ -73,6 +58,12 @@ const CaptionsPage = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-purple"></div>
       </div>
     );
+  }
+
+  // Additional check: if restaurant data is still null after loading, redirect to setup
+  if (!restaurant) {
+    navigate('/brand-setup');
+    return null;
   }
 
   return (

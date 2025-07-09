@@ -53,7 +53,7 @@ const ProductCreationActions = ({
           {generatingCaptions ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating & Scheduling...
+              Uploading & Generating Content...
             </>
           ) : (
             'Save & Generate Captions'
