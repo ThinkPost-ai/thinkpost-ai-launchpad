@@ -194,29 +194,34 @@ const ScheduledPosts = () => {
     return mediaItems.filter(item => item.caption && item.file_path);
   };
 
-  const generateSchedule = () => {
-    const schedule: Date[] = [];
-    const startDate = new Date();
-    startDate.setHours(12, 0, 0, 0); // Set to noon
+  // Helper function to determine media type from file extension
+  const getMediaTypeFromPath = (filePath: string): 'photo' | 'video' => {
+    if (!filePath) return 'photo';
     
-    // Generate 20 posts over 4 weeks (28 days) - one post per day, skipping some days
-    const totalDays = 28;
-    const postsNeeded = 20;
+    const extension = filePath.toLowerCase().split('.').pop();
+    const videoExtensions = ['mp4', 'mov', 'avi', 'webm'];
     
-    // Calculate which days to skip to get 20 posts in 28 days
-    const daysToUse = Array.from({ length: totalDays }, (_, i) => i)
-      .filter((_, index) => {
-        // Distribute posts evenly, skipping some days
-        const interval = totalDays / postsNeeded;
-        return index % Math.ceil(interval) === 0;
-      })
-      .slice(0, postsNeeded);
+    return videoExtensions.includes(extension || '') ? 'video' : 'photo';
+  };
 
-    daysToUse.forEach(dayOffset => {
-      const postDate = new Date(startDate);
-      postDate.setDate(startDate.getDate() + dayOffset);
-      schedule.push(postDate);
-    });
+  const generateSchedule = () => {
+    const schedule = [];
+    const now = new Date();
+    const startDate = new Date(now.getTime() + (2 * 60 * 60 * 1000)); // Start 2 hours from now
+
+    for (let week = 0; week < 4; week++) {
+      for (let day = 0; day < 7; day++) {
+        const scheduleDate = new Date(startDate);
+        scheduleDate.setDate(scheduleDate.getDate() + (week * 7) + day);
+        
+        // Set random time between 9 AM and 9 PM
+        const randomHour = Math.floor(Math.random() * 12) + 9;
+        const randomMinute = Math.floor(Math.random() * 60);
+        scheduleDate.setHours(randomHour, randomMinute, 0, 0);
+        
+        schedule.push(scheduleDate);
+      }
+    }
 
     return schedule;
   };
@@ -248,7 +253,8 @@ const ScheduledPosts = () => {
           caption: mediaItem.caption!,
           scheduled_date: date.toISOString(),
           platform: 'tiktok',
-          status: 'scheduled' as const
+          status: 'scheduled' as const,
+          media_type: getMediaTypeFromPath(mediaItem.file_path)
         };
       });
 
