@@ -50,7 +50,7 @@ const ProfileSettings = () => {
             {t('dashboard.profile.profileSettings')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Update your personal and restaurant information
+            Update your personal and brand information
           </p>
         </div>
 
@@ -68,10 +68,10 @@ const ProfileSettings = () => {
             </CardContent>
           </Card>
 
-          {/* Restaurant Information */}
+          {/* Brand Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Restaurant Information</CardTitle>
+              <CardTitle>Brand Information</CardTitle>
               <CardDescription>
                 Update your restaurant details and vision
               </CardDescription>

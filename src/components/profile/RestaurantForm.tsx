@@ -75,8 +75,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         if (error) throw error;
 
         toast({
-          title: "Restaurant Updated",
-          description: "Your restaurant information has been updated successfully.",
+          title: "Brand Updated",
+          description: "Your brand information has been updated successfully.",
         });
       } else {
         // Create new restaurant
@@ -101,10 +101,10 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       // Refresh the page to show updated data
       window.location.reload();
     } catch (error: any) {
-      console.error('Error saving restaurant:', error);
+      console.error('Error saving brand:', error);
       toast({
         title: "Error",
-        description: "Failed to save restaurant information.",
+        description: "Failed to save brand information.",
         variant: "destructive"
       });
     } finally {

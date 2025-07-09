@@ -67,8 +67,6 @@ const saudiCities = {
 
     "Dammam", "Al Khobar", "Al Ahsa",
 
-    "Abha", "Khamis Mushait", "Bisha",
-
     "Tabuk", "Duba", "Haql",
 
     "Hail", "Baqqa", "Al-Ghazalah",
@@ -93,7 +91,6 @@ const saudiCities = {
     "المدينة المنورة", "ينبع", "العلا",
     "بريدة", "عنيزة", "الرس",
     "الدمام", "الخبر", "الأحساء",
-    "أبها", "خميس مشيط", "بيشة",
     "تبوك", "ضباء", "حقل",
     "حائل", "بقعاء", "الغزالة",
     "عرعر", "رفحاء", "طريف",
@@ -144,7 +141,9 @@ const BrandSetup = () => {
     brandType: '',
     category: '' as RestaurantCategory,
     vision: '',
-    otherLocation: ''
+    otherLocation: '',
+    customBrandType: '',
+    customCategory: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -152,9 +151,6 @@ const BrandSetup = () => {
 
   // Get current cities based on language
   const currentCities = saudiCities[language] || saudiCities.en;
-
-  // Get categories for current brand type
-  const currentCategories = formData.brandType ? brandCategories[formData.brandType as keyof typeof brandCategories] || [] : [];
 
   useEffect(() => {
     if (!loading && !user) {
@@ -182,14 +178,19 @@ const BrandSetup = () => {
         const displayLocation = language === 'ar' && reverseCityMapping[data.location] 
           ? reverseCityMapping[data.location] 
           : data.location;
-          
+
+        // Determine brand type from category
+        const brandType = getBrandTypeFromCategory(data.category);
+        
         setFormData({
           name: data.name,
           locations: [displayLocation],
-          brandType: getBrandTypeFromCategory(data.category),
-          category: data.category,
+          brandType: brandType,
+          category: brandType === 'restaurant' ? data.category : '' as RestaurantCategory,
           vision: data.vision || '',
-          otherLocation: ''
+          otherLocation: '',
+          customBrandType: '',
+          customCategory: ''
         });
         setIsEditing(true);
         setBrandId(data.id);
@@ -213,7 +214,17 @@ const BrandSetup = () => {
     setFormData(prev => ({
       ...prev,
       brandType,
-      category: '' as RestaurantCategory
+      category: '' as RestaurantCategory,
+      customBrandType: '',
+      customCategory: ''
+    }));
+  };
+
+  const handleCategoryChange = (category: RestaurantCategory) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      customCategory: ''
     }));
   };
 
@@ -253,8 +264,36 @@ const BrandSetup = () => {
         throw new Error('Brand type is required');
       }
 
-      if (!formData.category) {
-        throw new Error('Brand category is required');
+      // Validate custom brand type if "Other" is selected
+      if (formData.brandType === 'other' && !formData.customBrandType.trim()) {
+        throw new Error('Please specify your brand type');
+      }
+
+      // For restaurants, category is required
+      if (formData.brandType === 'restaurant') {
+        if (!formData.category) {
+          throw new Error('Restaurant category is required');
+        }
+        // Validate custom category if "Other" is selected
+        if (formData.category === 'other' && !formData.customCategory.trim()) {
+          throw new Error('Please specify your restaurant category');
+        }
+      }
+
+      // Determine final category for database
+      let finalCategory: RestaurantCategory;
+      if (formData.brandType === 'restaurant') {
+        if (formData.category === 'other' && formData.customCategory.trim()) {
+          finalCategory = 'other';
+        } else {
+          finalCategory = formData.category;
+        }
+      } else if (formData.brandType === 'coffee') {
+        finalCategory = 'cafe';
+      } else if (formData.brandType === 'bakery') {
+        finalCategory = 'bakery';
+      } else {
+        finalCategory = 'other';
       }
       
       if (isEditing && brandId) {
@@ -263,7 +302,7 @@ const BrandSetup = () => {
           .update({
             name: formData.name.trim(),
             location: finalLocation,
-            category: formData.category,
+            category: finalCategory,
             vision: formData.vision.trim() || null
           })
           .eq('id', brandId);
@@ -281,7 +320,7 @@ const BrandSetup = () => {
             owner_id: user?.id,
             name: formData.name.trim(),
             location: finalLocation,
-            category: formData.category,
+            category: finalCategory,
             vision: formData.vision.trim() || null
           });
 
@@ -430,23 +469,35 @@ const BrandSetup = () => {
                 </Select>
               </div>
 
-              {/* Brand Category (Conditional based on Brand Type) */}
-              {formData.brandType && (
+              {/* Custom Brand Type Input (shown when "Other" is selected) */}
+              {formData.brandType === 'other' && (
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">
-                    {formData.brandType === 'restaurant' ? 'Restaurant Category' : 
-                     formData.brandType === 'coffee' ? 'Coffee Shop Category' :
-                     formData.brandType === 'bakery' ? 'Bakery Category' : 'Category'} *
-                  </Label>
+                  <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+                  <Input
+                    id="customBrandType"
+                    type="text"
+                    value={formData.customBrandType}
+                    onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
+                    placeholder="Enter your brand type"
+                    required
+                    className="h-11 text-base"
+                  />
+                </div>
+              )}
+
+              {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
+              {formData.brandType === 'restaurant' && (
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
                   <Select 
                     value={formData.category} 
-                    onValueChange={(value: RestaurantCategory) => setFormData({ ...formData, category: value })}
+                    onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger className="h-11 text-base">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                      {currentCategories.map((category) => (
+                      {brandCategories.restaurant.map((category) => (
                         <SelectItem 
                           key={category.value} 
                           value={category.value}
@@ -457,6 +508,22 @@ const BrandSetup = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {/* Custom Restaurant Category Input (shown when Category is "other") */}
+              {formData.brandType === 'restaurant' && formData.category === 'other' && (
+                <div className="space-y-2">
+                  <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+                  <Input
+                    id="customCategory"
+                    type="text"
+                    value={formData.customCategory}
+                    onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
+                    placeholder="Enter your restaurant category"
+                    required
+                    className="h-11 text-base"
+                  />
                 </div>
               )}
 
