@@ -52,6 +52,14 @@ interface ScheduledPost {
   status: 'scheduled' | 'posted' | 'failed';
   image_path?: string;
   product_name?: string;
+  tiktok_settings?: {
+    enabled: boolean;
+    privacyLevel: string;
+    allowComments: boolean;
+    commercialContent: boolean;
+    yourBrand: boolean;
+    brandedContent: boolean;
+  } | null;
 }
 
 interface MediaItem {
@@ -96,7 +104,16 @@ const ScheduledPosts = () => {
         .from('scheduled_posts')
         .select(`
           *,
-          products(name, image_path),
+          products(
+            name, 
+            image_path, 
+            tiktok_enabled,
+            tiktok_privacy_level,
+            tiktok_allow_comments,
+            tiktok_commercial_content,
+            tiktok_your_brand,
+            tiktok_branded_content
+          ),
           images(file_path)
         `)
         .eq('user_id', user?.id)
@@ -113,7 +130,16 @@ const ScheduledPosts = () => {
         platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
         status: post.status as 'scheduled' | 'posted' | 'failed',
         image_path: post.products?.image_path || post.images?.file_path,
-        product_name: post.products?.name
+        product_name: post.products?.name,
+        // Include TikTok settings if available
+        tiktok_settings: post.products ? {
+          enabled: post.products.tiktok_enabled,
+          privacyLevel: post.products.tiktok_privacy_level,
+          allowComments: post.products.tiktok_allow_comments,
+          commercialContent: post.products.tiktok_commercial_content,
+          yourBrand: post.products.tiktok_your_brand,
+          brandedContent: post.products.tiktok_branded_content
+        } : null
       }));
 
       setScheduledPosts(transformedPosts);

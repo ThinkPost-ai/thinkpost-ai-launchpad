@@ -59,6 +59,14 @@ interface ScheduledPost {
   scheduled_date: string;
   platform: string;
   status: string;
+  tiktok_settings?: {
+    enabled: boolean;
+    privacyLevel: string;
+    allowComments: boolean;
+    commercialContent: boolean;
+    yourBrand: boolean;
+    brandedContent: boolean;
+  } | null;
 }
 
 interface TikTokCompliancePostFormProps {
@@ -103,6 +111,26 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
     fetchCreatorInfo();
     determineMediaType();
   }, []);
+
+  // Initialize form with stored TikTok settings
+  useEffect(() => {
+    if (post.tiktok_settings) {
+      const settings = post.tiktok_settings;
+      
+      // Map privacy level from database format to TikTok API format
+      const privacyMapping: { [key: string]: string } = {
+        'public': 'PUBLIC_TO_EVERYONE',
+        'friends': 'MUTUAL_FOLLOW_FRIENDS',
+        'only_me': 'SELF_ONLY'
+      };
+      
+      setPrivacyLevel(privacyMapping[settings.privacyLevel] || '');
+      setAllowComment(settings.allowComments);
+      setCommercialContentToggle(settings.commercialContent);
+      setYourBrand(settings.yourBrand);
+      setBrandedContent(settings.brandedContent);
+    }
+  }, [post.tiktok_settings]);
 
   const fetchCreatorInfo = async () => {
     try {

@@ -147,8 +147,15 @@ export type Database = {
           description: string | null
           id: string
           image_path: string | null
+          is_new: boolean | null
           name: string
           price: number | null
+          tiktok_allow_comments: boolean | null
+          tiktok_branded_content: boolean | null
+          tiktok_commercial_content: boolean | null
+          tiktok_enabled: boolean | null
+          tiktok_privacy_level: string | null
+          tiktok_your_brand: boolean | null
           updated_at: string
           user_id: string
         }
@@ -158,8 +165,15 @@ export type Database = {
           description?: string | null
           id?: string
           image_path?: string | null
+          is_new?: boolean | null
           name: string
           price?: number | null
+          tiktok_allow_comments?: boolean | null
+          tiktok_branded_content?: boolean | null
+          tiktok_commercial_content?: boolean | null
+          tiktok_enabled?: boolean | null
+          tiktok_privacy_level?: string | null
+          tiktok_your_brand?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -169,8 +183,15 @@ export type Database = {
           description?: string | null
           id?: string
           image_path?: string | null
+          is_new?: boolean | null
           name?: string
           price?: number | null
+          tiktok_allow_comments?: boolean | null
+          tiktok_branded_content?: boolean | null
+          tiktok_commercial_content?: boolean | null
+          tiktok_enabled?: boolean | null
+          tiktok_privacy_level?: string | null
+          tiktok_your_brand?: boolean | null
           updated_at?: string
           user_id?: string
         }

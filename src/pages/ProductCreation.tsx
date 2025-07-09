@@ -26,6 +26,7 @@ const ProductCreation = () => {
     addProduct,
     removeProduct,
     updateProduct,
+    updateTikTokSettings,
     handleImageSelect,
     removeImage,
     validateProducts,
@@ -171,6 +172,7 @@ const ProductCreation = () => {
               onImageSelect={handleImageSelect}
               onRemoveImage={removeImage}
               onTikTokValidationChange={handleTikTokValidationChange}
+              onUpdateTikTokSettings={updateTikTokSettings}
             />
           ))}
 

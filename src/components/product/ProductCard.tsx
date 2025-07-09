@@ -34,6 +34,13 @@ interface Product {
   imagePreview: string | null;
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
+  tiktokSettings: {
+    privacyLevel: 'public' | 'friends' | 'only_me';
+    allowComments: boolean;
+    commercialContent: boolean;
+    yourBrand: boolean;
+    brandedContent: boolean;
+  };
 }
 
 interface ProductCardProps {
@@ -41,6 +48,7 @@ interface ProductCardProps {
   product: Product;
   canRemove: boolean;
   onUpdateProduct: (index: number, field: keyof Product, value: any) => void;
+  onUpdateTikTokSettings: (index: number, settings: Partial<Product['tiktokSettings']>) => void;
   onRemoveProduct: (index: number) => void;
   onImageSelect: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
@@ -52,6 +60,7 @@ const ProductCard = ({
   product,
   canRemove,
   onUpdateProduct,
+  onUpdateTikTokSettings,
   onRemoveProduct,
   onImageSelect,
   onRemoveImage,
@@ -67,90 +76,94 @@ const ProductCard = ({
   const hasEnabledPlatforms = (product.tiktokEnabled && isTikTokConnected) || 
                               (product.instagramEnabled && isInstagramConnected);
 
-  const [tiktokSettings, setTiktokSettings] = useState({
-    privacyLevel: 'public' as 'public' | 'friends' | 'only_me',
-    allowComments: true,
-    commercialContent: false,
-    yourBrand: false,
-    brandedContent: false
-  });
-
   // State for TikTok advanced settings expansion
   const [tiktokAdvancedExpanded, setTiktokAdvancedExpanded] = useState(false);
 
   // Helper function to check if "only me" should be disabled
   const isOnlyMeDisabled = () => {
-    return tiktokSettings.commercialContent && tiktokSettings.brandedContent;
+    return product.tiktokSettings.commercialContent && product.tiktokSettings.brandedContent;
   };
 
-  // Helper function to get compliance message
+  // Helper function to get compliance message with proper links
   const getComplianceMessage = () => {
-    if (!tiktokSettings.commercialContent) {
-      return {
-        text: "By posting, you agree to TikTok's Music Usage Confirmation.",
-        links: [
-          { text: "Music Usage Confirmation", url: "https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" }
-        ]
-      };
+    if (!product.tiktokSettings.commercialContent) {
+      return null;
     }
 
-    const hasYourBrand = tiktokSettings.yourBrand;
-    const hasBrandedContent = tiktokSettings.brandedContent;
-
-    if (hasYourBrand && hasBrandedContent) {
-      return {
-        text: "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation.",
-        links: [
-          { text: "Branded Content Policy", url: "https://www.tiktok.com/legal/page/global/bc-policy/en" },
-          { text: "Music Usage Confirmation", url: "https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" }
-        ]
-      };
+    if (product.tiktokSettings.brandedContent && product.tiktokSettings.yourBrand) {
+      // Both selected
+      return (
+        <span>
+          By posting, you agree to TikTok's{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Branded Content Policy
+          </a>{' '}
+          and{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Music Usage Confirmation
+          </a>
+        </span>
+      );
+    } else if (product.tiktokSettings.brandedContent) {
+      // Only branded content
+      return (
+        <span>
+          By posting, you agree to TikTok's{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Branded Content Policy
+          </a>
+        </span>
+      );
+    } else if (product.tiktokSettings.yourBrand) {
+      // Only your brand
+      return (
+        <span>
+          By posting, you agree to TikTok's{' '}
+          <a 
+            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Music Usage Confirmation
+          </a>
+        </span>
+      );
     }
 
-    if (hasBrandedContent) {
-      return {
-        text: "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation.",
-        links: [
-          { text: "Branded Content Policy", url: "https://www.tiktok.com/legal/page/global/bc-policy/en" },
-          { text: "Music Usage Confirmation", url: "https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" }
-        ]
-      };
-    }
-
-    if (hasYourBrand) {
-      return {
-        text: "By posting, you agree to TikTok's Music Usage Confirmation.",
-        links: [
-          { text: "Music Usage Confirmation", url: "https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" }
-        ]
-      };
-    }
-
-    return {
-      text: "By posting, you agree to TikTok's Music Usage Confirmation.",
-      links: [
-        { text: "Music Usage Confirmation", url: "https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" }
-      ]
-    };
+    return null;
   };
 
   // Handler for privacy level changes
   const handlePrivacyLevelChange = (value: string) => {
-    setTiktokSettings(prev => ({ ...prev, privacyLevel: value as 'public' | 'friends' | 'only_me' }));
+    onUpdateTikTokSettings(index, { privacyLevel: value as 'public' | 'friends' | 'only_me' });
   };
 
   // Handler for branded content changes
   const handleBrandedContentChange = (checked: boolean) => {
-    setTiktokSettings(prev => {
-      const newSettings = { ...prev, brandedContent: checked };
-      
-      // If branded content is enabled and privacy is "only me", switch to public
-      if (checked && prev.privacyLevel === 'only_me') {
-        newSettings.privacyLevel = 'public';
-      }
-      
-      return newSettings;
-    });
+    const newSettings: Partial<Product['tiktokSettings']> = { brandedContent: checked };
+    
+    // If branded content is enabled and privacy is "only me", switch to public
+    if (checked && product.tiktokSettings.privacyLevel === 'only_me') {
+      newSettings.privacyLevel = 'public';
+    }
+    
+    onUpdateTikTokSettings(index, newSettings);
   };
 
   // TikTok validation logic
@@ -159,25 +172,25 @@ const ProductCard = ({
       return true; // If TikTok is not enabled, no validation needed
     }
     
-    if (!tiktokSettings.commercialContent) {
+    if (!product.tiktokSettings.commercialContent) {
       return true; // If commercial content is not checked, validation passes
     }
     
     // If commercial content is checked, at least one sub-option must be selected
-    return tiktokSettings.yourBrand || tiktokSettings.brandedContent;
+    return product.tiktokSettings.yourBrand || product.tiktokSettings.brandedContent;
   };
 
   // Update validation when settings change
   useEffect(() => {
     const isValid = isTikTokValidationValid();
     onTikTokValidationChange?.(index, isValid);
-  }, [tiktokSettings, product.tiktokEnabled, isTikTokConnected, index, onTikTokValidationChange]);
+  }, [product.tiktokSettings, product.tiktokEnabled, isTikTokConnected, index, onTikTokValidationChange]);
 
   const showTikTokValidationWarning = product.tiktokEnabled && 
                                       isTikTokConnected && 
-                                      tiktokSettings.commercialContent && 
-                                      !tiktokSettings.yourBrand && 
-                                      !tiktokSettings.brandedContent;
+                                      product.tiktokSettings.commercialContent && 
+                                      !product.tiktokSettings.yourBrand && 
+                                      !product.tiktokSettings.brandedContent;
 
   return (
     <TooltipProvider>
@@ -300,7 +313,7 @@ const ProductCard = ({
                                 Privacy Level:
                               </Label>
                               <RadioGroup 
-                                value={tiktokSettings.privacyLevel.toUpperCase()} 
+                                value={product.tiktokSettings.privacyLevel.toUpperCase()} 
                                 onValueChange={(value) => handlePrivacyLevelChange(value.toLowerCase())}
                                 className="space-y-2"
                               >
@@ -311,23 +324,23 @@ const ProductCard = ({
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="MUTUAL_FOLLOW_FRIEND" id={`friends-${index}`} />
+                                  <RadioGroupItem value="FRIENDS" id={`friends-${index}`} />
                                   <Label htmlFor={`friends-${index}`} className="text-sm">
                                     Friends
                                   </Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
+                                <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <div className={`flex items-center space-x-2 ${isOnlyMeDisabled() ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                      <div className="flex items-center space-x-2">
                                         <RadioGroupItem 
-                                          value="SELF_ONLY" 
+                                          value="ONLY_ME" 
                                           id={`only-me-${index}`}
                                           disabled={isOnlyMeDisabled()}
                                         />
                                         <Label 
                                           htmlFor={`only-me-${index}`} 
-                                          className={`text-sm ${isOnlyMeDisabled() ? 'cursor-not-allowed' : ''}`}
+                                          className={`text-sm ${isOnlyMeDisabled() ? 'text-gray-400' : ''}`}
                                         >
                                           Only me
                                         </Label>
@@ -335,11 +348,11 @@ const ProductCard = ({
                                     </TooltipTrigger>
                                     {isOnlyMeDisabled() && (
                                       <TooltipContent>
-                                        <p>Branded content visibility cannot be set to private.</p>
+                                        <p>Branded content cannot be set to "Only me"</p>
                                       </TooltipContent>
                                     )}
                                   </Tooltip>
-                                </div>
+                                </TooltipProvider>
                               </RadioGroup>
                             </div>
 
@@ -349,7 +362,13 @@ const ProductCard = ({
                                 Interaction Settings
                               </Label>
                               <div className="flex items-center space-x-2">
-                                <Checkbox id={`allow-comments-${index}`} defaultChecked />
+                                <Checkbox 
+                                  id={`allow-comments-${index}`} 
+                                  checked={product.tiktokSettings.allowComments}
+                                  onCheckedChange={(checked) => 
+                                    onUpdateTikTokSettings(index, { allowComments: checked as boolean })
+                                  }
+                                />
                                 <Label htmlFor={`allow-comments-${index}`} className="text-sm">
                                   Allow Comments
                                 </Label>
@@ -361,15 +380,14 @@ const ProductCard = ({
                               <div className="flex items-center space-x-2">
                                 <Checkbox 
                                   id={`commercial-${index}`}
-                                  checked={tiktokSettings.commercialContent}
+                                  checked={product.tiktokSettings.commercialContent}
                                   onCheckedChange={(checked) => 
-                                    setTiktokSettings(prev => ({ 
-                                      ...prev, 
+                                    onUpdateTikTokSettings(index, { 
                                       commercialContent: checked as boolean,
                                       // Reset sub-options when unchecked
-                                      yourBrand: checked ? prev.yourBrand : false,
-                                      brandedContent: checked ? prev.brandedContent : false
-                                    }))
+                                      yourBrand: checked ? product.tiktokSettings.yourBrand : false,
+                                      brandedContent: checked ? product.tiktokSettings.brandedContent : false
+                                    })
                                   }
                                 />
                                 <Label htmlFor={`commercial-${index}`}>
@@ -378,17 +396,14 @@ const ProductCard = ({
                               </div>
 
                               {/* Conditional sub-checkboxes */}
-                              {tiktokSettings.commercialContent && (
+                              {product.tiktokSettings.commercialContent && (
                                 <div className="ml-6 space-y-2">
                                   <div className="flex items-center space-x-2">
                                     <Checkbox 
                                       id={`your-brand-${index}`}
-                                      checked={tiktokSettings.yourBrand}
+                                      checked={product.tiktokSettings.yourBrand}
                                       onCheckedChange={(checked) => 
-                                        setTiktokSettings(prev => ({ 
-                                          ...prev, 
-                                          yourBrand: checked as boolean 
-                                        }))
+                                        onUpdateTikTokSettings(index, { yourBrand: checked as boolean })
                                       }
                                     />
                                     <Label htmlFor={`your-brand-${index}`}>
@@ -399,7 +414,7 @@ const ProductCard = ({
                                   <div className="flex items-center space-x-2">
                                     <Checkbox 
                                       id={`branded-content-${index}`}
-                                      checked={tiktokSettings.brandedContent}
+                                      checked={product.tiktokSettings.brandedContent}
                                       onCheckedChange={handleBrandedContentChange}
                                     />
                                     <Label htmlFor={`branded-content-${index}`}>
@@ -423,87 +438,29 @@ const ProductCard = ({
                       </div>
                     )}
 
-                    {/* TikTok Compliance Info Line - shown when TikTok is enabled */}
-                    {product.tiktokEnabled && isTikTokConnected && (
-                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    {/* Compliance Message - only show when TikTok is enabled and commercial content is selected */}
+                    {product.tiktokEnabled && isTikTokConnected && product.tiktokSettings.commercialContent && (
+                      <div className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
                         <Info className="h-4 w-4 flex-shrink-0" />
                         <span>
-                          {(() => {
-                            const compliance = getComplianceMessage();
-                            
-                            // Handle different compliance message formats
-                            if (compliance.links.length === 1) {
-                              // Single link case
-                              const link = compliance.links[0];
-                              const parts = compliance.text.split(link.text);
-                              return (
-                                <>
-                                  {parts[0]}
-                                  <a 
-                                    href={link.url}
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 underline"
-                                  >
-                                    {link.text}
-                                  </a>
-                                  {parts[1]}
-                                </>
-                              );
-                            } else {
-                              // Multiple links case
-                              let result = compliance.text;
-                              const elements = [];
-                              let lastIndex = 0;
-                              
-                              compliance.links.forEach((link, index) => {
-                                const linkIndex = result.indexOf(link.text, lastIndex);
-                                if (linkIndex !== -1) {
-                                  // Add text before link
-                                  if (linkIndex > lastIndex) {
-                                    elements.push(result.substring(lastIndex, linkIndex));
-                                  }
-                                  // Add link
-                                  elements.push(
-                                    <a 
-                                      key={index}
-                                      href={link.url}
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:text-blue-800 underline"
-                                    >
-                                      {link.text}
-                                    </a>
-                                  );
-                                  lastIndex = linkIndex + link.text.length;
-                                }
-                              });
-                              
-                              // Add remaining text
-                              if (lastIndex < result.length) {
-                                elements.push(result.substring(lastIndex));
-                              }
-                              
-                              return elements;
-                            }
-                          })()}
+                          {getComplianceMessage()}
                         </span>
                       </div>
                     )}
                   </div>
+                </TooltipProvider>
 
-                  {/* Instagram Toggle */}
+                {/* Instagram Section */}
+                <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className={`flex items-center justify-between p-4 border rounded-lg ${isInstagramConnected ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60 cursor-not-allowed'}`}>
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${isInstagramConnected ? 'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500' : 'bg-gray-400'}`}>
-                            <Instagram className="h-6 w-6 text-white" />
-                          </div>
+                          <Instagram className="h-5 w-5 text-pink-500" />
                           <div>
-                            <Label className="text-base font-medium">Instagram</Label>
-                            <p className="text-sm text-muted-foreground">
-                              {isInstagramConnected ? 'Post to Instagram' : 'Connect Instagram account first'}
+                            <Label className="text-sm font-medium">Instagram</Label>
+                            <p className="text-xs text-muted-foreground">
+                              {isInstagramConnected ? 'Connected' : 'Not connected'}
                             </p>
                           </div>
                         </div>
@@ -524,27 +481,13 @@ const ProductCard = ({
                       </TooltipContent>
                     )}
                   </Tooltip>
-                </div>
-
-                {/* Dynamic Info note */}
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  {!hasEnabledPlatforms ? (
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      💡 Choose which platforms to post this product to. At least one platform must be enabled.
-                    </p>
-                  ) : (
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      ✅ Product configured for posting to selected platforms.
-                    </p>
-                  )}
-                </div>
+                </TooltipProvider>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </TooltipProvider>
-  );
-};
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
 export default ProductCard;

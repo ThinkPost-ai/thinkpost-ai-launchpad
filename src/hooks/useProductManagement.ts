@@ -6,6 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 
+interface TikTokSettings {
+  privacyLevel: 'public' | 'friends' | 'only_me';
+  allowComments: boolean;
+  commercialContent: boolean;
+  yourBrand: boolean;
+  brandedContent: boolean;
+}
+
 interface Product {
   id?: string;
   name: string;
@@ -15,6 +23,7 @@ interface Product {
   imagePreview: string | null;
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
+  tiktokSettings: TikTokSettings;
   is_new?: boolean;
 }
 
@@ -33,7 +42,14 @@ export const useProductManagement = () => {
       image: null,
       imagePreview: null,
       tiktokEnabled: false,
-      instagramEnabled: false
+      instagramEnabled: false,
+      tiktokSettings: {
+        privacyLevel: 'public',
+        allowComments: true,
+        commercialContent: false,
+        yourBrand: false,
+        brandedContent: false
+      }
     }
   ]);
   const [saving, setSaving] = useState(false);
@@ -48,7 +64,14 @@ export const useProductManagement = () => {
       image: null,
       imagePreview: null,
       tiktokEnabled: false,
-      instagramEnabled: false
+      instagramEnabled: false,
+      tiktokSettings: {
+        privacyLevel: 'public',
+        allowComments: true,
+        commercialContent: false,
+        yourBrand: false,
+        brandedContent: false
+      }
     }]);
     // Add validation state for new product
     setTiktokValidationStates(prev => [...prev, true]);
@@ -67,6 +90,21 @@ export const useProductManagement = () => {
       const updatedProducts = prevProducts.map((product, i) => {
         if (i === index) {
           return { ...product, [field]: value };
+        }
+        return product;
+      });
+      return updatedProducts;
+    });
+  }, []);
+
+  const updateTikTokSettings = useCallback((index: number, settings: Partial<TikTokSettings>) => {
+    setProducts(prevProducts => {
+      const updatedProducts = prevProducts.map((product, i) => {
+        if (i === index) {
+          return { 
+            ...product, 
+            tiktokSettings: { ...product.tiktokSettings, ...settings }
+          };
         }
         return product;
       });
@@ -162,43 +200,66 @@ export const useProductManagement = () => {
     setSaving(true);
 
     try {
-      const productPromises = products.map(async (product) => {
-        const imagePath = await uploadImage(product.image!);
+      const savedProducts = [];
 
-        const productData = {
-          user_id: user.id,
-          name: product.name,
-          price: product.price ? parseFloat(product.price) : null,
-          description: product.description || null,
-          image_path: imagePath,
-          caption: null
-        };
+      for (const product of products) {
+        if (!product.image) continue;
 
-        const { data: insertedProduct, error: dbError } = await supabase
+        // Upload image
+        const imagePath = await uploadImage(product.image);
+
+        // Save product with TikTok settings
+        const { data, error } = await supabase
           .from('products')
-          .insert(productData)
+          .insert({
+            user_id: user.id,
+            name: product.name,
+            price: parseFloat(product.price) || null,
+            description: product.description,
+            image_path: imagePath,
+            tiktok_enabled: product.tiktokEnabled,
+            tiktok_privacy_level: product.tiktokSettings.privacyLevel,
+            tiktok_allow_comments: product.tiktokSettings.allowComments,
+            tiktok_commercial_content: product.tiktokSettings.commercialContent,
+            tiktok_your_brand: product.tiktokSettings.yourBrand,
+            tiktok_branded_content: product.tiktokSettings.brandedContent,
+            is_new: true
+          })
           .select()
           .single();
 
-        if (dbError) throw dbError;
-
-        return insertedProduct;
-      });
-
-      await Promise.all(productPromises);
+        if (error) throw error;
+        savedProducts.push(data);
+      }
 
       toast({
         title: "Success!",
-        description: `${products.length} product(s) saved successfully`
+        description: `${savedProducts.length} product(s) saved successfully`
       });
 
-      // Redirect to review content page
-      navigate('/review-content');
+      // Reset products to initial state
+      setProducts([{
+        name: '',
+        price: '',
+        description: '',
+        image: null,
+        imagePreview: null,
+        tiktokEnabled: false,
+        instagramEnabled: false,
+        tiktokSettings: {
+          privacyLevel: 'public',
+          allowComments: true,
+          commercialContent: false,
+          yourBrand: false,
+          brandedContent: false
+        }
+      }]);
+
     } catch (error: any) {
-      console.error('Save error:', error);
+      console.error('Error saving products:', error);
       toast({
-        title: "Save Failed",
-        description: error.message || "Failed to save products",
+        title: "Error",
+        description: "Failed to save products. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -377,6 +438,7 @@ export const useProductManagement = () => {
     addProduct,
     removeProduct,
     updateProduct,
+    updateTikTokSettings,
     handleImageSelect,
     removeImage,
     validateProducts,
