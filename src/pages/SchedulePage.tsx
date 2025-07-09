@@ -35,20 +35,20 @@ const SchedulePage = () => {
 
       if (error) {
         console.error('Error checking restaurant:', error);
-        navigate('/restaurant-setup');
+        navigate('/brand-setup');
         return;
       }
 
       if (!data) {
         console.log('No restaurant found, redirecting to setup');
-        navigate('/restaurant-setup');
+        navigate('/brand-setup');
         return;
       }
 
       setCheckingRestaurant(false);
     } catch (error) {
       console.error('Error in checkRestaurantExists:', error);
-      navigate('/restaurant-setup');
+      navigate('/brand-setup');
     }
   };
 

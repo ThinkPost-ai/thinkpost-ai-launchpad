@@ -9,7 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import UserDashboard from "./pages/UserDashboard";
-import RestaurantSetup from "./pages/RestaurantSetup";
+import BrandSetup from "./pages/BrandSetup";
 import ProfileSettings from "./pages/ProfileSettings";
 import AccountSettings from "./pages/AccountSettings";
 import ImageUpload from "./pages/ImageUpload";
@@ -43,7 +43,7 @@ const App = () => {
                   <Route path="/home" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/user-dashboard" element={<UserDashboard />} />
-                  <Route path="/restaurant-setup" element={<RestaurantSetup />} />
+                  <Route path="/brand-setup" element={<BrandSetup />} />
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/account-settings" element={<AccountSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />

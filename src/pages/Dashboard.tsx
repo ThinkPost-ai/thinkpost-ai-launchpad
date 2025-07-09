@@ -39,7 +39,7 @@ const Dashboard = () => {
       if (error) {
         console.error('Error checking restaurant:', error);
         setChecking(false);
-        navigate('/restaurant-setup');
+        navigate('/brand-setup');
         return;
       }
 
@@ -52,12 +52,12 @@ const Dashboard = () => {
       } else {
         console.log('No restaurant found, redirecting to restaurant setup');
         setChecking(false);
-        navigate('/restaurant-setup');
+        navigate('/brand-setup');
       }
     } catch (error) {
       console.error('Error in checkRestaurantStatus:', error);
       setChecking(false);
-      navigate('/restaurant-setup');
+      navigate('/brand-setup');
     }
   };
 
