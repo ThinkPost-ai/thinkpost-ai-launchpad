@@ -12,7 +12,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { MultiSelect, type Option } from '../components/ui/multi-select';
 import { useToast } from '../components/ui/use-toast';
-import { Loader2, Sun, Moon, Languages, Info } from 'lucide-react';
+import { Loader2, Sun, Moon, Languages, Info, AlertTriangle } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
@@ -129,7 +129,7 @@ const reverseCityMapping: { [key: string]: string } = Object.fromEntries(
 );
 
 const BrandSetup = () => {
-  const { user, loading, checkUserProfile } = useAuth();
+  const { user, loading, checkUserProfile, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, language, setLanguage } = useLanguage();
@@ -148,6 +148,7 @@ const BrandSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [brandId, setBrandId] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Get current cities based on language
   const currentCities = saudiCities[language] || saudiCities.en;
@@ -159,9 +160,47 @@ const BrandSetup = () => {
     }
 
     if (user) {
-      checkExistingBrand();
+      checkUserAuth();
     }
   }, [user, loading, navigate]);
+
+  const checkUserAuth = async () => {
+    try {
+      // Verify that the user exists in the auth system
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser.user) {
+        setAuthError('Your session has expired or is invalid. Please sign in again.');
+        return;
+      }
+
+      // Check if user ID matches
+      if (authUser.user.id !== user?.id) {
+        setAuthError('Session mismatch detected. Please sign in again.');
+        return;
+      }
+
+      // Clear any previous auth errors
+      setAuthError(null);
+      
+      // Proceed with checking existing brand
+      checkExistingBrand();
+    } catch (error: any) {
+      console.error('Error checking user authentication:', error);
+      setAuthError('Authentication verification failed. Please sign in again.');
+    }
+  };
+
+  const handleAuthError = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Force navigation even if sign out fails
+      navigate('/');
+    }
+  };
 
   const checkExistingBrand = async () => {
     try {
@@ -286,6 +325,17 @@ const BrandSetup = () => {
     setIsSubmitting(true);
 
     try {
+      // Double-check authentication before submitting
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser.user) {
+        throw new Error('Your session has expired. Please sign in again.');
+      }
+
+      if (authUser.user.id !== user?.id) {
+        throw new Error('Session mismatch detected. Please sign in again.');
+      }
+
       // Convert locations to English for database storage and handle "Other"
       let finalLocation = '';
       let additionalLocations: string[] = [];
@@ -371,7 +421,12 @@ const BrandSetup = () => {
           .update(updateData)
           .eq('id', brandId);
 
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('foreign key constraint')) {
+            throw new Error('Your session has expired. Please sign in again.');
+          }
+          throw error;
+        }
 
         toast({
           title: "Success",
@@ -381,11 +436,16 @@ const BrandSetup = () => {
         const { error } = await supabase
           .from('restaurants')
           .insert({
-            owner_id: user?.id,
+            owner_id: authUser.user.id,
             ...updateData
           });
 
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('foreign key constraint')) {
+            throw new Error('Your session has expired. Please sign in again.');
+          }
+          throw error;
+        }
 
         toast({
           title: "Success", 
@@ -399,11 +459,17 @@ const BrandSetup = () => {
       // Navigate to user dashboard
       navigate('/user-dashboard');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save brand information",
-        variant: "destructive"
-      });
+      console.error('Brand setup error:', error);
+      
+      if (error.message.includes('session has expired') || error.message.includes('sign in again')) {
+        setAuthError(error.message);
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to save brand information",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -413,6 +479,35 @@ const BrandSetup = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-4">
         <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple" />
+      </div>
+    );
+  }
+
+  // Show authentication error screen
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+            <CardTitle className="text-xl font-bold text-deep-blue dark:text-white">
+              Authentication Error
+            </CardTitle>
+            <CardDescription className="text-center">
+              {authError}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleAuthError}
+              className="w-full bg-gradient-primary hover:opacity-90"
+            >
+              Sign In Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
