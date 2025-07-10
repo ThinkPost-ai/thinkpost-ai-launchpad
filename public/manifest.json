@@ -1,0 +1,26 @@
+{
+  "name": "ThinkPost - AI-Powered Social Media Management",
+  "short_name": "ThinkPost",
+  "description": "Create Less. Achieve More. Let AI Handle Your Social Media. Upload content, generate captions, and post across all platforms in seconds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#011D4C",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/6c4dfede-77fa-46ae-85b5-08890b6f7af5.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "social"],
+  "lang": "en"
+} 
