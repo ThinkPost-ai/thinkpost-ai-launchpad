@@ -5,10 +5,12 @@ import { Instagram, CheckCircle, Loader2 } from 'lucide-react';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const InstagramConnection = () => {
   const { profile, isLoading, isConnecting, setIsConnecting, disconnectInstagram } = useInstagramConnection();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleConnect = async () => {
     try {
@@ -70,13 +72,13 @@ const InstagramConnection = () => {
           </div>
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
-              Instagram Business
+              {t('dashboard.instagram.title')}
               {profile.connected && <CheckCircle className="h-5 w-5 text-green-600" />}
             </CardTitle>
             <CardDescription>
               {profile.connected 
-                ? `Connected as @${profile.username}`
-                : "Ready to connect"
+                ? t('dashboard.instagram.connectedAs', { username: profile.username })
+                : t('dashboard.instagram.readyToConnect')
               }
             </CardDescription>
           </div>
@@ -95,7 +97,7 @@ const InstagramConnection = () => {
               </Avatar>
               <div>
                 <p className="font-medium">@{profile.username}</p>
-                <p className="text-sm text-muted-foreground">Connected</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.instagram.connectedStatus')}</p>
               </div>
             </div>
             
@@ -104,7 +106,7 @@ const InstagramConnection = () => {
               variant="outline"
               className="w-full"
             >
-              Disconnect
+              {t('dashboard.instagram.disconnect')}
             </Button>
           </div>
         ) : (
@@ -123,12 +125,12 @@ const InstagramConnection = () => {
               {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
+                  {t('dashboard.instagram.connecting')}
                 </>
               ) : (
                 <>
                   <Instagram className="mr-2 h-4 w-4" />
-                  Connect Instagram Business
+                  {t('dashboard.instagram.connect')}
                 </>
               )}
             </Button>

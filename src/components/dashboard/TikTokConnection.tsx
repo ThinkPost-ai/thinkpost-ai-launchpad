@@ -37,7 +37,7 @@ const TikTokConnection = () => {
             <CardDescription>
               {isConnected 
                 ? t('dashboard.tiktok.connectedAs', { username: tiktokProfile.tiktok_username || 'TikTok User' })
-                : "Ready to connect"
+                : t('dashboard.tiktok.readyToConnect')
               }
             </CardDescription>
           </div>

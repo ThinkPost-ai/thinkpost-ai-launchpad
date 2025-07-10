@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductCreationActionsProps {
   onAddProduct: () => void;
@@ -18,15 +19,16 @@ const ProductCreationActions = ({
   generatingCaptions,
   isFormValid
 }: ProductCreationActionsProps) => {
+  const { t, isRTL } = useLanguage();
   return (
     <div className="flex flex-col gap-4">
       <Button
         variant="outline"
         onClick={onAddProduct}
-        className="w-full"
+        className={`w-full ${isRTL ? 'flex-row-reverse' : ''}`}
       >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Another Product
+        <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+        {t('productActions.addAnother')}
       </Button>
 
       <div className="flex gap-4">
@@ -34,29 +36,29 @@ const ProductCreationActions = ({
           onClick={onSaveProductsOnly}
           disabled={saving || generatingCaptions || !isFormValid}
           variant="outline"
-          className="flex-1"
+          className={`flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('productActions.saving')}
             </>
           ) : (
-            'Save'
+            t('productActions.save')
           )}
         </Button>
         <Button
           onClick={onSaveProductsWithCaptions}
           disabled={saving || generatingCaptions || !isFormValid}
-          className="bg-gradient-primary hover:opacity-90 flex-1"
+          className={`bg-gradient-primary hover:opacity-90 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           {generatingCaptions ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading & Generating Content...
+              <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('productActions.uploadingGenerating')}
             </>
           ) : (
-            'Save & Generate Captions'
+            t('productActions.saveAndGenerate')
           )}
         </Button>
       </div>
