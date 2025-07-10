@@ -174,19 +174,53 @@ const BrandSetup = () => {
       if (error) throw error;
 
       if (data) {
-        // Display location in current language
-        const displayLocation = language === 'ar' && reverseCityMapping[data.location] 
-          ? reverseCityMapping[data.location] 
-          : data.location;
+        console.log('Found existing restaurant:', data);
+        
+        // Handle location display - check if it's already in Arabic or needs mapping
+        let displayLocation = data.location;
+        if (language === 'ar') {
+          // If we're in Arabic mode, check if the stored location is English and needs mapping
+          if (reverseCityMapping[data.location]) {
+            displayLocation = reverseCityMapping[data.location];
+          }
+          // If it's already in Arabic, use it as is
+        } else {
+          // If we're in English mode, check if the stored location is Arabic and needs mapping
+          if (cityMapping[data.location]) {
+            displayLocation = cityMapping[data.location];
+          }
+          // If it's already in English, use it as is
+        }
 
         // Build locations array from primary location and additional locations
         const locations = [displayLocation];
         if (data.additional_locations) {
-          locations.push(...data.additional_locations);
+          // Handle additional locations - map them to current language
+          const mappedAdditionalLocations = data.additional_locations.map(loc => {
+            if (language === 'ar') {
+              // If we're in Arabic mode, check if the stored location is English and needs mapping
+              return reverseCityMapping[loc] || loc;
+            } else {
+              // If we're in English mode, check if the stored location is Arabic and needs mapping
+              return cityMapping[loc] || loc;
+            }
+          });
+          locations.push(...mappedAdditionalLocations);
         }
 
         // Determine brand type from stored brand_type or fallback to category
         const brandType = data.brand_type || getBrandTypeFromCategory(data.category);
+        
+        console.log('Setting form data with:', {
+          name: data.name,
+          locations: locations,
+          brandType: brandType,
+          category: brandType === 'restaurant' ? data.category : '' as RestaurantCategory,
+          vision: data.vision || '',
+          otherLocation: data.custom_location || '',
+          customBrandType: data.custom_brand_type || '',
+          customCategory: data.custom_category || ''
+        });
         
         setFormData({
           name: data.name,
@@ -200,8 +234,13 @@ const BrandSetup = () => {
         });
         setIsEditing(true);
         setBrandId(data.id);
+        
+        console.log('Set editing mode:', { isEditing: true, brandId: data.id });
+      } else {
+        console.log('No existing restaurant found');
       }
     } catch (error: any) {
+      console.error('Error in checkExistingBrand:', error);
       toast({
         title: "Error",
         description: "Failed to load brand information",
