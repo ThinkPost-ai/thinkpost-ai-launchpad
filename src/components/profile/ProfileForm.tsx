@@ -115,17 +115,7 @@ const ProfileForm = () => {
             {getInitials(profileData.full_name || user?.email || 'U')}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <Label htmlFor="avatar_url">Avatar URL</Label>
-          <Input
-            id="avatar_url"
-            type="url"
-            value={profileData.avatar_url}
-            onChange={(e) => handleInputChange('avatar_url', e.target.value)}
-            placeholder="https://example.com/avatar.jpg"
-            className="mt-1"
-          />
-        </div>
+        
       </div>
 
       {/* Email (read-only) */}
@@ -153,18 +143,7 @@ const ProfileForm = () => {
         />
       </div>
 
-      {/* Display Name */}
-      <div>
-        <Label htmlFor="display_name">Display Name</Label>
-        <Input
-          id="display_name"
-          type="text"
-          value={profileData.display_name}
-          onChange={(e) => handleInputChange('display_name', e.target.value)}
-          placeholder="Enter your display name"
-          className="mt-1"
-        />
-      </div>
+      
 
       <Button 
         type="submit" 
