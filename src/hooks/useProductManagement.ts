@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +30,7 @@ interface Product {
 
 export const useProductManagement = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { tiktokProfile } = useTikTokConnection();
@@ -233,8 +235,8 @@ export const useProductManagement = () => {
       }
 
       toast({
-        title: "Success!",
-        description: `${savedProducts.length} product(s) saved successfully`
+        title: t('upload.uploadSuccess'),
+        description: t('upload.productsSavedOnly', { count: savedProducts.length })
       });
 
       // Reset products to initial state
@@ -413,8 +415,8 @@ export const useProductManagement = () => {
       await Promise.all(captionPromises);
 
       toast({
-        title: "Success!",
-        description: `${products.length} product(s) saved and captions generated successfully`
+        title: t('upload.uploadSuccess'),
+        description: t('upload.productsSavedWithCaptions', { count: products.length })
       });
 
       // Redirect to review content page

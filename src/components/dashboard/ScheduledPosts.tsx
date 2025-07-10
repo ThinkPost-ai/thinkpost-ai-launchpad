@@ -353,7 +353,7 @@ const ScheduledPosts = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
+        title: t('upload.uploadSuccess'),
         description: `${schedule.length} TikTok posts have been scheduled over the next 4 weeks`,
       });
 
@@ -382,7 +382,7 @@ const ScheduledPosts = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
+        title: t('upload.uploadSuccess'),
         description: "All scheduled posts have been deleted",
       });
 

@@ -157,7 +157,7 @@ const reverseCityMapping: { [key: string]: string } = Object.fromEntries(
 const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t, isRTL } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -172,6 +172,43 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
   // Get current cities based on language (same as Brand Setup)
   const currentCities = saudiCities[language] || saudiCities.en;
+
+  // Get translated brand types
+  const getTranslatedBrandTypes = () => [
+    { value: 'restaurant', label: t('brandTypes.restaurant') },
+    { value: 'coffee', label: t('brandTypes.coffee') },
+    { value: 'bakery', label: t('brandTypes.bakery') },
+    { value: 'other', label: t('brandTypes.other') }
+  ];
+
+  // Get translated categories for each brand type
+  const getTranslatedBrandCategories = () => ({
+    restaurant: [
+      { value: 'fast_food', label: t('categories.fastFood') },
+      { value: 'casual_dining', label: t('categories.casualDining') },
+      { value: 'fine_dining', label: t('categories.fineDining') },
+      { value: 'middle_eastern', label: t('categories.middleEastern') },
+      { value: 'asian', label: t('categories.asian') },
+      { value: 'italian', label: t('categories.italian') },
+      { value: 'american', label: t('categories.american') },
+      { value: 'mexican', label: t('categories.mexican') },
+      { value: 'indian', label: t('categories.indian') },
+      { value: 'seafood', label: t('categories.seafood') },
+      { value: 'pizza', label: t('categories.pizza') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    coffee: [
+      { value: 'cafe', label: t('categories.coffeeShop') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    bakery: [
+      { value: 'bakery', label: t('categories.bakery') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    other: [
+      { value: 'other', label: t('categories.other') }
+    ]
+  });
 
   useEffect(() => {
     if (restaurant) {
@@ -342,8 +379,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Brand profile updated successfully",
+          title: t('restaurant.success'),
+          description: t('restaurant.profileUpdated'),
         });
       } else {
         // Create new restaurant
@@ -357,8 +394,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Brand profile created successfully",
+          title: t('restaurant.success'),
+          description: t('restaurant.profileCreated'),
         });
       }
 
@@ -366,8 +403,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       window.location.reload();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save brand information",
+        title: t('restaurant.error'),
+        description: error.message || t('restaurant.failedToSave'),
         variant: "destructive"
       });
     } finally {
@@ -378,22 +415,23 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {/* Brand Name */}
-      <div className="space-y-2">
-        <Label htmlFor="name" className="text-sm font-medium">Brand Name *</Label>
+      <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Label htmlFor="name" className="text-sm font-medium">{t('restaurant.name')} *</Label>
         <Input
           id="name"
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Enter your brand name"
+          placeholder={t('restaurant.enterName')}
           required
           className="h-11 text-base"
+          dir={isRTL ? 'rtl' : 'ltr'}
         />
       </div>
 
       {/* Brand Location (Multi-select) */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Brand Location</Label>
+      <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Label className="text-sm font-medium">{t('restaurant.location')}</Label>
         <MultiSelect
           options={currentCities.map(city => ({ value: city, label: city }))}
           selected={formData.locations}
@@ -401,7 +439,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
             ...prev,
             locations: values
           }))}
-          placeholder="Select locations"
+          placeholder={t('restaurant.locationPlaceholder')}
           className="h-11 text-base"
         />
         {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
@@ -409,24 +447,25 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
             type="text"
             value={formData.otherLocation}
             onChange={(e) => setFormData({ ...formData, otherLocation: e.target.value })}
-            placeholder="Specify your location"
+            placeholder={t('restaurantForm.specifyLocation')}
             className="h-11 text-base mt-2"
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
         )}
       </div>
 
       {/* Brand Type */}
-      <div className="space-y-2">
-        <Label htmlFor="brandType" className="text-sm font-medium">Brand Type *</Label>
+      <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Label htmlFor="brandType" className="text-sm font-medium">{t('restaurantForm.brandType')} *</Label>
         <Select 
           value={formData.brandType} 
           onValueChange={handleBrandTypeChange}
         >
           <SelectTrigger className="h-11 text-base">
-            <SelectValue placeholder="Select brand type" />
+            <SelectValue placeholder={t('restaurantForm.selectBrandType')} />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-            {brandTypes.map((type) => (
+            {getTranslatedBrandTypes().map((type) => (
               <SelectItem 
                 key={type.value} 
                 value={type.value}
@@ -441,33 +480,34 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Custom Brand Type Input (shown when "Other" is selected) */}
       {formData.brandType === 'other' && (
-        <div className="space-y-2">
-          <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+        <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <Label htmlFor="customBrandType" className="text-sm font-medium">{t('restaurantForm.customBrandType')} *</Label>
           <Input
             id="customBrandType"
             type="text"
             value={formData.customBrandType}
             onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
-            placeholder="Enter your brand type"
+            placeholder={t('restaurantForm.enterBrandType')}
             required
             className="h-11 text-base"
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
         </div>
       )}
 
       {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
       {formData.brandType === 'restaurant' && (
-        <div className="space-y-2">
-          <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+        <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <Label htmlFor="category" className="text-sm font-medium">{t('restaurant.category')} *</Label>
           <Select 
             value={formData.category} 
             onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="h-11 text-base">
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder={t('restaurant.selectCategory')} />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-              {brandCategories.restaurant.map((category) => (
+              {getTranslatedBrandCategories().restaurant.map((category) => (
                 <SelectItem 
                   key={category.value} 
                   value={category.value}
@@ -483,30 +523,32 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Custom Restaurant Category Input (shown when Category is "other") */}
       {formData.brandType === 'restaurant' && formData.category === 'other' && (
-        <div className="space-y-2">
-          <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+        <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <Label htmlFor="customCategory" className="text-sm font-medium">{t('restaurantForm.customCategory')} *</Label>
           <Input
             id="customCategory"
             type="text"
             value={formData.customCategory}
             onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
-            placeholder="Enter your restaurant category"
+            placeholder={t('restaurantForm.enterCategory')}
             required
             className="h-11 text-base"
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
         </div>
       )}
 
       {/* Brand Vision and Value */}
-      <div className="space-y-2">
-        <Label htmlFor="vision" className="text-sm font-medium">Brand Vision and Value</Label>
+      <div className={`space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Label htmlFor="vision" className="text-sm font-medium">{t('restaurant.vision')}</Label>
         <Textarea
           id="vision"
           value={formData.vision}
           onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-          placeholder="Describe your brand's vision, mission, and core values. What makes your brand unique? What do you stand for?"
+          placeholder={t('restaurant.visionPlaceholder')}
           rows={4}
           className="resize-none text-base min-h-[100px]"
+          dir={isRTL ? 'rtl' : 'ltr'}
         />
       </div>
 
@@ -517,11 +559,11 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {restaurant ? 'Updating...' : 'Creating...'}
+            <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {restaurant ? t('restaurant.updating') : t('restaurant.creating')}
           </>
         ) : (
-          restaurant ? 'Update Brand' : 'Complete Setup'
+          restaurant ? t('restaurant.updateButton') : t('restaurant.completeSetup')
         )}
       </Button>
     </form>
