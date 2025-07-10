@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
 import RestaurantForm from '@/components/profile/RestaurantForm';
@@ -13,7 +13,7 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 
 const ProfileSettings = () => {
   const { user, loading } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { restaurant, isLoading } = useDashboardData();
 
@@ -37,30 +37,30 @@ const ProfileSettings = () => {
       <DashboardHeader restaurant={restaurant} />
 
       <div className="container mx-auto px-4 py-6">
-        <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <div className="mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
-            className={`mb-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+            className="mb-4"
           >
-            {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-            {t('upload.backToDashboard')}
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t('common.back')}
           </Button>
-          <h1 className={`text-3xl font-bold text-deep-blue dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('profileSettings.title')}
+          <h1 className="text-3xl font-bold text-deep-blue dark:text-white">
+            {t('dashboard.profile.profileSettings')}
           </h1>
-          <p className={`text-gray-600 dark:text-gray-300 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-            {t('profileSettings.description')}
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            Update your personal and brand information
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Information */}
           <Card>
-            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-              <CardTitle>{t('profileSettings.personalInfo.title')}</CardTitle>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
               <CardDescription>
-                {t('profileSettings.personalInfo.description')}
+                Manage your personal account details
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -70,10 +70,10 @@ const ProfileSettings = () => {
 
           {/* Brand Information */}
           <Card>
-            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-              <CardTitle>{t('profileSettings.brandInfo.title')}</CardTitle>
+            <CardHeader>
+              <CardTitle>Brand Information</CardTitle>
               <CardDescription>
-                {t('profileSettings.brandInfo.description')}
+                Update your restaurant details and vision
               </CardDescription>
             </CardHeader>
             <CardContent>

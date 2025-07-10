@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductCreationActionsProps {
   onAddProduct: () => void;
@@ -19,16 +18,15 @@ const ProductCreationActions = ({
   generatingCaptions,
   isFormValid
 }: ProductCreationActionsProps) => {
-  const { t, isRTL } = useLanguage();
   return (
     <div className="flex flex-col gap-4">
       <Button
         variant="outline"
         onClick={onAddProduct}
-        className={`w-full ${isRTL ? 'flex-row-reverse' : ''}`}
+        className="w-full"
       >
-        <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-        {t('productActions.addAnother')}
+        <Plus className="mr-2 h-4 w-4" />
+        Add Another Product
       </Button>
 
       <div className="flex gap-4">
@@ -36,29 +34,29 @@ const ProductCreationActions = ({
           onClick={onSaveProductsOnly}
           disabled={saving || generatingCaptions || !isFormValid}
           variant="outline"
-          className={`flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}
+          className="flex-1"
         >
           {saving ? (
             <>
-              <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('productActions.saving')}
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
             </>
           ) : (
-            t('productActions.save')
+            'Save'
           )}
         </Button>
         <Button
           onClick={onSaveProductsWithCaptions}
           disabled={saving || generatingCaptions || !isFormValid}
-          className={`bg-gradient-primary hover:opacity-90 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}
+          className="bg-gradient-primary hover:opacity-90 flex-1"
         >
           {generatingCaptions ? (
             <>
-              <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('productActions.uploadingGenerating')}
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Uploading & Generating Content...
             </>
           ) : (
-            t('productActions.saveAndGenerate')
+            'Save & Generate Captions'
           )}
         </Button>
       </div>

@@ -1,11 +1,8 @@
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const TikTokCallback = () => {
-  const { t, isRTL } = useLanguage();
-
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -101,15 +98,15 @@ const TikTokCallback = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
-      <div className={`text-center ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className="text-center">
         <div className="mb-4">
           <Loader2 className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
         </div>
-        <h2 className={`text-xl font-semibold text-deep-blue dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-          {t('tiktok.processing')}
+        <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
+          Processing TikTok Connection...
         </h2>
-        <p className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
-          {t('tiktok.pleaseWait')}
+        <p className="text-muted-foreground">
+          Please wait while we complete your TikTok login.
         </p>
       </div>
     </div>

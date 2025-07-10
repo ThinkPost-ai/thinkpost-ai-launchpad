@@ -2,13 +2,11 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const TikTokLoginCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -16,31 +14,31 @@ const TikTokLoginCallback = () => {
     const error = searchParams.get('error');
 
     if (error) {
-      let errorMessage = t('tiktok.errors.general');
+      let errorMessage = "There was an error connecting your TikTok account.";
       
       switch (error) {
         case 'missing_parameters':
-          errorMessage = t('tiktok.errors.missingParameters');
+          errorMessage = "Missing required parameters from TikTok.";
           break;
         case 'invalid_state':
-          errorMessage = t('tiktok.errors.invalidState');
+          errorMessage = "Invalid or expired authorization state.";
           break;
         case 'token_exchange_failed':
-          errorMessage = t('tiktok.errors.tokenExchangeFailed');
+          errorMessage = "Failed to exchange authorization code for access token.";
           break;
         case 'invalid_token_response':
-          errorMessage = t('tiktok.errors.invalidTokenResponse');
+          errorMessage = "Invalid response from TikTok's token service.";
           break;
         case 'profile_update_failed':
-          errorMessage = t('tiktok.errors.profileUpdateFailed');
+          errorMessage = "Failed to update your profile with TikTok information.";
           break;
         case 'internal_error':
-          errorMessage = t('tiktok.errors.internalError');
+          errorMessage = "An internal error occurred during the connection process.";
           break;
       }
 
       toast({
-        title: t('tiktok.connectionFailed'),
+        title: "TikTok Connection Failed",
         description: errorMessage,
         variant: "destructive"
       });
@@ -51,8 +49,8 @@ const TikTokLoginCallback = () => {
 
     if (tiktokConnected === 'connected') {
       toast({
-        title: t('tiktok.connected'),
-        description: t('tiktok.connectedDescription'),
+        title: "TikTok Connected!",
+        description: "Your TikTok account has been connected successfully.",
       });
     }
 
@@ -69,7 +67,7 @@ const TikTokLoginCallback = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
-      <div className={`text-center ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className="text-center">
         <div className="mb-4">
           {hasError ? (
             <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
@@ -79,18 +77,18 @@ const TikTokLoginCallback = () => {
             <Loader2 className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
           )}
         </div>
-        <h2 className={`text-xl font-semibold text-deep-blue dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
           {hasError 
-            ? t('tiktok.connectionFailed') 
+            ? 'Connection Failed' 
             : isConnected 
-              ? t('tiktok.connectedSuccessfully') 
-              : t('tiktok.processing')
+              ? 'TikTok Connected Successfully!' 
+              : 'Processing TikTok Connection...'
           }
         </h2>
-        <p className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
+        <p className="text-muted-foreground">
           {hasError 
-            ? t('tiktok.connectionError') 
-            : t('tiktok.redirecting')
+            ? 'There was an error connecting your TikTok account.' 
+            : 'Redirecting to your dashboard...'
           }
         </p>
       </div>

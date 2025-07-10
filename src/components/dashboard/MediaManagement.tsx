@@ -219,7 +219,7 @@ const MediaManagement = () => {
                       variant="outline"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      {t('media.deleteProducts')}
+                      Delete Products
                     </Button>
                   )}
                 </>

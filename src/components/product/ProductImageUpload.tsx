@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { X, ImageIcon } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductImageUploadProps {
   index: number;
@@ -18,18 +17,17 @@ const ProductImageUpload = ({
   onImageSelect, 
   onRemoveImage 
 }: ProductImageUploadProps) => {
-  const { t, isRTL } = useLanguage();
   return (
     <div>
-      <Label htmlFor={`image-${index}`} className={isRTL ? 'text-right' : 'text-left'}>
-        {t('productCard.productImageRequired')}
+      <Label htmlFor={`image-${index}`}>
+        Product Image <span className="text-red-500">*</span>
       </Label>
       <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
         {imagePreview ? (
           <div className="relative">
             <img
               src={imagePreview}
-              alt={t('productCard.productPreview')}
+              alt="Product preview"
               className="w-full h-48 object-cover rounded-lg"
             />
             <button
@@ -44,8 +42,8 @@ const ProductImageUpload = ({
           <div className="text-center">
             <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <Label htmlFor={`image-${index}`} className="cursor-pointer">
-              <span className={`text-lg font-medium text-deep-blue dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-                {t('productCard.clickToUpload')} <span className="text-red-500">*</span>
+              <span className="text-lg font-medium text-deep-blue dark:text-white">
+                Click to upload image <span className="text-red-500">*</span>
               </span>
             </Label>
             <Input
