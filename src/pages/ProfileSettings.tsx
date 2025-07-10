@@ -47,10 +47,10 @@ const ProfileSettings = () => {
             {t('common.back')}
           </Button>
           <h1 className="text-3xl font-bold text-deep-blue dark:text-white">
-            {t('dashboard.profile.profileSettings')}
+            {t('profileSettings.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Update your personal and brand information
+            {t('profileSettings.description')}
           </p>
         </div>
 
@@ -58,9 +58,9 @@ const ProfileSettings = () => {
           {/* Profile Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle>{t('profileSettings.personalInfo')}</CardTitle>
               <CardDescription>
-                Manage your personal account details
+                {t('profileSettings.personalInfoDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -71,9 +71,9 @@ const ProfileSettings = () => {
           {/* Brand Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Brand Information</CardTitle>
+              <CardTitle>{t('profileSettings.brandInfo')}</CardTitle>
               <CardDescription>
-                Update your restaurant details and vision
+                {t('profileSettings.brandInfoDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>

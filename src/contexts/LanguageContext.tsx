@@ -79,6 +79,58 @@ export const useLanguage = () => {
 const getTranslations = () => {
   return {
     en: {
+      // Common
+      'common.back': 'Back',
+      
+      // Brand Setup
+      'brandSetup.title.complete': 'Complete Brand Profile',
+      'brandSetup.title.update': 'Update Brand Profile',
+      'brandSetup.description.complete': 'Tell us about your brand to get started',
+      'brandSetup.description.update': 'Update your brand information',
+      'brandSetup.infoMessage.title': 'Create High-Quality Content',
+      'brandSetup.infoMessage.description': 'Provide detailed and accurate information about your brand to help our AI generate better, more engaging content for your social media posts.',
+      'brandSetup.form.brandName.label': 'Brand Name *',
+      'brandSetup.form.brandName.placeholder': 'Enter your brand name',
+      'brandSetup.form.brandLocation.label': 'Brand Location',
+      'brandSetup.form.brandLocation.placeholder': 'Select locations',
+      'brandSetup.form.brandLocation.specify': 'Specify your location',
+      'brandSetup.form.brandType.label': 'Brand Type *',
+      'brandSetup.form.brandType.placeholder': 'Select brand type',
+      'brandSetup.form.brandType.restaurant': 'Restaurant',
+      'brandSetup.form.brandType.coffee': 'Coffee',
+      'brandSetup.form.brandType.bakery': 'Bakery',
+      'brandSetup.form.brandType.other': 'Other',
+      'brandSetup.form.customBrandType.label': 'Please write your Brand type *',
+      'brandSetup.form.customBrandType.placeholder': 'Enter your brand type',
+      'brandSetup.form.category.label': 'Category *',
+      'brandSetup.form.category.placeholder': 'Select category',
+      'brandSetup.form.category.fastFood': 'Fast Food',
+      'brandSetup.form.category.casualDining': 'Casual Dining',
+      'brandSetup.form.category.fineDining': 'Fine Dining',
+      'brandSetup.form.category.middleEastern': 'Middle Eastern',
+      'brandSetup.form.category.asian': 'Asian',
+      'brandSetup.form.category.italian': 'Italian',
+      'brandSetup.form.category.american': 'American',
+      'brandSetup.form.category.mexican': 'Mexican',
+      'brandSetup.form.category.indian': 'Indian',
+      'brandSetup.form.category.seafood': 'Seafood',
+      'brandSetup.form.category.pizza': 'Pizza',
+      'brandSetup.form.category.cafe': 'Coffee Shop',
+      'brandSetup.form.category.bakery': 'Bakery',
+      'brandSetup.form.category.other': 'Other',
+      'brandSetup.form.customCategory.label': 'Please write your restaurant category *',
+      'brandSetup.form.customCategory.placeholder': 'Enter your restaurant category',
+      'brandSetup.form.brandVision.label': 'Brand Vision and Value',
+      'brandSetup.form.brandVision.placeholder': 'Describe your brand\'s vision, mission, and core values. What makes your brand unique? What do you stand for?',
+      'brandSetup.form.cancel': 'Cancel',
+      'brandSetup.form.complete': 'Complete Setup',
+      'brandSetup.form.update': 'Update Brand',
+      'brandSetup.form.creating': 'Creating...',
+      'brandSetup.form.updating': 'Updating...',
+      'brandSetup.authError.title': 'Authentication Error',
+      'brandSetup.authError.description': 'Your session has expired or is invalid. Please sign in again.',
+      'brandSetup.authError.signInAgain': 'Sign In Again',
+      
       // Header
       'nav.features': 'Features',
       'nav.howItWorks': 'How It Works',
@@ -249,6 +301,7 @@ const getTranslations = () => {
       'dashboard.quickActions.addProducts': 'Start & add products',
       'dashboard.quickActions.viewCaptions': 'View Captions',
       'dashboard.quickActions.schedulePost': 'Schedule Post',
+      'dashboard.quickActions.workflowDescription': 'Complete workflow: Add content → Generate captions → Schedule posts',
       
       // TikTok Connection
       'dashboard.tiktok.title': 'TikTok Connection',
@@ -259,9 +312,28 @@ const getTranslations = () => {
       'dashboard.tiktok.connectDescription': 'Connect your TikTok account to access additional features and enhance your content creation.',
       'dashboard.tiktok.connecting': 'Connecting...',
       'dashboard.tiktok.connect': 'Connect TikTok',
+      'dashboard.tiktok.readyToConnect': 'Ready to connect',
+      'dashboard.tiktok.connectionSuccess': 'TikTok Connected!',
+      'dashboard.tiktok.connectionSuccessDescription': 'Your TikTok account has been connected successfully.',
+      'dashboard.tiktok.connectionFailed': 'TikTok Connection Failed',
+      'dashboard.tiktok.connectionSuccessPageTitle': 'TikTok Connected Successfully!',
+      'dashboard.tiktok.connectionFailedPageTitle': 'Connection Failed',
+      'dashboard.tiktok.connectionFailedPageDescription': 'There was an error connecting your TikTok account.',
+      'dashboard.tiktok.processingConnection': 'Processing TikTok Connection...',
+      'dashboard.tiktok.redirectingToDashboard': 'Redirecting to your dashboard...',
+      
+      // Instagram Connection
+      'dashboard.instagram.title': 'Instagram Business',
+      'dashboard.instagram.connectedAs': 'Connected as @{username}',
+      'dashboard.instagram.connectedStatus': 'Connected',
+      'dashboard.instagram.disconnect': 'Disconnect',
+      'dashboard.instagram.connecting': 'Connecting...',
+      'dashboard.instagram.connect': 'Connect Instagram Business',
+      'dashboard.instagram.readyToConnect': 'Ready to connect',
       
       // User Profile
       'dashboard.profile.owner': 'Owner',
+      'dashboard.profile.ownerOf': 'Owner of {name}',
       'dashboard.profile.profileSettings': 'Profile Settings',
       'dashboard.profile.accountSettings': 'Account Settings',
       'dashboard.profile.signOut': 'Sign Out',
@@ -274,6 +346,7 @@ const getTranslations = () => {
       'media.cancelSelection': 'Cancel Selection',
       'media.deleteSelected': 'Delete Selected ({count})',
       'media.deleteAll': 'Delete All Products',
+      'media.deleteProducts': 'Delete Products',
       'media.noMedia': 'No media uploaded yet',
       'media.noFilter': 'No {filter} found',
       'media.viewGrid': 'Grid View',
@@ -283,6 +356,131 @@ const getTranslations = () => {
       'media.filterProducts': 'Products',
       'media.filterWithCaptions': 'With Captions',
       'media.filterWithoutCaptions': 'Without Captions',
+
+      // Product Upload Page
+      'upload.title': 'Add Products',
+      'upload.description': 'Add your delicious dishes with details and images to generate AI-powered captions',
+      'upload.backToDashboard': 'Back to Dashboard',
+      'upload.platformConnectionStatus': 'Platform Connection Status',
+      'upload.platformConnectionDescription': 'Current platform connections for posting',
+      'upload.tiktokName': 'TikTok Name:',
+      'upload.loading': 'Loading...',
+      'upload.notConnected': 'Not connected',
+      'upload.connectedAs': 'Connected as @{username}',
+      'upload.productNumber': 'Product {number}',
+      'upload.socialMediaApps': '📱 Social Media Apps',
+      'upload.postToTikTok': 'Post to TikTok',
+      'upload.postToInstagram': 'Post to Instagram',
+      'upload.connectTikTokFirst': 'Connect TikTok account first',
+      'upload.connectInstagramFirst': 'Connect Instagram account first',
+      'upload.connectAccountTooltip': 'Connect your {platform} account from dashboard to enable posting to this app.',
+      'upload.advancedSettings': 'Advanced Settings',
+      'upload.privacyLevel': 'Privacy Level:',
+      'upload.public': 'Public',
+      'upload.friends': 'Friends',
+      'upload.onlyMe': 'Only me',
+      'upload.onlyMeDisabledTooltip': 'Branded content cannot be set to "Only me"',
+      'upload.interactionSettings': 'Interaction Settings',
+      'upload.allowComments': 'Allow Comments',
+      'upload.commercialContent': 'This content promotes a brand, product or service',
+      'upload.yourBrand': 'Your Brand',
+      'upload.brandedContent': 'Branded Content',
+      'upload.commercialContentWarning': '⚠️ You need to indicate if your content promotes yourself, a third party, or both.',
+      'upload.brandedContentPolicy': 'Branded Content Policy',
+      'upload.musicUsageConfirmation': 'Music Usage Confirmation',
+      'upload.complianceMessageBoth': 'By posting, you agree to TikTok\'s {brandedContentPolicy} and {musicUsageConfirmation}',
+      'upload.complianceMessageBranded': 'By posting, you agree to TikTok\'s {brandedContentPolicy}',
+      'upload.complianceMessageBrand': 'By posting, you agree to TikTok\'s {musicUsageConfirmation}',
+      'upload.connected': 'Connected',
+      
+      // Product Form
+      'productForm.productName': 'Product Name',
+      'productForm.required': '*',
+      'productForm.productNamePlaceholder': 'e.g., Margherita Pizza',
+      'productForm.price': 'Price ($)',
+      'productForm.pricePlaceholder': 'e.g., 12.99 (optional)',
+      'productForm.description': 'Description',
+      'productForm.descriptionPlaceholder': 'Describe your product... (optional)',
+      
+      // Product Image Upload
+      'productImage.productImage': 'Product Image',
+      'productImage.productPreview': 'Product preview',
+      'productImage.clickToUpload': 'Click to upload image',
+      
+      // Product Actions
+      'productActions.addAnother': 'Add Another Product',
+      'productActions.save': 'Save',
+      'productActions.saving': 'Saving...',
+      'productActions.saveAndGenerate': 'Save & Generate Captions',
+      'productActions.uploadingGenerating': 'Uploading & Generating Content...',
+
+      // Profile Settings Page
+      'profileSettings.title': 'Profile Settings',
+      'profileSettings.description': 'Update your personal and brand information',
+      'profileSettings.personalInfo': 'Personal Information',
+      'profileSettings.personalInfoDescription': 'Manage your personal account details',
+      'profileSettings.brandInfo': 'Brand Information',
+      'profileSettings.brandInfoDescription': 'Update your restaurant details and vision',
+      
+      // Profile Form
+      'profileForm.email': 'Email',
+      'profileForm.fullName': 'Full Name',
+      'profileForm.fullNamePlaceholder': 'Enter your full name',
+      'profileForm.updateProfile': 'Update Profile',
+      'profileForm.updating': 'Updating...',
+      'profileForm.profileUpdated': 'Profile Updated',
+      'profileForm.profileUpdatedDescription': 'Your profile information has been updated successfully.',
+      'profileForm.error': 'Error',
+      'profileForm.updateFailed': 'Failed to update profile information.',
+      
+      // Restaurant Form
+      'restaurantForm.brandName': 'Brand Name',
+      'restaurantForm.brandNamePlaceholder': 'Enter your brand name',
+      'restaurantForm.brandLocation': 'Brand Location',
+      'restaurantForm.selectLocations': 'Select locations',
+      'restaurantForm.specifyLocation': 'Specify your location',
+      'restaurantForm.brandType': 'Brand Type',
+      'restaurantForm.selectBrandType': 'Select brand type',
+      'restaurantForm.customBrandType': 'Please write your Brand type',
+      'restaurantForm.customBrandTypePlaceholder': 'Enter your brand type',
+      'restaurantForm.category': 'Category',
+      'restaurantForm.selectCategory': 'Select category',
+      'restaurantForm.customCategory': 'Please write your restaurant category',
+      'restaurantForm.customCategoryPlaceholder': 'Enter your restaurant category',
+      'restaurantForm.brandVision': 'Brand Vision and Value',
+      'restaurantForm.brandVisionPlaceholder': 'Describe your brand\'s vision, mission, and core values. What makes your brand unique? What do you stand for?',
+      'restaurantForm.updateBrand': 'Update Brand',
+      'restaurantForm.completeSetup': 'Complete Setup',
+      'restaurantForm.updating': 'Updating...',
+      'restaurantForm.creating': 'Creating...',
+      'restaurantForm.success': 'Success',
+      'restaurantForm.brandUpdated': 'Brand profile updated successfully',
+      'restaurantForm.brandCreated': 'Brand profile created successfully',
+      'restaurantForm.error': 'Error',
+      'restaurantForm.saveFailed': 'Failed to save brand information',
+      'restaurantForm.required': '*',
+      
+      // Brand Types
+      'brandTypes.restaurant': 'Restaurant',
+      'brandTypes.coffee': 'Coffee',
+      'brandTypes.bakery': 'Bakery',
+      'brandTypes.other': 'Other',
+      
+      // Restaurant Categories
+      'categories.fastFood': 'Fast Food',
+      'categories.casualDining': 'Casual Dining',
+      'categories.fineDining': 'Fine Dining',
+      'categories.middleEastern': 'Middle Eastern',
+      'categories.asian': 'Asian',
+      'categories.italian': 'Italian',
+      'categories.american': 'American',
+      'categories.mexican': 'Mexican',
+      'categories.indian': 'Indian',
+      'categories.seafood': 'Seafood',
+      'categories.pizza': 'Pizza',
+      'categories.coffeeShop': 'Coffee Shop',
+      'categories.bakery': 'Bakery',
+      'categories.other': 'Other',
 
       // Generated Captions
       'captions.title': 'Generated Captions',
@@ -454,27 +652,64 @@ const getTranslations = () => {
       'notifications.uploadStatus': 'Upload Status',
       'notifications.captionSettings': 'Get notified when AI captions are generated',
 
-      // Image Upload Page
-      'upload.backToDashboard': 'Back to Dashboard',
-      'upload.title': 'Upload Images',
-      'upload.description': 'Upload photos of your delicious dishes to generate AI-powered captions',
-      'upload.selectImages': 'Select Images',
-      'upload.selectImagesDescription': 'Choose multiple images to upload. Supported formats: JPG, PNG, WEBP',
-      'upload.clickToUpload': 'Click to upload images',
-      'upload.dragAndDrop': 'or drag and drop your files here',
-      'upload.selectedImages': 'Selected Images',
-      'upload.uploadButton': 'Upload {count} Image(s)',
-      'upload.uploading': 'Uploading...',
-      'upload.clearAll': 'Clear All',
-      'upload.uploadSuccess': 'Success!',
-      'upload.uploadSuccessDescription': '{count} image(s) uploaded successfully',
-      'upload.uploadFailed': 'Upload Failed',
-      'upload.uploadFailedDescription': 'Failed to upload images',
+
     },
     ar: {
+      // Common
+      'common.back': 'رجوع',
+      
+      // Brand Setup
+      'brandSetup.title.complete': 'إكمال ملف العلامة التجارية',
+      'brandSetup.title.update': 'تحديث ملف العلامة التجارية',
+      'brandSetup.description.complete': 'أخبرنا عن علامتك التجارية للبدء',
+      'brandSetup.description.update': 'تحديث معلومات علامتك التجارية',
+      'brandSetup.infoMessage.title': 'إنشاء محتوى عالي الجودة',
+      'brandSetup.infoMessage.description': 'قدم معلومات مفصلة ودقيقة حول علامتك التجارية لمساعدة الذكاء الاصطناعي في إنشاء محتوى أفضل وأكثر جاذبية لمنشورات وسائل التواصل الاجتماعي الخاصة بك.',
+      'brandSetup.form.brandName.label': 'اسم العلامة التجارية *',
+      'brandSetup.form.brandName.placeholder': 'أدخل اسم علامتك التجارية',
+      'brandSetup.form.brandLocation.label': 'موقع العلامة التجارية',
+      'brandSetup.form.brandLocation.placeholder': 'اختر المواقع',
+      'brandSetup.form.brandLocation.specify': 'حدد موقعك',
+      'brandSetup.form.brandType.label': 'نوع العلامة التجارية *',
+      'brandSetup.form.brandType.placeholder': 'اختر نوع العلامة التجارية',
+      'brandSetup.form.brandType.restaurant': 'مطعم',
+      'brandSetup.form.brandType.coffee': 'مقهى',
+      'brandSetup.form.brandType.bakery': 'مخبز',
+      'brandSetup.form.brandType.other': 'أخرى',
+      'brandSetup.form.customBrandType.label': 'يرجى كتابة نوع علامتك التجارية *',
+      'brandSetup.form.customBrandType.placeholder': 'أدخل نوع علامتك التجارية',
+      'brandSetup.form.category.label': 'الفئة *',
+      'brandSetup.form.category.placeholder': 'اختر الفئة',
+      'brandSetup.form.category.fastFood': 'وجبات سريعة',
+      'brandSetup.form.category.casualDining': 'مطعم عادي',
+      'brandSetup.form.category.fineDining': 'مطعم راقي',
+      'brandSetup.form.category.middleEastern': 'شرق أوسطي',
+      'brandSetup.form.category.asian': 'آسيوي',
+      'brandSetup.form.category.italian': 'إيطالي',
+      'brandSetup.form.category.american': 'أمريكي',
+      'brandSetup.form.category.mexican': 'مكسيكي',
+      'brandSetup.form.category.indian': 'هندي',
+      'brandSetup.form.category.seafood': 'مأكولات بحرية',
+      'brandSetup.form.category.pizza': 'بيتزا',
+      'brandSetup.form.category.cafe': 'مقهى',
+      'brandSetup.form.category.bakery': 'مخبز',
+      'brandSetup.form.category.other': 'أخرى',
+      'brandSetup.form.customCategory.label': 'يرجى كتابة فئة مطعمك *',
+      'brandSetup.form.customCategory.placeholder': 'أدخل فئة مطعمك',
+      'brandSetup.form.brandVision.label': 'رؤية وقيم العلامة التجارية',
+      'brandSetup.form.brandVision.placeholder': 'صف رؤية علامتك التجارية ومهمتها وقيمها الأساسية. ما الذي يجعل علامتك التجارية فريدة؟',
+      'brandSetup.form.cancel': 'إلغاء',
+      'brandSetup.form.complete': 'إكمال الإعداد',
+      'brandSetup.form.update': 'تحديث العلامة التجارية',
+      'brandSetup.form.creating': 'جارٍ الإنشاء...',
+      'brandSetup.form.updating': 'جارٍ التحديث...',
+      'brandSetup.authError.title': 'خطأ في المصادقة',
+      'brandSetup.authError.description': 'انتهت صلاحية جلستك أو أنها غير صالحة. يرجى تسجيل الدخول مرة أخرى.',
+      'brandSetup.authError.signInAgain': 'تسجيل الدخول مرة أخرى',
+      
       // Header
       'nav.features': 'المميزات',
-      'nav.howItWorks': 'كيف يعمل',
+      'nav.howItWorks': 'كيف تستخدم منصتنا',
       'nav.pricing': 'الأسعار',
       'nav.contact': 'اتصل بنا',
       'header.getStarted': 'ابدأ الآن',
@@ -575,7 +810,7 @@ const getTranslations = () => {
       'faq.questions.q3.question': 'هل يمكنني تخصيص وتعديل المحتوى المولد؟',
       'faq.questions.q3.answer': 'بالطبع! منصتنا توفر نقطة بداية رائعة، لكن لديك القدرة الكاملة لتحرير أو تعديل أو إعادة كتابة أي محتوى منتج بالكامل. يمكنك أيضاً تعيين تفضيلات للنبرة والأسلوب وكلمات مفتاحية محددة.',
       'faq.questions.q4.question': 'ما مدى دقة دعم اللهجة العربية؟',
-      'faq.questions.q4.answer': 'ذكاؤنا الاصطناعي مدرب خصيصاً على اللهجات العربية السعودية والفروق الثقافية. يفهم التعبيرات المحلية والمراجع الثقافية وينشئ محتوى أصيل يتردد صداه مع الجماهير الناطقة بالعربية.',
+      'faq.questions.q4.answer': 'ذكاؤنا الاصطناعي مدرب على اللهجات العربية السعودية والفروق الثقافية. يفهم التعبيرات المحلية والمراجع الثقافية وينشئ محتوى أصيل يتردد صداه مع الجماهير الناطقة بالعربية.',
       'faq.questions.q5.question': 'هل هناك تجربة مجانية متاحة؟',
       'faq.questions.q5.answer': 'نعم! خطتنا المجانية تشمل ١٤ منشور شهرياً مع تسميات توضيحية أساسية بالذكاء الاصطناعي لمنصتين اجتماعيتين. يمكنك الترقية في أي وقت للوصول إلى المزيد من الميزات والحدود الأعلى.',
       'faq.questions.q6.question': 'هل يمكنني جدولة المنشورات لوقت لاحق؟',
@@ -642,6 +877,7 @@ const getTranslations = () => {
       'dashboard.quickActions.addProducts': 'ابدأ وأضف منتجات',
       'dashboard.quickActions.viewCaptions': 'عرض المحتويات التي تم توليدها',
       'dashboard.quickActions.schedulePost': 'جدولة منشور',
+      'dashboard.quickActions.workflowDescription': 'الطريقة باختصار: إضافة منتجات ← توليد محتوى ← جدولة منشورات',
       
       // TikTok Connection
       'dashboard.tiktok.title': 'اتصال TikTok',
@@ -652,9 +888,28 @@ const getTranslations = () => {
       'dashboard.tiktok.connectDescription': 'اربط حسابك في TikTok للوصول إلى ميزات إضافية وتحسين إنشاء المحتوى.',
       'dashboard.tiktok.connecting': 'جارٍ الاتصال...',
       'dashboard.tiktok.connect': 'اربط TikTok',
+      'dashboard.tiktok.readyToConnect': 'جاهز للاتصال',
+      'dashboard.tiktok.connectionSuccess': 'تم ربط TikTok!',
+      'dashboard.tiktok.connectionSuccessDescription': 'تم ربط حساب TikTok الخاص بك بنجاح.',
+      'dashboard.tiktok.connectionFailed': 'فشل ربط TikTok',
+      'dashboard.tiktok.connectionSuccessPageTitle': 'تم ربط TikTok بنجاح!',
+      'dashboard.tiktok.connectionFailedPageTitle': 'فشل الاتصال',
+      'dashboard.tiktok.connectionFailedPageDescription': 'حدث خطأ أثناء ربط حساب TikTok الخاص بك.',
+      'dashboard.tiktok.processingConnection': 'جارٍ معالجة اتصال TikTok...',
+      'dashboard.tiktok.redirectingToDashboard': 'جارٍ التوجيه إلى لوحة التحكم...',
+      
+      // Instagram Connection
+      'dashboard.instagram.title': 'Instagram Business',
+      'dashboard.instagram.connectedAs': 'متصل باسم @{username}',
+      'dashboard.instagram.connectedStatus': 'متصل',
+      'dashboard.instagram.disconnect': 'قطع الاتصال',
+      'dashboard.instagram.connecting': 'جارٍ الاتصال...',
+      'dashboard.instagram.connect': 'اربط Instagram Business',
+      'dashboard.instagram.readyToConnect': 'جاهز للاتصال',
       
       // User Profile
       'dashboard.profile.owner': 'المالك',
+      'dashboard.profile.ownerOf': 'مالك {name}',
       'dashboard.profile.profileSettings': 'إعدادات الملف الشخصي',
       'dashboard.profile.accountSettings': 'إعدادات الحساب',
       'dashboard.profile.signOut': 'تسجيل الخروج',
@@ -667,6 +922,7 @@ const getTranslations = () => {
       'media.cancelSelection': 'إلغاء التحديد',
       'media.deleteSelected': 'حذف المحدد ({count})',
       'media.deleteAll': 'حذف جميع المنتجات',
+      'media.deleteProducts': 'حذف المنتجات',
       'media.noMedia': 'لم يتم رفع وسائط بعد',
       'media.noFilter': 'لا توجد {filter}',
       'media.viewGrid': 'عرض الشبكة',
@@ -676,6 +932,131 @@ const getTranslations = () => {
       'media.filterProducts': 'المنتجات',
       'media.filterWithCaptions': 'مع تسميات توضيحية',
       'media.filterWithoutCaptions': 'بدون تسميات توضيحية',
+
+      // Product Upload Page
+      'upload.title': 'إضافة المنتجات',
+      'upload.description': 'أضف أطباقك اللذيذة مع التفاصيل والصور لتوليد محتوى مدعوم بالذكاء الاصطناعي',
+      'upload.backToDashboard': 'العودة للوحة التحكم',
+      'upload.platformConnectionStatus': 'حالة اتصال المنصات',
+      'upload.platformConnectionDescription': 'اتصالات المنصات الحالية للنشر',
+      'upload.tiktokName': 'اسم TikTok:',
+      'upload.loading': 'جارٍ التحميل...',
+      'upload.notConnected': 'غير متصل',
+      'upload.connectedAs': 'متصل باسم @{username}',
+      'upload.productNumber': 'المنتج {number}',
+      'upload.socialMediaApps': '📱 تطبيقات التواصل الاجتماعي',
+      'upload.postToTikTok': 'النشر على TikTok',
+      'upload.postToInstagram': 'النشر على Instagram',
+      'upload.connectTikTokFirst': 'اربط حساب TikTok أولاً',
+      'upload.connectInstagramFirst': 'اربط حساب Instagram أولاً',
+      'upload.connectAccountTooltip': 'اربط حساب {platform} من لوحة التحكم لتمكين النشر على هذا التطبيق.',
+      'upload.advancedSettings': 'الإعدادات المتقدمة',
+      'upload.privacyLevel': 'مستوى الخصوصية:',
+      'upload.public': 'عام',
+      'upload.friends': 'الأصدقاء',
+      'upload.onlyMe': 'أنا فقط',
+      'upload.onlyMeDisabledTooltip': 'لا يمكن تعيين المحتوى المُعلن عنه إلى "أنا فقط"',
+      'upload.interactionSettings': 'إعدادات التفاعل',
+      'upload.allowComments': 'السماح بالتعليقات',
+      'upload.commercialContent': 'هذا المحتوى يروج لعلامة تجارية أو منتج أو خدمة',
+      'upload.yourBrand': 'علامتك التجارية',
+      'upload.brandedContent': 'محتوى مُعلن عنه',
+      'upload.commercialContentWarning': '⚠️ تحتاج إلى الإشارة إلى ما إذا كان المحتوى يروج لنفسك أو لطرف ثالث أو كليهما.',
+      'upload.brandedContentPolicy': 'سياسة المحتوى المُعلن عنه',
+      'upload.musicUsageConfirmation': 'تأكيد استخدام الموسيقى',
+      'upload.complianceMessageBoth': 'بالنشر، فإنك توافق على {brandedContentPolicy} و {musicUsageConfirmation} الخاصة بـ TikTok',
+      'upload.complianceMessageBranded': 'بالنشر، فإنك توافق على {brandedContentPolicy} الخاصة بـ TikTok',
+      'upload.complianceMessageBrand': 'بالنشر، فإنك توافق على {musicUsageConfirmation} الخاصة بـ TikTok',
+      'upload.connected': 'متصل',
+      
+      // Product Form
+      'productForm.productName': 'اسم المنتج',
+      'productForm.required': '*',
+      'productForm.productNamePlaceholder': 'مثال: بيتزا مارغريتا',
+      'productForm.price': 'السعر (ريال)',
+      'productForm.pricePlaceholder': 'مثال: 12.99 (اختياري)',
+      'productForm.description': 'الوصف',
+      'productForm.descriptionPlaceholder': 'صف منتجك... (اختياري)',
+      
+      // Product Image Upload
+      'productImage.productImage': 'صورة المنتج',
+      'productImage.productPreview': 'معاينة المنتج',
+      'productImage.clickToUpload': 'انقر لرفع الصورة',
+      
+      // Product Actions
+      'productActions.addAnother': 'إضافة منتج آخر',
+      'productActions.save': 'حفظ',
+      'productActions.saving': 'جارٍ الحفظ...',
+      'productActions.saveAndGenerate': 'حفظ وتوليد المحتوى',
+      'productActions.uploadingGenerating': 'جارٍ الرفع وتوليد المحتوى...',
+
+      // Profile Settings Page
+      'profileSettings.title': 'إعدادات الملف الشخصي',
+      'profileSettings.description': 'تحديث معلوماتك الشخصية ومعلومات العلامة التجارية',
+      'profileSettings.personalInfo': 'المعلومات الشخصية',
+      'profileSettings.personalInfoDescription': 'إدارة تفاصيل حسابك الشخصي',
+      'profileSettings.brandInfo': 'معلومات العلامة التجارية',
+      'profileSettings.brandInfoDescription': 'تحديث تفاصيل منشأتك ورؤيتها',
+      
+      // Profile Form
+      'profileForm.email': 'البريد الإلكتروني',
+      'profileForm.fullName': 'الاسم الكامل',
+      'profileForm.fullNamePlaceholder': 'أدخل اسمك الكامل',
+      'profileForm.updateProfile': 'تحديث الملف الشخصي',
+      'profileForm.updating': 'جارٍ التحديث...',
+      'profileForm.profileUpdated': 'تم تحديث الملف الشخصي',
+      'profileForm.profileUpdatedDescription': 'تم تحديث معلومات ملفك الشخصي بنجاح.',
+      'profileForm.error': 'خطأ',
+      'profileForm.updateFailed': 'فشل في تحديث معلومات الملف الشخصي.',
+      
+      // Restaurant Form
+      'restaurantForm.brandName': 'اسم العلامة التجارية',
+      'restaurantForm.brandNamePlaceholder': 'أدخل اسم علامتك التجارية',
+      'restaurantForm.brandLocation': 'موقع العلامة التجارية',
+      'restaurantForm.selectLocations': 'اختر المواقع',
+      'restaurantForm.specifyLocation': 'حدد موقعك',
+      'restaurantForm.brandType': 'نوع العلامة التجارية',
+      'restaurantForm.selectBrandType': 'اختر نوع العلامة التجارية',
+      'restaurantForm.customBrandType': 'يرجى كتابة نوع علامتك التجارية',
+      'restaurantForm.customBrandTypePlaceholder': 'أدخل نوع علامتك التجارية',
+      'restaurantForm.category': 'الفئة',
+      'restaurantForm.selectCategory': 'اختر الفئة',
+      'restaurantForm.customCategory': 'يرجى كتابة فئة مطعمك',
+      'restaurantForm.customCategoryPlaceholder': 'أدخل فئة مطعمك',
+      'restaurantForm.brandVision': 'رؤية وقيمة العلامة التجارية',
+      'restaurantForm.brandVisionPlaceholder': 'صف رؤية علامتك التجارية ومهمتها وقيمها الأساسية. ما الذي يجعل علامتك التجارية فريدة؟ ما الذي تمثله؟',
+      'restaurantForm.updateBrand': 'تحديث العلامة التجارية',
+      'restaurantForm.completeSetup': 'إكمال الإعداد',
+      'restaurantForm.updating': 'جارٍ التحديث...',
+      'restaurantForm.creating': 'جارٍ الإنشاء...',
+      'restaurantForm.success': 'نجح',
+      'restaurantForm.brandUpdated': 'تم تحديث ملف العلامة التجارية بنجاح',
+      'restaurantForm.brandCreated': 'تم إنشاء ملف العلامة التجارية بنجاح',
+      'restaurantForm.error': 'خطأ',
+      'restaurantForm.saveFailed': 'فشل في حفظ معلومات العلامة التجارية',
+      'restaurantForm.required': '*',
+      
+      // Brand Types
+      'brandTypes.restaurant': 'مطعم',
+      'brandTypes.coffee': 'قهوة',
+      'brandTypes.bakery': 'مخبز',
+      'brandTypes.other': 'أخرى',
+      
+      // Restaurant Categories
+      'categories.fastFood': 'وجبات سريعة',
+      'categories.casualDining': 'مطاعم عائلية',
+      'categories.fineDining': 'مطاعم راقية',
+      'categories.middleEastern': 'شرق أوسطي',
+      'categories.asian': 'آسيوي',
+      'categories.italian': 'إيطالي',
+      'categories.american': 'أمريكي',
+      'categories.mexican': 'مكسيكي',
+      'categories.indian': 'هندي',
+      'categories.seafood': 'مأكولات بحرية',
+      'categories.pizza': 'بيتزا',
+      'categories.coffeeShop': 'مقهى',
+      'categories.bakery': 'مخبز',
+      'categories.other': 'أخرى',
 
       // Generated Captions
       'captions.title': 'توليد المحتوى',
@@ -692,8 +1073,8 @@ const getTranslations = () => {
       'captions.schedule': 'جدولة',
 
       // Table Headers
-      'table.content': 'المحتوى',
-      'table.caption': 'التسمية',
+      'table.content': 'المنتج',
+      'table.caption': 'المحتوى',
       'table.details': 'التفاصيل',
       'table.status': 'الحالة',
       'table.performance': 'الأداء',
@@ -847,22 +1228,7 @@ const getTranslations = () => {
       'notifications.uploadStatus': 'حالة الرفع',
       'notifications.captionSettings': 'احصل على إشعار عند توليد محتوى بالذكاء الاصطناعي',
 
-      // Image Upload Page
-      'upload.backToDashboard': 'العودة إلى لوحة التحكم',
-      'upload.title': 'رفع الصور',
-      'upload.description': 'ارفع صور أطباقك اللذيذة لإنتاج تسميات توضيحية بالذكاء الاصطناعي',
-      'upload.selectImages': 'اختر الصور',
-      'upload.selectImagesDescription': 'اختر عدة صور للرفع. التنسيقات المدعومة: JPG، PNG، WEBP',
-      'upload.clickToUpload': 'انقر لرفع الصور',
-      'upload.dragAndDrop': 'أو اسحب وأفلت ملفاتك هنا',
-      'upload.selectedImages': 'الصور المختارة',
-      'upload.uploadButton': 'رفع {count} صورة',
-      'upload.uploading': 'جارٍ الرفع...',
-      'upload.clearAll': 'مسح الكل',
-      'upload.uploadSuccess': 'نجاح!',
-      'upload.uploadSuccessDescription': 'تم رفع {count} صورة بنجاح',
-      'upload.uploadFailed': 'فشل الرفع',
-      'upload.uploadFailedDescription': 'فشل في رفع الصور',
+
     }
   };
 };

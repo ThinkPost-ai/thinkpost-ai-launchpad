@@ -12,6 +12,7 @@ import TikTokIcon from '@/components/ui/TikTokIcon';
 import { Instagram } from 'lucide-react';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Tooltip,
   TooltipContent,
@@ -66,6 +67,7 @@ const ProductCard = ({
   onRemoveImage,
   onTikTokValidationChange
 }: ProductCardProps) => {
+  const { t } = useLanguage();
   const { tiktokProfile } = useTikTokConnection();
   const { profile: instagramProfile } = useInstagramConnection();
   
@@ -94,54 +96,64 @@ const ProductCard = ({
       // Both selected
       return (
         <span>
-          By posting, you agree to TikTok's{' '}
-          <a 
-            href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Branded Content Policy
-          </a>{' '}
-          and{' '}
-          <a 
-            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Music Usage Confirmation
-          </a>
+          {t('upload.complianceMessageBoth', {
+            brandedContentPolicy: (
+              <a 
+                href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {t('upload.brandedContentPolicy')}
+              </a>
+            ),
+            musicUsageConfirmation: (
+              <a 
+                href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {t('upload.musicUsageConfirmation')}
+              </a>
+            )
+          })}
         </span>
       );
     } else if (product.tiktokSettings.brandedContent) {
       // Only branded content
       return (
         <span>
-          By posting, you agree to TikTok's{' '}
-          <a 
-            href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Branded Content Policy
-          </a>
+          {t('upload.complianceMessageBranded', {
+            brandedContentPolicy: (
+              <a 
+                href="https://www.tiktok.com/legal/page/global/bc-policy/en" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {t('upload.brandedContentPolicy')}
+              </a>
+            )
+          })}
         </span>
       );
     } else if (product.tiktokSettings.yourBrand) {
       // Only your brand
       return (
         <span>
-          By posting, you agree to TikTok's{' '}
-          <a 
-            href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Music Usage Confirmation
-          </a>
+          {t('upload.complianceMessageBrand', {
+            musicUsageConfirmation: (
+              <a 
+                href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {t('upload.musicUsageConfirmation')}
+              </a>
+            )
+          })}
         </span>
       );
     }
@@ -196,7 +208,7 @@ const ProductCard = ({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Product {index + 1}</CardTitle>
+          <CardTitle>{t('upload.productNumber', { number: index + 1 })}</CardTitle>
           {canRemove && (
             <Button
               variant="ghost"
@@ -238,7 +250,7 @@ const ProductCard = ({
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-4 flex items-center gap-2">
-                📱 Social Media Apps
+                {t('upload.socialMediaApps')}
               </h3>
               
               <div className="space-y-4">
@@ -255,7 +267,7 @@ const ProductCard = ({
                             <div>
                               <Label className="text-base font-medium">TikTok</Label>
                               <p className="text-sm text-muted-foreground">
-                                {isTikTokConnected ? 'Post to TikTok' : 'Connect TikTok account first'}
+                                {isTikTokConnected ? t('upload.postToTikTok') : t('upload.connectTikTokFirst')}
                               </p>
                             </div>
                           </div>
@@ -292,7 +304,7 @@ const ProductCard = ({
                       </TooltipTrigger>
                       {!isTikTokConnected && (
                         <TooltipContent>
-                          <p>Connect your TikTok account from dashboard to enable posting to this app.</p>
+                          <p>{t('upload.connectAccountTooltip', { platform: 'TikTok' })}</p>
                         </TooltipContent>
                       )}
                     </Tooltip>
@@ -304,13 +316,13 @@ const ProductCard = ({
                       <div className="mb-4">
                         <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                           <TikTokIcon className="h-4 w-4" size={16} />
-                          Advanced Settings
+                          {t('upload.advancedSettings')}
                         </h4>
                         <div className="space-y-4 text-sm">
                           {/* Privacy Level */}
                           <div>
                             <Label className="font-medium flex items-center gap-1 mb-3">
-                              Privacy Level:
+                              {t('upload.privacyLevel')}
                             </Label>
                             <RadioGroup 
                               value={product.tiktokSettings.privacyLevel.toUpperCase()} 
@@ -320,13 +332,13 @@ const ProductCard = ({
                               <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="PUBLIC" id={`public-${index}`} />
                                 <Label htmlFor={`public-${index}`} className="text-sm">
-                                  Public
+                                  {t('upload.public')}
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="FRIENDS" id={`friends-${index}`} />
                                 <Label htmlFor={`friends-${index}`} className="text-sm">
-                                  Friends
+                                  {t('upload.friends')}
                                 </Label>
                               </div>
                               <TooltipProvider>
@@ -342,13 +354,13 @@ const ProductCard = ({
                                         htmlFor={`only-me-${index}`} 
                                         className={`text-sm ${isOnlyMeDisabled() ? 'text-gray-400' : ''}`}
                                       >
-                                        Only me
+                                        {t('upload.onlyMe')}
                                       </Label>
                                     </div>
                                   </TooltipTrigger>
                                   {isOnlyMeDisabled() && (
                                     <TooltipContent>
-                                      <p>Branded content cannot be set to "Only me"</p>
+                                      <p>{t('upload.onlyMeDisabledTooltip')}</p>
                                     </TooltipContent>
                                   )}
                                 </Tooltip>
@@ -359,7 +371,7 @@ const ProductCard = ({
                           {/* Interaction Settings */}
                           <div>
                             <Label className="font-medium mb-3 block">
-                              Interaction Settings
+                              {t('upload.interactionSettings')}
                             </Label>
                             <div className="flex items-center space-x-2">
                               <Checkbox 
@@ -370,7 +382,7 @@ const ProductCard = ({
                                 }
                               />
                               <Label htmlFor={`allow-comments-${index}`} className="text-sm">
-                                Allow Comments
+                                {t('upload.allowComments')}
                               </Label>
                             </div>
                           </div>
@@ -391,7 +403,7 @@ const ProductCard = ({
                                 }
                               />
                               <Label htmlFor={`commercial-${index}`}>
-                                This content promotes a brand, product or service
+                                {t('upload.commercialContent')}
                               </Label>
                             </div>
 
@@ -407,7 +419,7 @@ const ProductCard = ({
                                     }
                                   />
                                   <Label htmlFor={`your-brand-${index}`}>
-                                    Your Brand
+                                    {t('upload.yourBrand')}
                                   </Label>
                                 </div>
                                 
@@ -418,7 +430,7 @@ const ProductCard = ({
                                     onCheckedChange={handleBrandedContentChange}
                                   />
                                   <Label htmlFor={`branded-content-${index}`}>
-                                    Branded Content
+                                    {t('upload.brandedContent')}
                                   </Label>
                                 </div>
                               </div>
@@ -428,7 +440,7 @@ const ProductCard = ({
                             {showTikTokValidationWarning && (
                               <div className="ml-6 mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
                                 <p className="text-sm text-red-700 dark:text-red-300">
-                                  ⚠️ You need to indicate if your content promotes yourself, a third party, or both.
+                                  {t('upload.commercialContentWarning')}
                                 </p>
                               </div>
                             )}
@@ -460,7 +472,7 @@ const ProductCard = ({
                             <div>
                               <Label className="text-sm font-medium">Instagram</Label>
                               <p className="text-xs text-muted-foreground">
-                                {isInstagramConnected ? 'Connected' : 'Not connected'}
+                                {isInstagramConnected ? t('upload.connected') : t('upload.notConnected')}
                               </p>
                             </div>
                           </div>
@@ -477,7 +489,7 @@ const ProductCard = ({
                       </TooltipTrigger>
                       {!isInstagramConnected && (
                         <TooltipContent>
-                          <p>Connect your Instagram account from dashboard to enable posting to this app.</p>
+                          <p>{t('upload.connectAccountTooltip', { platform: 'Instagram' })}</p>
                         </TooltipContent>
                       )}
                     </Tooltip>

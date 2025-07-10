@@ -7,9 +7,11 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CaptionsPage = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [checkingRestaurant, setCheckingRestaurant] = useState(true);
   const { restaurant, isLoading, handleCreditsUpdate } = useDashboardData();
@@ -79,7 +81,7 @@ const CaptionsPage = () => {
             className="flex items-center gap-2 text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            {t('upload.backToDashboard')}
           </Button>
         </div>
 

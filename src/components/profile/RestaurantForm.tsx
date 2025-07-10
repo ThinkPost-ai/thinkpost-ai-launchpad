@@ -32,43 +32,6 @@ interface RestaurantFormProps {
   restaurant: Restaurant | null;
 }
 
-// Brand types with their categories (same as Brand Setup)
-const brandTypes = [
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'coffee', label: 'Coffee' },
-  { value: 'bakery', label: 'Bakery' },
-  { value: 'other', label: 'Other' }
-];
-
-// Categories for each brand type (same as Brand Setup)
-const brandCategories = {
-  restaurant: [
-    { value: 'fast_food', label: 'Fast Food' },
-    { value: 'casual_dining', label: 'Casual Dining' },
-    { value: 'fine_dining', label: 'Fine Dining' },
-    { value: 'middle_eastern', label: 'Middle Eastern' },
-    { value: 'asian', label: 'Asian' },
-    { value: 'italian', label: 'Italian' },
-    { value: 'american', label: 'American' },
-    { value: 'mexican', label: 'Mexican' },
-    { value: 'indian', label: 'Indian' },
-    { value: 'seafood', label: 'Seafood' },
-    { value: 'pizza', label: 'Pizza' },
-    { value: 'other', label: 'Other' }
-  ],
-  coffee: [
-    { value: 'cafe', label: 'Coffee Shop' },
-    { value: 'other', label: 'Other' }
-  ],
-  bakery: [
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'other', label: 'Other' }
-  ],
-  other: [
-    { value: 'other', label: 'Other' }
-  ]
-};
-
 // Saudi cities data (same as Brand Setup)
 const saudiCities = {
   en: [
@@ -157,7 +120,7 @@ const reverseCityMapping: { [key: string]: string } = Object.fromEntries(
 const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -169,6 +132,43 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
     customBrandType: '',
     customCategory: ''
   });
+
+  // Brand types with their categories using translation keys
+  const brandTypes = [
+    { value: 'restaurant', label: t('brandTypes.restaurant') },
+    { value: 'coffee', label: t('brandTypes.coffee') },
+    { value: 'bakery', label: t('brandTypes.bakery') },
+    { value: 'other', label: t('brandTypes.other') }
+  ];
+
+  // Categories for each brand type using translation keys
+  const brandCategories = {
+    restaurant: [
+      { value: 'fast_food', label: t('categories.fastFood') },
+      { value: 'casual_dining', label: t('categories.casualDining') },
+      { value: 'fine_dining', label: t('categories.fineDining') },
+      { value: 'middle_eastern', label: t('categories.middleEastern') },
+      { value: 'asian', label: t('categories.asian') },
+      { value: 'italian', label: t('categories.italian') },
+      { value: 'american', label: t('categories.american') },
+      { value: 'mexican', label: t('categories.mexican') },
+      { value: 'indian', label: t('categories.indian') },
+      { value: 'seafood', label: t('categories.seafood') },
+      { value: 'pizza', label: t('categories.pizza') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    coffee: [
+      { value: 'cafe', label: t('categories.coffeeShop') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    bakery: [
+      { value: 'bakery', label: t('categories.bakery') },
+      { value: 'other', label: t('categories.other') }
+    ],
+    other: [
+      { value: 'other', label: t('categories.other') }
+    ]
+  };
 
   // Get current cities based on language (same as Brand Setup)
   const currentCities = saudiCities[language] || saudiCities.en;
@@ -342,8 +342,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Brand profile updated successfully",
+          title: t('restaurantForm.success'),
+          description: t('restaurantForm.brandUpdated'),
         });
       } else {
         // Create new restaurant
@@ -357,8 +357,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Brand profile created successfully",
+          title: t('restaurantForm.success'),
+          description: t('restaurantForm.brandCreated'),
         });
       }
 
@@ -366,8 +366,8 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       window.location.reload();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save brand information",
+        title: t('restaurantForm.error'),
+        description: error.message || t('restaurantForm.saveFailed'),
         variant: "destructive"
       });
     } finally {
@@ -379,13 +379,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {/* Brand Name */}
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-sm font-medium">Brand Name *</Label>
+        <Label htmlFor="name" className="text-sm font-medium">
+          {t('restaurantForm.brandName')} <span className="text-red-500">{t('restaurantForm.required')}</span>
+        </Label>
         <Input
           id="name"
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Enter your brand name"
+          placeholder={t('restaurantForm.brandNamePlaceholder')}
           required
           className="h-11 text-base"
         />
@@ -393,7 +395,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Brand Location (Multi-select) */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Brand Location</Label>
+        <Label className="text-sm font-medium">{t('restaurantForm.brandLocation')}</Label>
         <MultiSelect
           options={currentCities.map(city => ({ value: city, label: city }))}
           selected={formData.locations}
@@ -401,7 +403,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
             ...prev,
             locations: values
           }))}
-          placeholder="Select locations"
+          placeholder={t('restaurantForm.selectLocations')}
           className="h-11 text-base"
         />
         {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
@@ -409,7 +411,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
             type="text"
             value={formData.otherLocation}
             onChange={(e) => setFormData({ ...formData, otherLocation: e.target.value })}
-            placeholder="Specify your location"
+            placeholder={t('restaurantForm.specifyLocation')}
             className="h-11 text-base mt-2"
           />
         )}
@@ -417,13 +419,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Brand Type */}
       <div className="space-y-2">
-        <Label htmlFor="brandType" className="text-sm font-medium">Brand Type *</Label>
+        <Label htmlFor="brandType" className="text-sm font-medium">
+          {t('restaurantForm.brandType')} <span className="text-red-500">{t('restaurantForm.required')}</span>
+        </Label>
         <Select 
           value={formData.brandType} 
           onValueChange={handleBrandTypeChange}
         >
           <SelectTrigger className="h-11 text-base">
-            <SelectValue placeholder="Select brand type" />
+            <SelectValue placeholder={t('restaurantForm.selectBrandType')} />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
             {brandTypes.map((type) => (
@@ -442,13 +446,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       {/* Custom Brand Type Input (shown when "Other" is selected) */}
       {formData.brandType === 'other' && (
         <div className="space-y-2">
-          <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+          <Label htmlFor="customBrandType" className="text-sm font-medium">
+            {t('restaurantForm.customBrandType')} <span className="text-red-500">{t('restaurantForm.required')}</span>
+          </Label>
           <Input
             id="customBrandType"
             type="text"
             value={formData.customBrandType}
             onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
-            placeholder="Enter your brand type"
+            placeholder={t('restaurantForm.customBrandTypePlaceholder')}
             required
             className="h-11 text-base"
           />
@@ -458,13 +464,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
       {formData.brandType === 'restaurant' && (
         <div className="space-y-2">
-          <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+          <Label htmlFor="category" className="text-sm font-medium">
+            {t('restaurantForm.category')} <span className="text-red-500">{t('restaurantForm.required')}</span>
+          </Label>
           <Select 
             value={formData.category} 
             onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="h-11 text-base">
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder={t('restaurantForm.selectCategory')} />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
               {brandCategories.restaurant.map((category) => (
@@ -484,13 +492,15 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
       {/* Custom Restaurant Category Input (shown when Category is "other") */}
       {formData.brandType === 'restaurant' && formData.category === 'other' && (
         <div className="space-y-2">
-          <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+          <Label htmlFor="customCategory" className="text-sm font-medium">
+            {t('restaurantForm.customCategory')} <span className="text-red-500">{t('restaurantForm.required')}</span>
+          </Label>
           <Input
             id="customCategory"
             type="text"
             value={formData.customCategory}
             onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
-            placeholder="Enter your restaurant category"
+            placeholder={t('restaurantForm.customCategoryPlaceholder')}
             required
             className="h-11 text-base"
           />
@@ -499,12 +509,12 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Brand Vision and Value */}
       <div className="space-y-2">
-        <Label htmlFor="vision" className="text-sm font-medium">Brand Vision and Value</Label>
+        <Label htmlFor="vision" className="text-sm font-medium">{t('restaurantForm.brandVision')}</Label>
         <Textarea
           id="vision"
           value={formData.vision}
           onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-          placeholder="Describe your brand's vision, mission, and core values. What makes your brand unique? What do you stand for?"
+          placeholder={t('restaurantForm.brandVisionPlaceholder')}
           rows={4}
           className="resize-none text-base min-h-[100px]"
         />
@@ -518,10 +528,10 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {restaurant ? 'Updating...' : 'Creating...'}
+            {restaurant ? t('restaurantForm.updating') : t('restaurantForm.creating')}
           </>
         ) : (
-          restaurant ? 'Update Brand' : 'Complete Setup'
+          restaurant ? t('restaurantForm.updateBrand') : t('restaurantForm.completeSetup')
         )}
       </Button>
     </form>

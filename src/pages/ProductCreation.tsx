@@ -10,11 +10,13 @@ import { useProductManagement } from '@/hooks/useProductManagement';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
 const ProductCreation = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { tiktokProfile, isLoading: tiktokLoading } = useTikTokConnection();
   const { profile: instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
   const { session } = useAuth();
@@ -82,21 +84,21 @@ const ProductCreation = () => {
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            {t('upload.backToDashboard')}
           </Button>
           <h1 className="text-3xl font-bold text-deep-blue dark:text-white mb-2">
-            Add Products
+            {t('upload.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Add your delicious dishes with details and images to generate AI-powered captions
+            {t('upload.description')}
           </p>
         </div>
 
         {/* Platform Connection Status */}
         <Card className="mb-6">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Platform Connection Status</CardTitle>
-            <CardDescription>Current platform connections for posting</CardDescription>
+            <CardTitle className="text-lg">{t('upload.platformConnectionStatus')}</CardTitle>
+            <CardDescription>{t('upload.platformConnectionDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,15 +122,15 @@ const ProductCreation = () => {
                   <p className="text-sm text-muted-foreground">
                     {tiktokProfile?.tiktok_connected ? (
                       <span>
-                        <span className="font-medium">TikTok Name:</span>{' '}
+                        <span className="font-medium">{t('upload.tiktokName')}</span>{' '}
                         {loadingDisplayName ? (
-                          'Loading...'
+                          t('upload.loading')
                         ) : (
                           tiktokDisplayName || tiktokProfile.tiktok_username || 'TikTok User'
                         )}
                       </span>
                     ) : (
-                      'Not connected'
+                      t('upload.notConnected')
                     )}
                   </p>
                 </div>
@@ -150,8 +152,8 @@ const ProductCreation = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {instagramProfile?.connected 
-                      ? `Connected as @${instagramProfile.username || 'Instagram User'}`
-                      : 'Not connected'
+                      ? t('upload.connectedAs', { username: instagramProfile.username || 'Instagram User' })
+                      : t('upload.notConnected')
                     }
                   </p>
                 </div>

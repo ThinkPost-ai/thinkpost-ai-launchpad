@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductCreationActionsProps {
   onAddProduct: () => void;
@@ -18,6 +19,8 @@ const ProductCreationActions = ({
   generatingCaptions,
   isFormValid
 }: ProductCreationActionsProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-col gap-4">
       <Button
@@ -26,7 +29,7 @@ const ProductCreationActions = ({
         className="w-full"
       >
         <Plus className="mr-2 h-4 w-4" />
-        Add Another Product
+        {t('productActions.addAnother')}
       </Button>
 
       <div className="flex gap-4">
@@ -39,10 +42,10 @@ const ProductCreationActions = ({
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t('productActions.saving')}
             </>
           ) : (
-            'Save'
+            t('productActions.save')
           )}
         </Button>
         <Button
@@ -53,10 +56,10 @@ const ProductCreationActions = ({
           {generatingCaptions ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading & Generating Content...
+              {t('productActions.uploadingGenerating')}
             </>
           ) : (
-            'Save & Generate Captions'
+            t('productActions.saveAndGenerate')
           )}
         </Button>
       </div>

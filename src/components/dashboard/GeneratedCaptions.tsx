@@ -177,13 +177,13 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
           {captions.length === 0 ? (
             <EmptyCaptionsState />
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border mx-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('table.content')}</TableHead>
-                    <TableHead>{t('table.caption')}</TableHead>
-                    <TableHead>{t('table.actions')}</TableHead>
+                    <TableHead className="text-center">{t('table.content')}</TableHead>
+                    <TableHead className="text-center">{t('table.caption')}</TableHead>
+                    <TableHead className="text-center">{t('table.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

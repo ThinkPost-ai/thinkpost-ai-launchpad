@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ interface ProfileData {
 
 const ProfileForm = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -86,14 +88,14 @@ const ProfileForm = () => {
       }
 
       toast({
-        title: "Profile Updated",
-        description: "Your profile information has been updated successfully.",
+        title: t('profileForm.profileUpdated'),
+        description: t('profileForm.profileUpdatedDescription'),
       });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Error",
-        description: "Failed to update profile information.",
+        title: t('profileForm.error'),
+        description: t('profileForm.updateFailed'),
         variant: "destructive"
       });
     } finally {
@@ -120,7 +122,7 @@ const ProfileForm = () => {
 
       {/* Email (read-only) */}
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('profileForm.email')}</Label>
         <Input
           id="email"
           type="email"
@@ -132,13 +134,13 @@ const ProfileForm = () => {
 
       {/* Full Name */}
       <div>
-        <Label htmlFor="full_name">Full Name</Label>
+        <Label htmlFor="full_name">{t('profileForm.fullName')}</Label>
         <Input
           id="full_name"
           type="text"
           value={profileData.full_name}
           onChange={(e) => handleInputChange('full_name', e.target.value)}
-          placeholder="Enter your full name"
+          placeholder={t('profileForm.fullNamePlaceholder')}
           className="mt-1"
         />
       </div>
@@ -150,7 +152,7 @@ const ProfileForm = () => {
         disabled={isLoading}
         className="w-full bg-gradient-primary hover:opacity-90"
       >
-        {isLoading ? 'Updating...' : 'Update Profile'}
+        {isLoading ? t('profileForm.updating') : t('profileForm.updateProfile')}
       </Button>
     </form>
   );

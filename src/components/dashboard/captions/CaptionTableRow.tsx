@@ -79,8 +79,8 @@ const CaptionTableRow = ({
 
   return (
     <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
+      <TableCell className="text-center">
+        <div className="flex items-center gap-3 justify-center">
           <img
             src={getImageUrl(caption.image_path)}
             alt={caption.name || caption.original_filename || 'Content'}
@@ -103,7 +103,7 @@ const CaptionTableRow = ({
           </div>
         </div>
       </TableCell>
-      <TableCell className="max-w-xs">
+      <TableCell className="max-w-xs text-center">
         {isEditing ? (
           <div className="flex flex-col gap-2">
             <Textarea
@@ -130,7 +130,7 @@ const CaptionTableRow = ({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-right line-clamp-3" dir="rtl">
+          <p className="text-sm text-center line-clamp-3">
             {caption.caption || (
               <span className="text-muted-foreground italic">
                 No caption generated yet
@@ -139,8 +139,8 @@ const CaptionTableRow = ({
           </p>
         )}
       </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
+      <TableCell className="text-center">
+        <div className="flex items-center gap-2 justify-center">
           <Button 
             size="sm" 
             variant="outline"

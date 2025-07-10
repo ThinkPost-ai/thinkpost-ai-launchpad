@@ -2,11 +2,13 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const TikTokLoginCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -38,7 +40,7 @@ const TikTokLoginCallback = () => {
       }
 
       toast({
-        title: "TikTok Connection Failed",
+        title: t('dashboard.tiktok.connectionFailed'),
         description: errorMessage,
         variant: "destructive"
       });
@@ -49,8 +51,8 @@ const TikTokLoginCallback = () => {
 
     if (tiktokConnected === 'connected') {
       toast({
-        title: "TikTok Connected!",
-        description: "Your TikTok account has been connected successfully.",
+        title: t('dashboard.tiktok.connectionSuccess'),
+        description: t('dashboard.tiktok.connectionSuccessDescription'),
       });
     }
 
@@ -79,16 +81,16 @@ const TikTokLoginCallback = () => {
         </div>
         <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
           {hasError 
-            ? 'Connection Failed' 
+            ? t('dashboard.tiktok.connectionFailedPageTitle')
             : isConnected 
-              ? 'TikTok Connected Successfully!' 
-              : 'Processing TikTok Connection...'
+              ? t('dashboard.tiktok.connectionSuccessPageTitle')
+              : t('dashboard.tiktok.processingConnection')
           }
         </h2>
         <p className="text-muted-foreground">
           {hasError 
-            ? 'There was an error connecting your TikTok account.' 
-            : 'Redirecting to your dashboard...'
+            ? t('dashboard.tiktok.connectionFailedPageDescription')
+            : t('dashboard.tiktok.redirectingToDashboard')
           }
         </p>
       </div>

@@ -206,20 +206,13 @@ const MediaManagement = () => {
                     <Upload className="h-4 w-4 mr-2" />
                     {t('media.addProducts')}
                   </Button>
-                  <Button
-                    onClick={() => navigate('/images')}
-                    variant="outline"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Generate Captions
-                  </Button>
                   {hasProducts && (
                     <Button
                       onClick={() => setSelectionMode(true)}
                       variant="outline"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Products
+                      {t('media.deleteProducts')}
                     </Button>
                   )}
                 </>

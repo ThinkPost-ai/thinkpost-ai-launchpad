@@ -12,45 +12,45 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { MultiSelect, type Option } from '../components/ui/multi-select';
 import { useToast } from '../components/ui/use-toast';
-import { Loader2, Sun, Moon, Languages, Info, AlertTriangle } from 'lucide-react';
+import { Loader2, Sun, Moon, Globe, Info, AlertTriangle } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
-// Brand types with their categories
-const brandTypes = [
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'coffee', label: 'Coffee' },
-  { value: 'bakery', label: 'Bakery' },
-  { value: 'other', label: 'Other' }
+// Brand types with their categories - will be translated in component
+const brandTypeOptions = [
+  { value: 'restaurant', labelKey: 'brandSetup.form.brandType.restaurant' },
+  { value: 'coffee', labelKey: 'brandSetup.form.brandType.coffee' },
+  { value: 'bakery', labelKey: 'brandSetup.form.brandType.bakery' },
+  { value: 'other', labelKey: 'brandSetup.form.brandType.other' }
 ];
 
-// Categories for each brand type
-const brandCategories = {
+// Categories for each brand type - will be translated in component
+const brandCategoryOptions = {
   restaurant: [
-    { value: 'fast_food', label: 'Fast Food' },
-    { value: 'casual_dining', label: 'Casual Dining' },
-    { value: 'fine_dining', label: 'Fine Dining' },
-    { value: 'middle_eastern', label: 'Middle Eastern' },
-    { value: 'asian', label: 'Asian' },
-    { value: 'italian', label: 'Italian' },
-    { value: 'american', label: 'American' },
-    { value: 'mexican', label: 'Mexican' },
-    { value: 'indian', label: 'Indian' },
-    { value: 'seafood', label: 'Seafood' },
-    { value: 'pizza', label: 'Pizza' },
-    { value: 'other', label: 'Other' }
+    { value: 'fast_food', labelKey: 'brandSetup.form.category.fastFood' },
+    { value: 'casual_dining', labelKey: 'brandSetup.form.category.casualDining' },
+    { value: 'fine_dining', labelKey: 'brandSetup.form.category.fineDining' },
+    { value: 'middle_eastern', labelKey: 'brandSetup.form.category.middleEastern' },
+    { value: 'asian', labelKey: 'brandSetup.form.category.asian' },
+    { value: 'italian', labelKey: 'brandSetup.form.category.italian' },
+    { value: 'american', labelKey: 'brandSetup.form.category.american' },
+    { value: 'mexican', labelKey: 'brandSetup.form.category.mexican' },
+    { value: 'indian', labelKey: 'brandSetup.form.category.indian' },
+    { value: 'seafood', labelKey: 'brandSetup.form.category.seafood' },
+    { value: 'pizza', labelKey: 'brandSetup.form.category.pizza' },
+    { value: 'other', labelKey: 'brandSetup.form.category.other' }
   ],
   coffee: [
-    { value: 'cafe', label: 'Coffee Shop' },
-    { value: 'other', label: 'Other' }
+    { value: 'cafe', labelKey: 'brandSetup.form.category.cafe' },
+    { value: 'other', labelKey: 'brandSetup.form.category.other' }
   ],
   bakery: [
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'other', label: 'Other' }
+    { value: 'bakery', labelKey: 'brandSetup.form.category.bakery' },
+    { value: 'other', labelKey: 'brandSetup.form.category.other' }
   ],
   other: [
-    { value: 'other', label: 'Other' }
+    { value: 'other', labelKey: 'brandSetup.form.category.other' }
   ]
 };
 
@@ -493,10 +493,10 @@ const BrandSetup = () => {
               <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
             <CardTitle className="text-xl font-bold text-deep-blue dark:text-white">
-              Authentication Error
+              {t('brandSetup.authError.title')}
             </CardTitle>
             <CardDescription className="text-center">
-              {authError}
+              {t('brandSetup.authError.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -504,7 +504,7 @@ const BrandSetup = () => {
               onClick={handleAuthError}
               className="w-full bg-gradient-primary hover:opacity-90"
             >
-              Sign In Again
+              {t('brandSetup.authError.signInAgain')}
             </Button>
           </CardContent>
         </Card>
@@ -533,7 +533,7 @@ const BrandSetup = () => {
             onClick={toggleLanguage}
             className="h-9 w-9"
           >
-            <Languages className="h-4 w-4" />
+            <Globe className="h-4 w-4" />
             <span className="sr-only">Toggle language</span>
           </Button>
         </div>
@@ -543,8 +543,8 @@ const BrandSetup = () => {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium mb-1">Create High-Quality Content</p>
-              <p>Provide detailed and accurate information about your brand to help our AI generate better, more engaging content for your social media posts.</p>
+              <p className="font-medium mb-1">{t('brandSetup.infoMessage.title')}</p>
+              <p>{t('brandSetup.infoMessage.description')}</p>
             </div>
           </div>
         </div>
@@ -552,12 +552,12 @@ const BrandSetup = () => {
         <Card className="shadow-lg">
           <CardHeader className="text-center px-4 sm:px-6">
             <CardTitle className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white leading-tight">
-              {isEditing ? 'Update Brand Profile' : 'Complete Brand Profile'}
+              {isEditing ? t('brandSetup.title.update') : t('brandSetup.title.complete')}
             </CardTitle>
             <CardDescription className="text-sm sm:text-base mt-2">
               {isEditing 
-                ? 'Update your brand information'
-                : 'Tell us about your brand to get started'
+                ? t('brandSetup.description.update')
+                : t('brandSetup.description.complete')
               }
             </CardDescription>
           </CardHeader>
@@ -565,13 +565,13 @@ const BrandSetup = () => {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Brand Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">Brand Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium">{t('brandSetup.form.brandName.label')}</Label>
                 <Input
                   id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter your brand name"
+                  placeholder={t('brandSetup.form.brandName.placeholder')}
                   required
                   className="h-11 text-base"
                 />
@@ -579,7 +579,7 @@ const BrandSetup = () => {
 
               {/* Brand Location (Multi-select) */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Brand Location</Label>
+                <Label className="text-sm font-medium">{t('brandSetup.form.brandLocation.label')}</Label>
                 <MultiSelect
                   options={currentCities.map(city => ({ value: city, label: city }))}
                   selected={formData.locations}
@@ -587,7 +587,7 @@ const BrandSetup = () => {
                     ...prev,
                     locations: values
                   }))}
-                  placeholder="Select locations"
+                  placeholder={t('brandSetup.form.brandLocation.placeholder')}
                   className="h-11 text-base"
                 />
                 {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
@@ -595,7 +595,7 @@ const BrandSetup = () => {
                     type="text"
                     value={formData.otherLocation}
                     onChange={(e) => setFormData({ ...formData, otherLocation: e.target.value })}
-                    placeholder="Specify your location"
+                    placeholder={t('brandSetup.form.brandLocation.specify')}
                     className="h-11 text-base mt-2"
                   />
                 )}
@@ -603,22 +603,22 @@ const BrandSetup = () => {
 
               {/* Brand Type */}
               <div className="space-y-2">
-                <Label htmlFor="brandType" className="text-sm font-medium">Brand Type *</Label>
+                <Label htmlFor="brandType" className="text-sm font-medium">{t('brandSetup.form.brandType.label')}</Label>
                 <Select 
                   value={formData.brandType} 
                   onValueChange={handleBrandTypeChange}
                 >
                   <SelectTrigger className="h-11 text-base">
-                    <SelectValue placeholder="Select brand type" />
+                    <SelectValue placeholder={t('brandSetup.form.brandType.placeholder')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                    {brandTypes.map((type) => (
+                    {brandTypeOptions.map((type) => (
                       <SelectItem 
                         key={type.value} 
                         value={type.value}
                         className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        {type.label}
+                        {t(type.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -628,13 +628,13 @@ const BrandSetup = () => {
               {/* Custom Brand Type Input (shown when "Other" is selected) */}
               {formData.brandType === 'other' && (
                 <div className="space-y-2">
-                  <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+                  <Label htmlFor="customBrandType" className="text-sm font-medium">{t('brandSetup.form.customBrandType.label')}</Label>
                   <Input
                     id="customBrandType"
                     type="text"
                     value={formData.customBrandType}
                     onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
-                    placeholder="Enter your brand type"
+                    placeholder={t('brandSetup.form.customBrandType.placeholder')}
                     required
                     className="h-11 text-base"
                   />
@@ -644,22 +644,22 @@ const BrandSetup = () => {
               {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
               {formData.brandType === 'restaurant' && (
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+                  <Label htmlFor="category" className="text-sm font-medium">{t('brandSetup.form.category.label')}</Label>
                   <Select 
                     value={formData.category} 
                     onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger className="h-11 text-base">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t('brandSetup.form.category.placeholder')} />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                      {brandCategories.restaurant.map((category) => (
+                      {brandCategoryOptions.restaurant.map((category) => (
                         <SelectItem 
                           key={category.value} 
                           value={category.value}
                           className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
-                          {category.label}
+                          {t(category.labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -670,13 +670,13 @@ const BrandSetup = () => {
               {/* Custom Restaurant Category Input (shown when Category is "other") */}
               {formData.brandType === 'restaurant' && formData.category === 'other' && (
                 <div className="space-y-2">
-                  <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+                  <Label htmlFor="customCategory" className="text-sm font-medium">{t('brandSetup.form.customCategory.label')}</Label>
                   <Input
                     id="customCategory"
                     type="text"
                     value={formData.customCategory}
                     onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
-                    placeholder="Enter your restaurant category"
+                    placeholder={t('brandSetup.form.customCategory.placeholder')}
                     required
                     className="h-11 text-base"
                   />
@@ -685,12 +685,12 @@ const BrandSetup = () => {
 
               {/* Brand Vision and Value */}
               <div className="space-y-2">
-                <Label htmlFor="vision" className="text-sm font-medium">Brand Vision and Value</Label>
+                <Label htmlFor="vision" className="text-sm font-medium">{t('brandSetup.form.brandVision.label')}</Label>
                 <Textarea
                   id="vision"
                   value={formData.vision}
                   onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-                  placeholder="Describe your brand's vision, mission, and core values. What makes your brand unique? What do you stand for?"
+                  placeholder={t('brandSetup.form.brandVision.placeholder')}
                   rows={4}
                   className="resize-none text-base min-h-[100px]"
                 />
@@ -704,7 +704,7 @@ const BrandSetup = () => {
                     onClick={() => navigate('/dashboard')}
                     className="w-full sm:flex-1 h-11 text-base"
                   >
-                    Cancel
+                    {t('brandSetup.form.cancel')}
                   </Button>
                 )}
                 <Button
@@ -715,10 +715,10 @@ const BrandSetup = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEditing ? 'Updating...' : 'Creating...'}
+                      {isEditing ? t('brandSetup.form.updating') : t('brandSetup.form.creating')}
                     </>
                   ) : (
-                    isEditing ? 'Update Brand' : 'Complete Setup'
+                    isEditing ? t('brandSetup.form.update') : t('brandSetup.form.complete')
                   )}
                 </Button>
               </div>

@@ -65,7 +65,7 @@ const UserProfilePanel = ({ restaurant }: UserProfilePanelProps) => {
                 {userDisplayName}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {restaurant ? `Owner of ${restaurant.name}` : t('dashboard.profile.owner')}
+                {restaurant ? t('dashboard.profile.ownerOf', { name: restaurant.name }) : t('dashboard.profile.owner')}
               </p>
             </div>
           </Button>

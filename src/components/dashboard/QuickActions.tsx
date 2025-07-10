@@ -117,7 +117,7 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
         {/* Flow description */}
         <div className="mt-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Complete workflow: Add content → Generate captions → Schedule posts
+            {t('dashboard.quickActions.workflowDescription')}
           </p>
         </div>
       </CardContent>
