@@ -181,7 +181,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
 
       {/* Vision */}
       <div>
-        <Label htmlFor="vision">Restaurant Vision</Label>
+        <Label htmlFor="vision">Brand Vision</Label>
         <Textarea
           id="vision"
           value={restaurantData.vision}
