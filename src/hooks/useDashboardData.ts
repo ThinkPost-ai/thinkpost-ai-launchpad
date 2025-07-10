@@ -13,6 +13,11 @@ interface Restaurant {
   location: string;
   category: RestaurantCategory;
   vision?: string;
+  brand_type?: string;
+  custom_brand_type?: string;
+  custom_category?: string;
+  additional_locations?: string[];
+  custom_location?: string;
 }
 
 interface DashboardStats {

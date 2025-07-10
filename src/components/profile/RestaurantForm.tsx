@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { Loader2 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
@@ -18,186 +21,508 @@ interface Restaurant {
   location: string;
   category: RestaurantCategory;
   vision?: string;
+  brand_type?: string;
+  custom_brand_type?: string;
+  custom_category?: string;
+  additional_locations?: string[];
+  custom_location?: string;
 }
 
 interface RestaurantFormProps {
   restaurant: Restaurant | null;
 }
 
-const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [restaurantData, setRestaurantData] = useState({
-    name: '',
-    location: '',
-    category: '' as RestaurantCategory | '',
-    vision: ''
-  });
+// Brand types with their categories (same as Brand Setup)
+const brandTypes = [
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'coffee', label: 'Coffee' },
+  { value: 'bakery', label: 'Bakery' },
+  { value: 'other', label: 'Other' }
+];
 
-  useEffect(() => {
-    if (restaurant) {
-      setRestaurantData({
-        name: restaurant.name || '',
-        location: restaurant.location || '',
-        category: restaurant.category || '',
-        vision: restaurant.vision || ''
-      });
-    }
-  }, [restaurant]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setRestaurantData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.id || !restaurantData.category) return;
-
-    setIsLoading(true);
-
-    try {
-      if (restaurant) {
-        // Update existing restaurant
-        const { error } = await supabase
-          .from('restaurants')
-          .update({
-            name: restaurantData.name,
-            location: restaurantData.location,
-            category: restaurantData.category as RestaurantCategory,
-            vision: restaurantData.vision
-          })
-          .eq('id', restaurant.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Brand Updated",
-          description: "Your brand information has been updated successfully.",
-        });
-      } else {
-        // Create new restaurant
-        const { error } = await supabase
-          .from('restaurants')
-          .insert({
-            owner_id: user.id,
-            name: restaurantData.name,
-            location: restaurantData.location,
-            category: restaurantData.category as RestaurantCategory,
-            vision: restaurantData.vision
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: "Restaurant Created",
-          description: "Your restaurant has been created successfully.",
-        });
-      }
-
-      // Refresh the page to show updated data
-      window.location.reload();
-    } catch (error: any) {
-      console.error('Error saving brand:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save brand information.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const categories: { value: RestaurantCategory; label: string }[] = [
+// Categories for each brand type (same as Brand Setup)
+const brandCategories = {
+  restaurant: [
     { value: 'fast_food', label: 'Fast Food' },
     { value: 'casual_dining', label: 'Casual Dining' },
     { value: 'fine_dining', label: 'Fine Dining' },
-    { value: 'cafe', label: 'Cafe' },
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'pizza', label: 'Pizza' },
-    { value: 'seafood', label: 'Seafood' },
     { value: 'middle_eastern', label: 'Middle Eastern' },
     { value: 'asian', label: 'Asian' },
     { value: 'italian', label: 'Italian' },
     { value: 'american', label: 'American' },
     { value: 'mexican', label: 'Mexican' },
     { value: 'indian', label: 'Indian' },
+    { value: 'seafood', label: 'Seafood' },
+    { value: 'pizza', label: 'Pizza' },
     { value: 'other', label: 'Other' }
-  ];
+  ],
+  coffee: [
+    { value: 'cafe', label: 'Coffee Shop' },
+    { value: 'other', label: 'Other' }
+  ],
+  bakery: [
+    { value: 'bakery', label: 'Bakery' },
+    { value: 'other', label: 'Other' }
+  ],
+  other: [
+    { value: 'other', label: 'Other' }
+  ]
+};
+
+// Saudi cities data (same as Brand Setup)
+const saudiCities = {
+  en: [
+    "Riyadh", "Al Kharj", "Al Majmaah",
+    "Jeddah", "Makkah", "Taif",
+    "Madinah", "Yanbu", "Al-Ula",
+    "Buraidah", "Unaizah", "Ar Rass",
+    "Dammam", "Al Khobar", "Al Ahsa",
+    "Tabuk", "Duba", "Haql",
+    "Hail", "Baqqa", "Al-Ghazalah",
+    "Arar", "Rafha", "Turaif",
+    "Abha", "Khamis Mushait", "Mahayel",
+    "Jazan", "Sabya", "Abu Arish",
+    "Najran", "Sharurah", "Habona",
+    "Al Bahah", "Baljurashi", "Al Mandaq",
+    "Sakaka", "Dumat Al-Jandal", "Tabarjal",
+    "Other"
+  ],
+  ar: [ 
+    "الرياض", "الخرج", "المجمعة",
+    "جدة", "مكة", "الطائف",
+    "المدينة المنورة", "ينبع", "العلا",
+    "بريدة", "عنيزة", "الرس",
+    "الدمام", "الخبر", "الأحساء",
+    "تبوك", "ضباء", "حقل",
+    "حائل", "بقعاء", "الغزالة",
+    "عرعر", "رفحاء", "طريف",
+    "أبها", "خميس مشيط", "محايل",
+    "جازان", "صبياء", "أبو عريش",
+    "نجران", "شرورة", "حبونا",
+    "الباحة", "بلجرشي", "المندق",
+    "سكاكا", "دومة الجندل", "طبرجل",
+    "أخرى"
+  ]
+};
+
+// Map Arabic cities to English for database storage (same as Brand Setup)
+const cityMapping: { [key: string]: string } = {
+  "الرياض": "Riyadh",
+  "الخرج": "Al Kharj",
+  "المجمعة": "Al Majmaah",
+  "جدة": "Jeddah",
+  "مكة": "Makkah",
+  "الطائف": "Taif",
+  "المدينة المنورة": "Madinah",
+  "ينبع": "Yanbu",
+  "العلا": "Al-Ula",
+  "بريدة": "Buraidah",
+  "عنيزة": "Unaizah",
+  "الرس": "Ar Rass",
+  "الدمام": "Dammam",
+  "الخبر": "Al Khobar",
+  "الأحساء": "Al Ahsa",
+  "تبوك": "Tabuk",
+  "ضباء": "Duba",
+  "حقل": "Haql",
+  "حائل": "Hail",
+  "بقعاء": "Baqqa",
+  "الغزالة": "Al-Ghazalah",
+  "عرعر": "Arar",
+  "رفحاء": "Rafha",
+  "طريف": "Turaif",
+  "أبها": "Abha",
+  "خميس مشيط": "Khamis Mushait",
+  "محايل": "Mahayel",
+  "جازان": "Jazan",
+  "صبياء": "Sabya",
+  "أبو عريش": "Abu Arish",
+  "نجران": "Najran",
+  "شرورة": "Sharurah",
+  "حبونا": "Habona",
+  "الباحة": "Al Bahah",
+  "بلجرشي": "Baljurashi",
+  "المندق": "Al Mandaq",
+  "سكاكا": "Sakaka",
+  "دومة الجندل": "Dumat Al-Jandal",
+  "طبرجل": "Tabarjal",
+  "أخرى": "Other"
+};
+
+// Reverse mapping for displaying stored English values in Arabic (same as Brand Setup)
+const reverseCityMapping: { [key: string]: string } = Object.fromEntries(
+  Object.entries(cityMapping).map(([ar, en]) => [en, ar])
+);
+
+const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { language } = useLanguage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    locations: [] as string[],
+    brandType: '',
+    category: '' as RestaurantCategory,
+    vision: '',
+    otherLocation: '',
+    customBrandType: '',
+    customCategory: ''
+  });
+
+  // Get current cities based on language (same as Brand Setup)
+  const currentCities = saudiCities[language] || saudiCities.en;
+
+  useEffect(() => {
+    if (restaurant) {
+      // Display location in current language (same logic as Brand Setup)
+      const displayLocation = language === 'ar' && reverseCityMapping[restaurant.location] 
+        ? reverseCityMapping[restaurant.location] 
+        : restaurant.location;
+
+      // Build locations array from primary location and additional locations
+      const locations = [];
+      
+      // Handle custom location case
+      if (restaurant.custom_location) {
+        // If the primary location is a custom location, add "Other" to locations array
+        if (restaurant.location === restaurant.custom_location) {
+          locations.push(language === 'ar' ? 'أخرى' : 'Other');
+        } else {
+          // If primary location is not custom, add it normally
+          locations.push(displayLocation);
+        }
+      } else {
+        // No custom location, add primary location normally
+        locations.push(displayLocation);
+      }
+      
+      // Add additional locations
+      if (restaurant.additional_locations) {
+        // Map additional locations to current language
+        const mappedAdditionalLocations = restaurant.additional_locations.map(loc => {
+          return language === 'ar' && reverseCityMapping[loc] 
+            ? reverseCityMapping[loc] 
+            : loc;
+        });
+        locations.push(...mappedAdditionalLocations);
+      }
+
+      // Determine brand type from stored brand_type or fallback to category
+      const brandType = restaurant.brand_type || getBrandTypeFromCategory(restaurant.category);
+      
+      setFormData({
+        name: restaurant.name,
+        locations: locations,
+        brandType: brandType,
+        category: brandType === 'restaurant' ? restaurant.category : '' as RestaurantCategory,
+        vision: restaurant.vision || '',
+        otherLocation: restaurant.custom_location || '',
+        customBrandType: restaurant.custom_brand_type || '',
+        customCategory: restaurant.custom_category || ''
+      });
+    }
+  }, [restaurant, language]);
+
+  const getBrandTypeFromCategory = (category: RestaurantCategory): string => {
+    if (category === 'cafe') return 'coffee';
+    if (category === 'bakery') return 'bakery';
+    return 'restaurant';
+  };
+
+  const handleBrandTypeChange = (brandType: string) => {
+    setFormData(prev => ({
+      ...prev,
+      brandType,
+      category: '' as RestaurantCategory,
+      customBrandType: '',
+      customCategory: ''
+    }));
+  };
+
+  const handleCategoryChange = (category: RestaurantCategory) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      customCategory: ''
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Convert locations to English for database storage and handle "Other" (same logic as Brand Setup)
+      let finalLocation = '';
+      let additionalLocations: string[] = [];
+      let customLocation = '';
+      
+      if (formData.locations.includes('Other') || formData.locations.includes('أخرى')) {
+        if (formData.otherLocation.trim()) {
+          customLocation = formData.otherLocation.trim();
+          finalLocation = customLocation;
+          // Remove "Other" from locations and add remaining ones to additional_locations
+          additionalLocations = formData.locations
+            .filter(loc => loc !== 'Other' && loc !== 'أخرى')
+            .map(loc => cityMapping[loc] || loc);
+        } else {
+          throw new Error('Please specify the location when selecting "Other"');
+        }
+      } else if (formData.locations.length > 0) {
+        const firstLocation = formData.locations[0];
+        finalLocation = cityMapping[firstLocation] || firstLocation;
+        // Add remaining locations to additional_locations
+        additionalLocations = formData.locations
+          .slice(1)
+          .map(loc => cityMapping[loc] || loc);
+      } else {
+        throw new Error('Please select at least one location');
+      }
+
+      if (!formData.name.trim()) {
+        throw new Error('Brand name is required');
+      }
+
+      if (!formData.brandType) {
+        throw new Error('Brand type is required');
+      }
+
+      // Validate custom brand type if "Other" is selected
+      if (formData.brandType === 'other' && !formData.customBrandType.trim()) {
+        throw new Error('Please specify your brand type');
+      }
+
+      // For restaurants, category is required
+      if (formData.brandType === 'restaurant') {
+        if (!formData.category) {
+          throw new Error('Restaurant category is required');
+        }
+        // Validate custom category if "Other" is selected
+        if (formData.category === 'other' && !formData.customCategory.trim()) {
+          throw new Error('Please specify your restaurant category');
+        }
+      }
+
+      // Determine final category for database (same logic as Brand Setup)
+      let finalCategory: RestaurantCategory;
+      if (formData.brandType === 'restaurant') {
+        if (formData.category === 'other' && formData.customCategory.trim()) {
+          finalCategory = 'other';
+        } else {
+          finalCategory = formData.category;
+        }
+      } else if (formData.brandType === 'coffee') {
+        finalCategory = 'cafe';
+      } else if (formData.brandType === 'bakery') {
+        finalCategory = 'bakery';
+      } else {
+        finalCategory = 'other';
+      }
+      
+      const updateData = {
+        name: formData.name.trim(),
+        location: finalLocation,
+        category: finalCategory,
+        vision: formData.vision.trim() || null,
+        brand_type: formData.brandType,
+        custom_brand_type: formData.brandType === 'other' ? formData.customBrandType.trim() : null,
+        custom_category: formData.category === 'other' ? formData.customCategory.trim() : null,
+        additional_locations: additionalLocations.length > 0 ? additionalLocations : null,
+        custom_location: customLocation || null
+      };
+
+      if (restaurant) {
+        // Update existing restaurant
+        const { error } = await supabase
+          .from('restaurants')
+          .update(updateData)
+          .eq('id', restaurant.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Brand profile updated successfully",
+        });
+      } else {
+        // Create new restaurant
+        const { error } = await supabase
+          .from('restaurants')
+          .insert({
+            owner_id: user?.id,
+            ...updateData
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Brand profile created successfully",
+        });
+      }
+
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save brand information",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Restaurant Name */}
-      <div>
-        <Label htmlFor="restaurant_name">Restaurant Name</Label>
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      {/* Brand Name */}
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-sm font-medium">Brand Name *</Label>
         <Input
-          id="restaurant_name"
+          id="name"
           type="text"
-          value={restaurantData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          placeholder="Enter restaurant name"
-          className="mt-1"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Enter your brand name"
           required
+          className="h-11 text-base"
         />
       </div>
 
-      {/* Location */}
-      <div>
-        <Label htmlFor="location">Location</Label>
-        <Input
-          id="location"
-          type="text"
-          value={restaurantData.location}
-          onChange={(e) => handleInputChange('location', e.target.value)}
-          placeholder="Enter restaurant location"
-          className="mt-1"
-          required
+      {/* Brand Location (Multi-select) */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Brand Location</Label>
+        <MultiSelect
+          options={currentCities.map(city => ({ value: city, label: city }))}
+          selected={formData.locations}
+          onChange={(values: string[]) => setFormData(prev => ({
+            ...prev,
+            locations: values
+          }))}
+          placeholder="Select locations"
+          className="h-11 text-base"
         />
+        {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
+          <Input
+            type="text"
+            value={formData.otherLocation}
+            onChange={(e) => setFormData({ ...formData, otherLocation: e.target.value })}
+            placeholder="Specify your location"
+            className="h-11 text-base mt-2"
+          />
+        )}
       </div>
 
-      {/* Category */}
-      <div>
-        <Label htmlFor="category">Category</Label>
-        <Select
-          value={restaurantData.category}
-          onValueChange={(value: RestaurantCategory) => handleInputChange('category', value)}
+      {/* Brand Type */}
+      <div className="space-y-2">
+        <Label htmlFor="brandType" className="text-sm font-medium">Brand Type *</Label>
+        <Select 
+          value={formData.brandType} 
+          onValueChange={handleBrandTypeChange}
         >
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select restaurant category" />
+          <SelectTrigger className="h-11 text-base">
+            <SelectValue placeholder="Select brand type" />
           </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.value} value={category.value}>
-                {category.label}
+          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+            {brandTypes.map((type) => (
+              <SelectItem 
+                key={type.value} 
+                value={type.value}
+                className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                {type.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Vision */}
-      <div>
-        <Label htmlFor="vision">Brand Vision</Label>
+      {/* Custom Brand Type Input (shown when "Other" is selected) */}
+      {formData.brandType === 'other' && (
+        <div className="space-y-2">
+          <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+          <Input
+            id="customBrandType"
+            type="text"
+            value={formData.customBrandType}
+            onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
+            placeholder="Enter your brand type"
+            required
+            className="h-11 text-base"
+          />
+        </div>
+      )}
+
+      {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
+      {formData.brandType === 'restaurant' && (
+        <div className="space-y-2">
+          <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+          <Select 
+            value={formData.category} 
+            onValueChange={handleCategoryChange}
+          >
+            <SelectTrigger className="h-11 text-base">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+              {brandCategories.restaurant.map((category) => (
+                <SelectItem 
+                  key={category.value} 
+                  value={category.value}
+                  className="text-base py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Custom Restaurant Category Input (shown when Category is "other") */}
+      {formData.brandType === 'restaurant' && formData.category === 'other' && (
+        <div className="space-y-2">
+          <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+          <Input
+            id="customCategory"
+            type="text"
+            value={formData.customCategory}
+            onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
+            placeholder="Enter your restaurant category"
+            required
+            className="h-11 text-base"
+          />
+        </div>
+      )}
+
+      {/* Brand Vision and Value */}
+      <div className="space-y-2">
+        <Label htmlFor="vision" className="text-sm font-medium">Brand Vision and Value</Label>
         <Textarea
           id="vision"
-          value={restaurantData.vision}
-          onChange={(e) => handleInputChange('vision', e.target.value)}
-          placeholder="Describe your brand's vision and goals..."
-          className="mt-1"
+          value={formData.vision}
+          onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
+          placeholder="Describe your brand's vision, mission, and core values. What makes your brand unique? What do you stand for?"
           rows={4}
+          className="resize-none text-base min-h-[100px]"
         />
       </div>
 
-      <Button 
-        type="submit" 
-        disabled={isLoading}
-        className="w-full bg-gradient-primary hover:opacity-90"
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full h-11 text-base bg-gradient-primary hover:opacity-90"
       >
-        {isLoading ? 'Saving...' : restaurant ? 'Update Restaurant' : 'Create Restaurant'}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {restaurant ? 'Updating...' : 'Creating...'}
+          </>
+        ) : (
+          restaurant ? 'Update Brand' : 'Complete Setup'
+        )}
       </Button>
     </form>
   );

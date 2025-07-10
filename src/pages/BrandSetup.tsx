@@ -179,18 +179,24 @@ const BrandSetup = () => {
           ? reverseCityMapping[data.location] 
           : data.location;
 
-        // Determine brand type from category
-        const brandType = getBrandTypeFromCategory(data.category);
+        // Build locations array from primary location and additional locations
+        const locations = [displayLocation];
+        if (data.additional_locations) {
+          locations.push(...data.additional_locations);
+        }
+
+        // Determine brand type from stored brand_type or fallback to category
+        const brandType = data.brand_type || getBrandTypeFromCategory(data.category);
         
         setFormData({
           name: data.name,
-          locations: [displayLocation],
+          locations: locations,
           brandType: brandType,
           category: brandType === 'restaurant' ? data.category : '' as RestaurantCategory,
           vision: data.vision || '',
-          otherLocation: '',
-          customBrandType: '',
-          customCategory: ''
+          otherLocation: data.custom_location || '',
+          customBrandType: data.custom_brand_type || '',
+          customCategory: data.custom_category || ''
         });
         setIsEditing(true);
         setBrandId(data.id);
@@ -243,15 +249,27 @@ const BrandSetup = () => {
     try {
       // Convert locations to English for database storage and handle "Other"
       let finalLocation = '';
+      let additionalLocations: string[] = [];
+      let customLocation = '';
+      
       if (formData.locations.includes('Other') || formData.locations.includes('أخرى')) {
         if (formData.otherLocation.trim()) {
-          finalLocation = formData.otherLocation.trim();
+          customLocation = formData.otherLocation.trim();
+          finalLocation = customLocation;
+          // Remove "Other" from locations and add remaining ones to additional_locations
+          additionalLocations = formData.locations
+            .filter(loc => loc !== 'Other' && loc !== 'أخرى')
+            .map(loc => cityMapping[loc] || loc);
         } else {
           throw new Error('Please specify the location when selecting "Other"');
         }
       } else if (formData.locations.length > 0) {
         const firstLocation = formData.locations[0];
         finalLocation = cityMapping[firstLocation] || firstLocation;
+        // Add remaining locations to additional_locations
+        additionalLocations = formData.locations
+          .slice(1)
+          .map(loc => cityMapping[loc] || loc);
       } else {
         throw new Error('Please select at least one location');
       }
@@ -296,15 +314,22 @@ const BrandSetup = () => {
         finalCategory = 'other';
       }
       
+      const updateData = {
+        name: formData.name.trim(),
+        location: finalLocation,
+        category: finalCategory,
+        vision: formData.vision.trim() || null,
+        brand_type: formData.brandType,
+        custom_brand_type: formData.brandType === 'other' ? formData.customBrandType.trim() : null,
+        custom_category: formData.category === 'other' ? formData.customCategory.trim() : null,
+        additional_locations: additionalLocations.length > 0 ? additionalLocations : null,
+        custom_location: customLocation || null
+      };
+      
       if (isEditing && brandId) {
         const { error } = await supabase
           .from('restaurants')
-          .update({
-            name: formData.name.trim(),
-            location: finalLocation,
-            category: finalCategory,
-            vision: formData.vision.trim() || null
-          })
+          .update(updateData)
           .eq('id', brandId);
 
         if (error) throw error;
@@ -318,10 +343,7 @@ const BrandSetup = () => {
           .from('restaurants')
           .insert({
             owner_id: user?.id,
-            name: formData.name.trim(),
-            location: finalLocation,
-            category: finalCategory,
-            vision: formData.vision.trim() || null
+            ...updateData
           });
 
         if (error) throw error;
