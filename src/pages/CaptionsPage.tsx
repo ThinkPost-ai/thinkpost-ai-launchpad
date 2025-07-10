@@ -1,9 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
@@ -11,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 const CaptionsPage = () => {
   const { user, loading } = useAuth();
-  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const [checkingRestaurant, setCheckingRestaurant] = useState(true);
   const { restaurant, isLoading, handleCreditsUpdate } = useDashboardData();
@@ -74,14 +72,14 @@ const CaptionsPage = () => {
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Back to Dashboard Button */}
-        <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <div className="mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
-            className={`flex items-center gap-2 text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10 ${isRTL ? 'flex-row-reverse' : ''}`}
+            className="flex items-center gap-2 text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
           >
-            {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-            {t('upload.backToDashboard')}
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
           </Button>
         </div>
 

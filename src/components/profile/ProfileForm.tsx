@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,6 @@ interface ProfileData {
 
 const ProfileForm = () => {
   const { user } = useAuth();
-  const { t, isRTL } = useLanguage();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -88,14 +86,14 @@ const ProfileForm = () => {
       }
 
       toast({
-        title: t('profileForm.success'),
-        description: t('profileForm.successDescription'),
+        title: "Profile Updated",
+        description: "Your profile information has been updated successfully.",
       });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
-        title: t('profileForm.error'),
-        description: t('profileForm.errorDescription'),
+        title: "Error",
+        description: "Failed to update profile information.",
         variant: "destructive"
       });
     } finally {
@@ -110,82 +108,49 @@ const ProfileForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Avatar Section */}
-      <div className={`flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
+      <div className="flex items-center space-x-4">
         <Avatar className="h-16 w-16">
           <AvatarImage src={profileData.avatar_url} />
           <AvatarFallback className="bg-vibrant-purple text-white text-lg">
             {getInitials(profileData.full_name || user?.email || 'U')}
           </AvatarFallback>
         </Avatar>
-<<<<<<< HEAD
         
-=======
-        <div className={isRTL ? 'text-right' : 'text-left'}>
-          <Label htmlFor="avatar_url">{t('profileForm.avatarUrl')}</Label>
-          <Input
-            id="avatar_url"
-            type="url"
-            value={profileData.avatar_url}
-            onChange={(e) => handleInputChange('avatar_url', e.target.value)}
-            placeholder={t('profileForm.avatarUrlPlaceholder')}
-            className="mt-1"
-            dir={isRTL ? 'rtl' : 'ltr'}
-          />
-        </div>
->>>>>>> Arabic
       </div>
 
       {/* Email (read-only) */}
-      <div className={isRTL ? 'text-right' : 'text-left'}>
-        <Label htmlFor="email">{t('profileForm.email')}</Label>
+      <div>
+        <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
           value={user?.email || ''}
           disabled
           className="mt-1 bg-gray-50 dark:bg-gray-800"
-          dir={isRTL ? 'rtl' : 'ltr'}
         />
       </div>
 
       {/* Full Name */}
-      <div className={isRTL ? 'text-right' : 'text-left'}>
-        <Label htmlFor="full_name">{t('profileForm.fullName')}</Label>
+      <div>
+        <Label htmlFor="full_name">Full Name</Label>
         <Input
           id="full_name"
           type="text"
           value={profileData.full_name}
           onChange={(e) => handleInputChange('full_name', e.target.value)}
-          placeholder={t('profileForm.fullNamePlaceholder')}
+          placeholder="Enter your full name"
           className="mt-1"
-          dir={isRTL ? 'rtl' : 'ltr'}
         />
       </div>
 
-<<<<<<< HEAD
       
-=======
-      {/* Display Name */}
-      <div className={isRTL ? 'text-right' : 'text-left'}>
-        <Label htmlFor="display_name">{t('profileForm.displayName')}</Label>
-        <Input
-          id="display_name"
-          type="text"
-          value={profileData.display_name}
-          onChange={(e) => handleInputChange('display_name', e.target.value)}
-          placeholder={t('profileForm.displayNamePlaceholder')}
-          className="mt-1"
-          dir={isRTL ? 'rtl' : 'ltr'}
-        />
-      </div>
->>>>>>> Arabic
 
       <Button 
         type="submit" 
         disabled={isLoading}
         className="w-full bg-gradient-primary hover:opacity-90"
       >
-        {isLoading ? t('profileForm.updating') : t('profileForm.updateProfile')}
+        {isLoading ? 'Updating...' : 'Update Profile'}
       </Button>
     </form>
   );

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Trash2, Wand2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, Trash2, Wand2 } from 'lucide-react';
 
 interface Image {
   id: string;
@@ -20,7 +19,6 @@ interface Image {
 
 const ImageGallery = () => {
   const { user } = useAuth();
-  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -179,10 +177,10 @@ const ImageGallery = () => {
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
-            className={`mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}
+            className="mb-4"
           >
-            {isRTL ? <ArrowRight className="ml-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
-            {t('upload.backToDashboard')}
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
           </Button>
           <div className="flex justify-between items-center">
             <div>

@@ -25,7 +25,6 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useState, useEffect } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Product {
   name: string;
@@ -67,7 +66,6 @@ const ProductCard = ({
   onRemoveImage,
   onTikTokValidationChange
 }: ProductCardProps) => {
-  const { t, isRTL } = useLanguage();
   const { tiktokProfile } = useTikTokConnection();
   const { profile: instagramProfile } = useInstagramConnection();
   
@@ -198,9 +196,7 @@ const ProductCard = ({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-            {t('productCard.product', { number: index + 1 })}
-          </CardTitle>
+          <CardTitle>Product {index + 1}</CardTitle>
           {canRemove && (
             <Button
               variant="ghost"
@@ -241,8 +237,8 @@ const ProductCard = ({
           {/* Right Section - Social Media Apps */}
           <div className="space-y-4">
             <div>
-              <h3 className={`text-lg font-semibold text-deep-blue dark:text-white mb-4 flex items-center gap-2 ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
-                📱 {t('productCard.platforms')}
+              <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-4 flex items-center gap-2">
+                📱 Social Media Apps
               </h3>
               
               <div className="space-y-4">
@@ -258,8 +254,8 @@ const ProductCard = ({
                             </div>
                             <div>
                               <Label className="text-base font-medium">TikTok</Label>
-                              <p className={`text-sm text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
-                                {isTikTokConnected ? t('productCard.postToTikTok') : t('productCard.connectTikTokFirst')}
+                              <p className="text-sm text-muted-foreground">
+                                {isTikTokConnected ? 'Post to TikTok' : 'Connect TikTok account first'}
                               </p>
                             </div>
                           </div>
@@ -306,15 +302,15 @@ const ProductCard = ({
                   {product.tiktokEnabled && isTikTokConnected && tiktokAdvancedExpanded && (
                     <div className="mt-2 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
                       <div className="mb-4">
-                        <h4 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                           <TikTokIcon className="h-4 w-4" size={16} />
-                          {t('productCard.advancedSettings')}
+                          Advanced Settings
                         </h4>
                         <div className="space-y-4 text-sm">
                           {/* Privacy Level */}
                           <div>
-                            <Label className={`font-medium flex items-center gap-1 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {t('productCard.privacyLevelLabel')}
+                            <Label className="font-medium flex items-center gap-1 mb-3">
+                              Privacy Level:
                             </Label>
                             <RadioGroup 
                               value={product.tiktokSettings.privacyLevel.toUpperCase()} 
@@ -323,14 +319,14 @@ const ProductCard = ({
                             >
                               <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="PUBLIC" id={`public-${index}`} />
-                                <Label htmlFor={`public-${index}`} className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                                  {t('productCard.public')}
+                                <Label htmlFor={`public-${index}`} className="text-sm">
+                                  Public
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="FRIENDS" id={`friends-${index}`} />
-                                <Label htmlFor={`friends-${index}`} className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                                  {t('productCard.friends')}
+                                <Label htmlFor={`friends-${index}`} className="text-sm">
+                                  Friends
                                 </Label>
                               </div>
                               <TooltipProvider>
@@ -344,9 +340,9 @@ const ProductCard = ({
                                       />
                                       <Label 
                                         htmlFor={`only-me-${index}`} 
-                                        className={`text-sm ${isOnlyMeDisabled() ? 'text-gray-400' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                        className={`text-sm ${isOnlyMeDisabled() ? 'text-gray-400' : ''}`}
                                       >
-                                        {t('productCard.onlyMe')}
+                                        Only me
                                       </Label>
                                     </div>
                                   </TooltipTrigger>
@@ -362,8 +358,8 @@ const ProductCard = ({
 
                           {/* Interaction Settings */}
                           <div>
-                            <Label className={`font-medium mb-3 block ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {t('productCard.interactionSettings')}
+                            <Label className="font-medium mb-3 block">
+                              Interaction Settings
                             </Label>
                             <div className="flex items-center space-x-2">
                               <Checkbox 
@@ -373,8 +369,8 @@ const ProductCard = ({
                                   onUpdateTikTokSettings(index, { allowComments: checked as boolean })
                                 }
                               />
-                              <Label htmlFor={`allow-comments-${index}`} className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                                {t('productCard.allowComments')}
+                              <Label htmlFor={`allow-comments-${index}`} className="text-sm">
+                                Allow Comments
                               </Label>
                             </div>
                           </div>
@@ -394,8 +390,8 @@ const ProductCard = ({
                                   })
                                 }
                               />
-                              <Label htmlFor={`commercial-${index}`} className={isRTL ? 'text-right' : 'text-left'}>
-                                {t('productCard.commercialContentLabel')}
+                              <Label htmlFor={`commercial-${index}`}>
+                                This content promotes a brand, product or service
                               </Label>
                             </div>
 
@@ -410,8 +406,8 @@ const ProductCard = ({
                                       onUpdateTikTokSettings(index, { yourBrand: checked as boolean })
                                     }
                                   />
-                                  <Label htmlFor={`your-brand-${index}`} className={isRTL ? 'text-right' : 'text-left'}>
-                                    {t('productCard.yourBrand')}
+                                  <Label htmlFor={`your-brand-${index}`}>
+                                    Your Brand
                                   </Label>
                                 </div>
                                 
@@ -421,8 +417,8 @@ const ProductCard = ({
                                     checked={product.tiktokSettings.brandedContent}
                                     onCheckedChange={handleBrandedContentChange}
                                   />
-                                  <Label htmlFor={`branded-content-${index}`} className={isRTL ? 'text-right' : 'text-left'}>
-                                    {t('productCard.brandedContent')}
+                                  <Label htmlFor={`branded-content-${index}`}>
+                                    Branded Content
                                   </Label>
                                 </div>
                               </div>
@@ -431,8 +427,8 @@ const ProductCard = ({
                             {/* Validation warning */}
                             {showTikTokValidationWarning && (
                               <div className="ml-6 mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                                <p className={`text-sm text-red-700 dark:text-red-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                                  {t('productCard.validationWarning')}
+                                <p className="text-sm text-red-700 dark:text-red-300">
+                                  ⚠️ You need to indicate if your content promotes yourself, a third party, or both.
                                 </p>
                               </div>
                             )}
