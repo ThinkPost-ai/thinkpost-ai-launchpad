@@ -186,7 +186,7 @@ const RestaurantForm = ({ restaurant }: RestaurantFormProps) => {
           id="vision"
           value={restaurantData.vision}
           onChange={(e) => handleInputChange('vision', e.target.value)}
-          placeholder="Describe your restaurant's vision and goals..."
+          placeholder="Describe your brand's vision and goals..."
           className="mt-1"
           rows={4}
         />
