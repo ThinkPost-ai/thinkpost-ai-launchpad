@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, CheckCircle, Instagram } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Instagram } from 'lucide-react';
 import ProductCard from '@/components/product/ProductCard';
 import ProductCreationActions from '@/components/product/ProductCreationActions';
 import { useProductManagement } from '@/hooks/useProductManagement';
@@ -15,6 +16,7 @@ import TikTokIcon from '@/components/ui/TikTokIcon';
 
 const ProductCreation = () => {
   const navigate = useNavigate();
+  const { t, isRTL } = useLanguage();
   const { tiktokProfile, isLoading: tiktokLoading } = useTikTokConnection();
   const { profile: instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
   const { session } = useAuth();
@@ -79,24 +81,28 @@ const ProductCreation = () => {
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
-            className="mb-4"
+            className={`mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            {isRTL ? <ArrowRight className="ml-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
+            {t('upload.backToDashboard')}
           </Button>
-          <h1 className="text-3xl font-bold text-deep-blue dark:text-white mb-2">
-            Add Products
+          <h1 className={`text-3xl font-bold text-deep-blue dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('upload.addProducts')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Add your delicious dishes with details and images to generate AI-powered captions
+          <p className={`text-gray-600 dark:text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('upload.addProductsDescription')}
           </p>
         </div>
 
         {/* Platform Connection Status */}
         <Card className="mb-6">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Platform Connection Status</CardTitle>
-            <CardDescription>Current platform connections for posting</CardDescription>
+            <CardTitle className={`text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t('productCreation.platformConnectionStatus')}
+            </CardTitle>
+            <CardDescription className={isRTL ? 'text-right' : 'text-left'}>
+              {t('productCreation.currentConnections')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,15 +126,15 @@ const ProductCreation = () => {
                   <p className="text-sm text-muted-foreground">
                     {tiktokProfile?.tiktok_connected ? (
                       <span>
-                        <span className="font-medium">TikTok Name:</span>{' '}
+                        <span className="font-medium">{t('productCreation.tiktokName')}</span>{' '}
                         {loadingDisplayName ? (
-                          'Loading...'
+                          t('productCreation.loading')
                         ) : (
-                          tiktokDisplayName || tiktokProfile.tiktok_username || 'TikTok User'
+                          tiktokDisplayName || tiktokProfile.tiktok_username || t('productCreation.tiktokUser')
                         )}
                       </span>
                     ) : (
-                      'Not connected'
+                      t('productCreation.notConnected')
                     )}
                   </p>
                 </div>
@@ -150,8 +156,8 @@ const ProductCreation = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {instagramProfile?.connected 
-                      ? `Connected as @${instagramProfile.username || 'Instagram User'}`
-                      : 'Not connected'
+                      ? t('productCreation.connectedAs', { username: instagramProfile.username || 'Instagram User' })
+                      : t('productCreation.notConnected')
                     }
                   </p>
                 </div>

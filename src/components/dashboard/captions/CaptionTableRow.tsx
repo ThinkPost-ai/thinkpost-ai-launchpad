@@ -12,6 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { CaptionData } from './types';
 
@@ -31,6 +32,7 @@ const CaptionTableRow = ({
   userCredits
 }: CaptionTableRowProps) => {
   const { toast } = useToast();
+  const { isRTL } = useLanguage();
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -79,8 +81,8 @@ const CaptionTableRow = ({
 
   return (
     <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
+      <TableCell className="text-center">
+        <div className="flex items-center gap-3 justify-center">
           <img
             src={getImageUrl(caption.image_path)}
             alt={caption.name || caption.original_filename || 'Content'}
@@ -103,16 +105,16 @@ const CaptionTableRow = ({
           </div>
         </div>
       </TableCell>
-      <TableCell className="max-w-xs">
+      <TableCell className="max-w-xs text-center">
         {isEditing ? (
           <div className="flex flex-col gap-2">
             <Textarea
               value={editingCaption}
               onChange={(e) => setEditingCaption(e.target.value)}
-              className="text-right min-h-[100px]"
-              dir="rtl"
+              className={`${isRTL ? 'text-right' : 'text-left'} min-h-[100px]`}
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2 justify-center">
               <Button
                 size="sm"
                 variant="outline"
@@ -130,7 +132,7 @@ const CaptionTableRow = ({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-right line-clamp-3" dir="rtl">
+          <p className="text-sm line-clamp-3 text-center" dir={isRTL ? 'rtl' : 'ltr'}>
             {caption.caption || (
               <span className="text-muted-foreground italic">
                 No caption generated yet
@@ -139,8 +141,8 @@ const CaptionTableRow = ({
           </p>
         )}
       </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
+      <TableCell className="text-center">
+        <div className="flex items-center gap-2 justify-center">
           <Button 
             size="sm" 
             variant="outline"

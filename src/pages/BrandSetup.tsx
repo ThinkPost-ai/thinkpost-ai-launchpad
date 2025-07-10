@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import LanguageToggle from '../components/LanguageToggle';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,47 +13,47 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { MultiSelect, type Option } from '../components/ui/multi-select';
 import { useToast } from '../components/ui/use-toast';
-import { Loader2, Sun, Moon, Languages, Info } from 'lucide-react';
+import { Loader2, Sun, Moon, Info } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
 
-// Brand types with their categories
-const brandTypes = [
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'coffee', label: 'Coffee' },
-  { value: 'bakery', label: 'Bakery' },
-  { value: 'other', label: 'Other' }
+// Brand types with their categories (will be translated dynamically)
+const getBrandTypes = (t: any) => [
+  { value: 'restaurant', label: t('brandTypes.restaurant') },
+  { value: 'coffee', label: t('brandTypes.coffee') },
+  { value: 'bakery', label: t('brandTypes.bakery') },
+  { value: 'other', label: t('brandTypes.other') }
 ];
 
-// Categories for each brand type
-const brandCategories = {
+// Categories for each brand type (will be translated dynamically)
+const getBrandCategories = (t: any) => ({
   restaurant: [
-    { value: 'fast_food', label: 'Fast Food' },
-    { value: 'casual_dining', label: 'Casual Dining' },
-    { value: 'fine_dining', label: 'Fine Dining' },
-    { value: 'middle_eastern', label: 'Middle Eastern' },
-    { value: 'asian', label: 'Asian' },
-    { value: 'italian', label: 'Italian' },
-    { value: 'american', label: 'American' },
-    { value: 'mexican', label: 'Mexican' },
-    { value: 'indian', label: 'Indian' },
-    { value: 'seafood', label: 'Seafood' },
-    { value: 'pizza', label: 'Pizza' },
-    { value: 'other', label: 'Other' }
+    { value: 'fast_food', label: t('categories.fastFood') },
+    { value: 'casual_dining', label: t('categories.casualDining') },
+    { value: 'fine_dining', label: t('categories.fineDining') },
+    { value: 'middle_eastern', label: t('categories.middleEastern') },
+    { value: 'asian', label: t('categories.asian') },
+    { value: 'italian', label: t('categories.italian') },
+    { value: 'american', label: t('categories.american') },
+    { value: 'mexican', label: t('categories.mexican') },
+    { value: 'indian', label: t('categories.indian') },
+    { value: 'seafood', label: t('categories.seafood') },
+    { value: 'pizza', label: t('categories.pizza') },
+    { value: 'other', label: t('categories.other') }
   ],
   coffee: [
-    { value: 'cafe', label: 'Coffee Shop' },
-    { value: 'other', label: 'Other' }
+    { value: 'cafe', label: t('categories.coffeeShop') },
+    { value: 'other', label: t('categories.other') }
   ],
   bakery: [
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'other', label: 'Other' }
+    { value: 'bakery', label: t('categories.bakery') },
+    { value: 'other', label: t('categories.other') }
   ],
   other: [
-    { value: 'other', label: 'Other' }
+    { value: 'other', label: t('categories.other') }
   ]
-};
+});
 
 // Saudi cities data
 const saudiCities = {
@@ -132,7 +133,7 @@ const BrandSetup = () => {
   const { user, loading, checkUserProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, isRTL } = useLanguage();
   const { theme, setTheme } = useTheme();
   
   const [formData, setFormData] = useState({
@@ -151,6 +152,10 @@ const BrandSetup = () => {
 
   // Get current cities based on language
   const currentCities = saudiCities[language] || saudiCities.en;
+  
+  // Get translated brand types and categories
+  const brandTypes = getBrandTypes(t);
+  const brandCategories = getBrandCategories(t);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -238,9 +243,7 @@ const BrandSetup = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'ar' : 'en');
-  };
+  // Remove toggleLanguage function since we're using LanguageToggle component
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -335,8 +338,8 @@ const BrandSetup = () => {
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Brand profile updated successfully"
+          title: t('brandSetup.success'),
+          description: t('brandSetup.updateSuccess')
         });
       } else {
         const { error } = await supabase
@@ -349,8 +352,8 @@ const BrandSetup = () => {
         if (error) throw error;
 
         toast({
-          title: "Success", 
-          description: "Brand profile created successfully"
+          title: t('brandSetup.success'), 
+          description: t('brandSetup.createSuccess')
         });
       }
 
@@ -361,8 +364,8 @@ const BrandSetup = () => {
       navigate('/user-dashboard');
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save brand information",
+        title: t('brandSetup.error'),
+        description: error.message || t('brandSetup.saveError'),
         variant: "destructive"
       });
     } finally {
@@ -379,7 +382,7 @@ const BrandSetup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-4 px-4 sm:py-8 sm:px-6 lg:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 py-4 px-4 sm:py-8 sm:px-6 lg:py-12" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto max-w-lg sm:max-w-xl lg:max-w-2xl">
         {/* Toggle Buttons */}
         <div className="flex justify-end gap-2 mb-4">
@@ -393,37 +396,29 @@ const BrandSetup = () => {
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleLanguage}
-            className="h-9 w-9"
-          >
-            <Languages className="h-4 w-4" />
-            <span className="sr-only">Toggle language</span>
-          </Button>
+          <LanguageToggle />
         </div>
 
         {/* Informational Message */}
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium mb-1">Create High-Quality Content</p>
-              <p>Provide detailed and accurate information about your brand to help our AI generate better, more engaging content for your social media posts.</p>
+            <div className={`text-sm text-blue-800 dark:text-blue-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <p className="font-medium mb-1">{t('brandSetup.infoTitle')}</p>
+              <p>{t('brandSetup.infoDescription')}</p>
             </div>
           </div>
         </div>
 
         <Card className="shadow-lg">
-          <CardHeader className="text-center px-4 sm:px-6">
+          <CardHeader className={`text-center px-4 sm:px-6 ${isRTL ? 'text-right' : 'text-left'}`}>
             <CardTitle className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white leading-tight">
-              {isEditing ? 'Update Brand Profile' : 'Complete Brand Profile'}
+              {isEditing ? t('brandSetup.updateTitle') : t('brandSetup.completeTitle')}
             </CardTitle>
             <CardDescription className="text-sm sm:text-base mt-2">
               {isEditing 
-                ? 'Update your brand information'
-                : 'Tell us about your brand to get started'
+                ? t('brandSetup.updateDescription')
+                : t('brandSetup.completeDescription')
               }
             </CardDescription>
           </CardHeader>
@@ -431,21 +426,22 @@ const BrandSetup = () => {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Brand Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">Brand Name *</Label>
+                <Label htmlFor="name" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.brandName')} *</Label>
                 <Input
                   id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter your brand name"
+                  placeholder={t('brandSetup.brandNamePlaceholder')}
                   required
                   className="h-11 text-base"
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </div>
 
               {/* Brand Location (Multi-select) */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Brand Location</Label>
+                <Label className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.brandLocation')}</Label>
                 <MultiSelect
                   options={currentCities.map(city => ({ value: city, label: city }))}
                   selected={formData.locations}
@@ -453,7 +449,7 @@ const BrandSetup = () => {
                     ...prev,
                     locations: values
                   }))}
-                  placeholder="Select locations"
+                  placeholder={t('brandSetup.selectLocations')}
                   className="h-11 text-base"
                 />
                 {(formData.locations.includes('Other') || formData.locations.includes('أخرى')) && (
@@ -461,21 +457,22 @@ const BrandSetup = () => {
                     type="text"
                     value={formData.otherLocation}
                     onChange={(e) => setFormData({ ...formData, otherLocation: e.target.value })}
-                    placeholder="Specify your location"
+                    placeholder={t('brandSetup.specifyLocation')}
                     className="h-11 text-base mt-2"
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 )}
               </div>
 
               {/* Brand Type */}
               <div className="space-y-2">
-                <Label htmlFor="brandType" className="text-sm font-medium">Brand Type *</Label>
+                <Label htmlFor="brandType" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.brandType')} *</Label>
                 <Select 
                   value={formData.brandType} 
                   onValueChange={handleBrandTypeChange}
                 >
                   <SelectTrigger className="h-11 text-base">
-                    <SelectValue placeholder="Select brand type" />
+                    <SelectValue placeholder={t('brandSetup.selectBrandType')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                     {brandTypes.map((type) => (
@@ -494,15 +491,16 @@ const BrandSetup = () => {
               {/* Custom Brand Type Input (shown when "Other" is selected) */}
               {formData.brandType === 'other' && (
                 <div className="space-y-2">
-                  <Label htmlFor="customBrandType" className="text-sm font-medium">Please write your Brand type *</Label>
+                  <Label htmlFor="customBrandType" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.customBrandType')} *</Label>
                   <Input
                     id="customBrandType"
                     type="text"
                     value={formData.customBrandType}
                     onChange={(e) => setFormData({ ...formData, customBrandType: e.target.value })}
-                    placeholder="Enter your brand type"
+                    placeholder={t('brandSetup.enterBrandType')}
                     required
                     className="h-11 text-base"
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
               )}
@@ -510,13 +508,13 @@ const BrandSetup = () => {
               {/* Restaurant Category (shown only when Brand Type is "restaurant") */}
               {formData.brandType === 'restaurant' && (
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+                  <Label htmlFor="category" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.category')} *</Label>
                   <Select 
                     value={formData.category} 
                     onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger className="h-11 text-base">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t('brandSetup.selectCategory')} />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
                       {brandCategories.restaurant.map((category) => (
@@ -536,29 +534,31 @@ const BrandSetup = () => {
               {/* Custom Restaurant Category Input (shown when Category is "other") */}
               {formData.brandType === 'restaurant' && formData.category === 'other' && (
                 <div className="space-y-2">
-                  <Label htmlFor="customCategory" className="text-sm font-medium">Please write your restaurant category *</Label>
+                  <Label htmlFor="customCategory" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.customCategory')} *</Label>
                   <Input
                     id="customCategory"
                     type="text"
                     value={formData.customCategory}
                     onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
-                    placeholder="Enter your restaurant category"
+                    placeholder={t('brandSetup.enterCategory')}
                     required
                     className="h-11 text-base"
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
               )}
 
               {/* Brand Vision and Value */}
               <div className="space-y-2">
-                <Label htmlFor="vision" className="text-sm font-medium">Brand Vision and Value</Label>
+                <Label htmlFor="vision" className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{t('brandSetup.brandVision')}</Label>
                 <Textarea
                   id="vision"
                   value={formData.vision}
                   onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
-                  placeholder="Describe your brand's vision, mission, and core values. What makes your brand unique? What do you stand for?"
+                  placeholder={t('brandSetup.visionPlaceholder')}
                   rows={4}
                   className="resize-none text-base min-h-[100px]"
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </div>
 
@@ -570,7 +570,7 @@ const BrandSetup = () => {
                     onClick={() => navigate('/dashboard')}
                     className="w-full sm:flex-1 h-11 text-base"
                   >
-                    Cancel
+                    {t('brandSetup.cancel')}
                   </Button>
                 )}
                 <Button
@@ -580,11 +580,11 @@ const BrandSetup = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEditing ? 'Updating...' : 'Creating...'}
+                      <Loader2 className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4 animate-spin`} />
+                      {isEditing ? t('brandSetup.updating') : t('brandSetup.creating')}
                     </>
                   ) : (
-                    isEditing ? 'Update Brand' : 'Complete Setup'
+                    isEditing ? t('brandSetup.updateBrand') : t('brandSetup.completeSetup')
                   )}
                 </Button>
               </div>

@@ -20,7 +20,7 @@ import EmptyCaptionsState from './captions/EmptyCaptionsState';
 
 const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { 
     captions, 
     setCaptions, 
@@ -119,8 +119,8 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
       console.log('Caption regeneration completed successfully');
       
       toast({
-        title: "Success!",
-        description: "Caption generated successfully"
+        title: t('upload.uploadSuccess'),
+        description: t('captions.generated')
       });
     } catch (error: any) {
       console.error('Caption regeneration error:', error);
@@ -181,9 +181,9 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('table.content')}</TableHead>
-                    <TableHead>{t('table.caption')}</TableHead>
-                    <TableHead>{t('table.actions')}</TableHead>
+                    <TableHead className="text-center">{t('table.content')}</TableHead>
+                    <TableHead className="text-center">{t('table.caption')}</TableHead>
+                    <TableHead className="text-center">{t('table.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
