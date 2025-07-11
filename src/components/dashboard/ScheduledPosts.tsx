@@ -82,6 +82,7 @@ interface ScheduledPost {
   video_url?: string;
   image_url?: string;
   video_path?: string;
+  approved_at?: string | null;
   tiktok_settings?: {
     enabled: boolean;
     privacyLevel: string;
@@ -166,6 +167,7 @@ const ScheduledPosts = () => {
         video_url: post.video_url,
         image_url: post.image_url,
         video_path: post.video_path,
+        approved_at: post.approved_at,
         // Include TikTok settings if available
         tiktok_settings: post.products ? {
           enabled: post.products.tiktok_enabled,
@@ -178,6 +180,17 @@ const ScheduledPosts = () => {
       }));
 
       setScheduledPosts(transformedPosts);
+      
+      // Check if user has approved posts - determine approval state from database
+      const hasApprovedPosts = data.some(post => 
+        post.status === 'scheduled' && 
+        post.platform === 'tiktok' && 
+        post.approved_at !== null
+      );
+      
+      // Set postsLocked state based on whether there are approved posts
+      setPostsLocked(hasApprovedPosts);
+      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -578,6 +591,9 @@ const ScheduledPosts = () => {
           title: t('schedule.postsLocked'),
           description: t('schedule.postsLockedDesc'),
         });
+        
+        // Refresh the posts to update the UI state
+        await fetchScheduledPosts();
       } else {
         toast({
           title: t('schedule.noPostsToApprove'),
@@ -616,6 +632,9 @@ const ScheduledPosts = () => {
         title: t('schedule.postsUnlocked'),
         description: t('schedule.postsUnlockedDesc'),
       });
+      
+      // Refresh the posts to update the UI state
+      await fetchScheduledPosts();
     } catch (error: any) {
       toast({
         title: "Error",
