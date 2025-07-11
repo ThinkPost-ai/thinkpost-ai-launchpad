@@ -344,7 +344,6 @@ export type Database = {
           product_id: string | null
           proxy_image_url: string | null
           proxy_video_url: string | null
-          reviewed_and_approved: boolean | null
           scheduled_date: string
           status: string
           tiktok_publish_id: string | null
@@ -365,7 +364,6 @@ export type Database = {
           product_id?: string | null
           proxy_image_url?: string | null
           proxy_video_url?: string | null
-          reviewed_and_approved?: boolean | null
           scheduled_date: string
           status?: string
           tiktok_publish_id?: string | null
@@ -386,7 +384,6 @@ export type Database = {
           product_id?: string | null
           proxy_image_url?: string | null
           proxy_video_url?: string | null
-          reviewed_and_approved?: boolean | null
           scheduled_date?: string
           status?: string
           tiktok_publish_id?: string | null
@@ -596,7 +593,7 @@ export type Database = {
       }
       http_reset_curlopt: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
+        Returns: undefined
       }
       http_set_curlopt: {
         Args: { curlopt: string; value: string }

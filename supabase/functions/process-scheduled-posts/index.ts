@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,7 +20,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get all scheduled posts that are due to be posted AND have been reviewed and approved
+    // Get all scheduled posts that are due to be posted
     const now = new Date().toISOString();
     console.log(`[AUTO-POST] Checking for posts due before: ${now}`);
     
@@ -34,7 +33,6 @@ serve(async (req) => {
       `)
       .eq('status', 'scheduled')
       .eq('platform', 'tiktok')
-      .eq('reviewed_and_approved', true)
       .lte('scheduled_date', now);
 
     if (fetchError) {
@@ -48,11 +46,11 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[AUTO-POST] Found ${duePosts?.length || 0} reviewed and approved posts due for posting`);
+    console.log(`[AUTO-POST] Found ${duePosts?.length || 0} posts due for posting`);
 
     if (!duePosts || duePosts.length === 0) {
       return new Response(
-        JSON.stringify({ message: 'No reviewed and approved posts due for posting', processed: 0 }),
+        JSON.stringify({ message: 'No posts due for posting', processed: 0 }),
         {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -209,4 +207,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}); 
