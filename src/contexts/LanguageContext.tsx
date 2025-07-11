@@ -906,7 +906,7 @@ const getTranslations = () => {
       'footer.sections.support': 'الدعم',
       'footer.sections.legal': 'قانوني',
       'footer.product.features': 'المميزات',
-      'footer.product.pricing': 'أسعارنا',
+      'footer.product.pricing': 'الأسعار',
       'footer.product.api': 'واجهة برمجة التطبيقات',
       'footer.product.documentation': 'التوثيق',
       'footer.company.about': 'من نحن',
