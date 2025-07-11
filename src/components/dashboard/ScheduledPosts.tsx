@@ -77,6 +77,7 @@ interface ScheduledPost {
   scheduled_date: string;
   platform: 'instagram' | 'tiktok' | 'facebook';
   status: 'scheduled' | 'posted' | 'failed';
+  reviewed_and_approved: boolean;
   image_path?: string;
   product_name?: string;
   video_url?: string;
@@ -116,7 +117,7 @@ const ScheduledPosts = () => {
   const [selectedHour, setSelectedHour] = useState<string>('12');
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
   const [postingNow, setPostingNow] = useState<string | null>(null);
-  const [postsLocked, setPostsLocked] = useState(false);
+  const [reviewingPosts, setReviewingPosts] = useState(false);
   const [showSchedulingModal, setShowSchedulingModal] = useState(false);
   const [schedulingPreferences, setSchedulingPreferences] = useState({
     days: '4-weekly' as '2-weekly' | '4-weekly' | 'daily' | 'custom',
@@ -161,6 +162,7 @@ const ScheduledPosts = () => {
         scheduled_date: post.scheduled_date,
         platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
         status: post.status as 'scheduled' | 'posted' | 'failed',
+        reviewed_and_approved: post.reviewed_and_approved || false,
         image_path: post.products?.image_path || post.images?.file_path,
         product_name: post.products?.name,
         video_url: post.video_url,
@@ -363,6 +365,7 @@ const ScheduledPosts = () => {
           scheduled_date: date.toISOString(),
           platform: 'tiktok',
           status: 'scheduled' as const,
+          reviewed_and_approved: false,
           media_type: getMediaTypeFromPath(mediaItem.file_path)
         };
       });
@@ -375,7 +378,7 @@ const ScheduledPosts = () => {
 
       toast({
         title: "Success!",
-        description: `${schedule.length} TikTok posts have been scheduled over the next 4 weeks`,
+        description: `${schedule.length} TikTok posts have been scheduled. Click "Reviewed and Submitted" to enable automatic publishing.`,
       });
 
       await fetchScheduledPosts();
@@ -422,6 +425,72 @@ const ScheduledPosts = () => {
   const handleSchedulingConfirm = async () => {
     setShowSchedulingModal(false);
     await scheduleAutomaticPosts();
+  };
+
+  const handleReviewedAndSubmitted = async () => {
+    setReviewingPosts(true);
+
+    try {
+      // Mark all scheduled posts as reviewed and approved
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .update({ 
+          reviewed_and_approved: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user?.id)
+        .eq('status', 'scheduled');
+
+      if (error) throw error;
+
+      toast({
+        title: "Posts Reviewed and Submitted!",
+        description: "Your scheduled posts will now be automatically published at their scheduled times.",
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to submit posts for review",
+        variant: "destructive"
+      });
+    } finally {
+      setReviewingPosts(false);
+    }
+  };
+
+  const handleCancelScheduledPostsAndEdits = async () => {
+    setReviewingPosts(true);
+
+    try {
+      // Mark all scheduled posts as NOT reviewed and approved
+      const { error } = await supabase
+        .from('scheduled_posts')
+        .update({ 
+          reviewed_and_approved: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user?.id)
+        .eq('status', 'scheduled');
+
+      if (error) throw error;
+
+      toast({
+        title: "Posts Unlocked",
+        description: "All scheduled posts are now editable again and will not be published until reviewed.",
+      });
+
+      await fetchScheduledPosts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to unlock posts",
+        variant: "destructive"
+      });
+    } finally {
+      setReviewingPosts(false);
+    }
   };
 
   // Direct TikTok posting function using stored settings
@@ -546,20 +615,12 @@ const ScheduledPosts = () => {
     }
   };
 
-  const handleReviewedAndSubmitted = () => {
-    setPostsLocked(true);
-    toast({
-      title: "Posts Locked",
-      description: "All scheduled posts have been locked and are no longer editable.",
-    });
+  const handleReviewedAndSubmittedClick = () => {
+    handleReviewedAndSubmitted();
   };
 
-  const handleCancelScheduledPostsAndEdits = () => {
-    setPostsLocked(false);
-    toast({
-      title: "Posts Unlocked",
-      description: "All scheduled posts are now editable again.",
-    });
+  const handleCancelScheduledPostsAndEditsClick = () => {
+    handleCancelScheduledPostsAndEdits();
   };
 
   const getImageUrl = (filePath: string) => {
@@ -673,7 +734,7 @@ const ScheduledPosts = () => {
   };
 
   // Helper function to check if a date has scheduled posts
-  const hasScheduledPosts = (date: Date) => {
+  const hasScheduledPostsOnDate = (date: Date) => {
     return scheduledPosts.some(post => 
       new Date(post.scheduled_date).toDateString() === date.toDateString() &&
       post.status === 'scheduled'
@@ -691,12 +752,15 @@ const ScheduledPosts = () => {
 
   // Create modifiers for the calendar
   const calendarModifiers = {
-    hasScheduledPosts: (date: Date) => hasScheduledPosts(date)
+    hasScheduledPosts: (date: Date) => hasScheduledPostsOnDate(date)
   };
 
   const calendarModifiersClassNames = {
     hasScheduledPosts: "scheduled-day"
   };
+
+  const arePostsLocked = scheduledPosts.some(p => p.status === 'scheduled' && p.reviewed_and_approved);
+  const hasScheduledPosts = scheduledPosts.filter(p => p.status === 'scheduled').length > 0;
 
   if (loading) {
     return (
@@ -727,7 +791,7 @@ const ScheduledPosts = () => {
               <Button 
                 variant="outline"
                 onClick={cancelAllScheduledPosts}
-                disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0 || postsLocked}
+                disabled={cancellingAll || !hasScheduledPosts || arePostsLocked}
               >
                 {cancellingAll ? (
                   <>
@@ -744,7 +808,7 @@ const ScheduledPosts = () => {
               <Button 
                 className="bg-gradient-primary hover:opacity-90"
                 onClick={() => setShowSchedulingModal(true)}
-                disabled={scheduling || postsLocked}
+                disabled={scheduling || arePostsLocked}
               >
                 {scheduling ? (
                   <>
@@ -788,25 +852,45 @@ const ScheduledPosts = () => {
                     />
                     
                     {/* Lock/Unlock Buttons - Only show if there are scheduled posts */}
-                    {scheduledPosts.filter(p => p.status === 'scheduled').length > 0 && (
+                    {hasScheduledPosts && (
                       <div className="mt-4 flex flex-col gap-2">
-                        {!postsLocked ? (
+                        {!arePostsLocked ? (
                           <Button 
                             variant="default"
-                            onClick={handleReviewedAndSubmitted}
+                            onClick={handleReviewedAndSubmittedClick}
+                            disabled={reviewingPosts}
                             className="bg-green-600 hover:bg-green-700 w-full"
                           >
-                            <Send className="h-4 w-4 mr-2" />
-                            {t('schedule.reviewedAndSubmitted')}
+                            {reviewingPosts ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                {t('schedule.reviewedAndSubmitted')}
+                              </>
+                            )}
                           </Button>
                         ) : (
                           <Button 
                             variant="outline"
-                            onClick={handleCancelScheduledPostsAndEdits}
+                            onClick={handleCancelScheduledPostsAndEditsClick}
+                            disabled={reviewingPosts}
                             className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:hover:text-red-300 w-full"
                           >
-                            <Edit className="h-4 w-4 mr-2" />
-                            {t('schedule.cancelScheduledPostsAndEdits')}
+                            {reviewingPosts ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <Edit className="h-4 w-4 mr-2" />
+                                {t('schedule.cancelScheduledPostsAndEdits')}
+                              </>
+                            )}
                           </Button>
                         )}
                       </div>
@@ -848,6 +932,11 @@ const ScheduledPosts = () => {
                                   {new Date(post.scheduled_date).toLocaleTimeString()}
                                 </span>
                                 {getStatusBadge(post.status)}
+                                {post.reviewed_and_approved && (
+                                  <Badge variant="default" className="bg-green-600">
+                                    Approved
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                             {(post.status === 'scheduled' || post.status === 'failed') && (
@@ -856,7 +945,7 @@ const ScheduledPosts = () => {
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => startEditDate(post)}
-                                  disabled={postsLocked}
+                                  disabled={post.reviewed_and_approved}
                                 >
                                   <Edit className="h-3 w-3 mr-1" />
                                   {t('schedule.editDate')}
@@ -865,7 +954,7 @@ const ScheduledPosts = () => {
                                   size="sm" 
                                   variant="destructive"
                                   onClick={() => deletePost(post.id)}
-                                  disabled={postsLocked}
+                                  disabled={post.reviewed_and_approved}
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
                                   {t('schedule.delete')}
