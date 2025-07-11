@@ -549,16 +549,16 @@ const ScheduledPosts = () => {
   const handleReviewedAndSubmitted = () => {
     setPostsLocked(true);
     toast({
-      title: "Posts Locked",
-      description: "All scheduled posts have been locked and are no longer editable.",
+      title: t('schedule.postsLocked'),
+      description: t('schedule.postsLockedDesc'),
     });
   };
 
   const handleCancelScheduledPostsAndEdits = () => {
     setPostsLocked(false);
     toast({
-      title: "Posts Unlocked",
-      description: "All scheduled posts are now editable again.",
+      title: t('schedule.postsUnlocked'),
+      description: t('schedule.postsUnlockedDesc'),
     });
   };
 
@@ -791,14 +791,19 @@ const ScheduledPosts = () => {
                     {scheduledPosts.filter(p => p.status === 'scheduled').length > 0 && (
                       <div className="mt-4 flex flex-col gap-2">
                         {!postsLocked ? (
-                          <Button 
-                            variant="default"
-                            onClick={handleReviewedAndSubmitted}
-                            className="bg-green-600 hover:bg-green-700 w-full"
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            {t('schedule.reviewedAndSubmitted')}
-                          </Button>
+                          <div className="space-y-2">
+                            <Button 
+                              variant="default"
+                              onClick={handleReviewedAndSubmitted}
+                              className="bg-green-600 hover:bg-green-700 w-full"
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              {t('schedule.reviewedAndSubmitted')}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center">
+                              {t('schedule.reviewedAndSubmittedNote')}
+                            </p>
+                          </div>
                         ) : (
                           <Button 
                             variant="outline"
