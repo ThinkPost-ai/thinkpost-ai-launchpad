@@ -916,50 +916,54 @@ const ScheduledPosts = () => {
                           post.platform === 'tiktok'
                         )
                         .map((post) => (
-                          <div key={post.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                            {post.image_path && (
-                              <img
-                                src={getImageUrl(post.image_path)}
-                                alt="Scheduled post"
-                                className="h-16 w-16 object-cover rounded-md"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm text-right mb-2" dir="rtl">
-                                {post.caption}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                {getPlatformIcon(post.platform)}
-                                <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(post.scheduled_date).toLocaleTimeString()}
-                                </span>
-                                {getStatusBadge(post.status)}
-                              </div>
-                            </div>
-                            {(post.status === 'scheduled' || post.status === 'failed') && (
-                              <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => startEditDate(post)}
-                                  disabled={postsLocked}
-                                >
-                                  <Edit className="h-3 w-3 mr-1" />
-                                  {t('schedule.editDate')}
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  onClick={() => deletePost(post.id)}
-                                  disabled={postsLocked}
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  {t('schedule.delete')}
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                           <div key={post.id} className="p-4 border rounded-lg">
+                             <div className="flex items-start gap-4 mb-3">
+                               {post.image_path && (
+                                 <img
+                                   src={getImageUrl(post.image_path)}
+                                   alt="Scheduled post"
+                                   className="h-16 w-16 object-cover rounded-md flex-shrink-0"
+                                 />
+                               )}
+                               <div className="flex-1 min-w-0">
+                                 <p className="text-sm text-right mb-2" dir="rtl">
+                                   {post.caption}
+                                 </p>
+                                 <div className="flex items-center gap-2 flex-wrap">
+                                   {getPlatformIcon(post.platform)}
+                                   <Clock className="h-3 w-3 text-muted-foreground" />
+                                   <span className="text-sm text-muted-foreground">
+                                     {new Date(post.scheduled_date).toLocaleTimeString()}
+                                   </span>
+                                   {getStatusBadge(post.status)}
+                                 </div>
+                               </div>
+                             </div>
+                             {(post.status === 'scheduled' || post.status === 'failed') && (
+                               <div className="flex gap-2 justify-end pt-2 border-t">
+                                 <Button 
+                                   size="sm" 
+                                   variant="outline"
+                                   onClick={() => startEditDate(post)}
+                                   disabled={postsLocked}
+                                   className="text-xs"
+                                 >
+                                   <Edit className="h-3 w-3 mr-1" />
+                                   {t('schedule.editDate')}
+                                 </Button>
+                                 <Button 
+                                   size="sm" 
+                                   variant="destructive"
+                                   onClick={() => deletePost(post.id)}
+                                   disabled={postsLocked}
+                                   className="text-xs"
+                                 >
+                                   <Trash2 className="h-3 w-3 mr-1" />
+                                   {t('schedule.delete')}
+                                 </Button>
+                               </div>
+                             )}
+                           </div>
                         ))}
                       
                       {scheduledPosts.filter(post => 

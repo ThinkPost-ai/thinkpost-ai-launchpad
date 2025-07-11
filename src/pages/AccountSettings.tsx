@@ -207,7 +207,12 @@ const AccountSettings = () => {
         // Additional cleanup - clear any local storage items
         try {
           localStorage.removeItem('supabase.auth.token');
-          localStorage.removeItem('sb-' + supabase.supabaseUrl.split('//')[1] + '-auth-token');
+          // Clear auth tokens from local storage
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') && key.includes('-auth-token')) {
+              localStorage.removeItem(key);
+            }
+          });
           sessionStorage.clear();
         } catch (e) {
           console.error('Error clearing storage:', e);
