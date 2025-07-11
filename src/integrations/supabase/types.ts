@@ -333,6 +333,7 @@ export type Database = {
       }
       scheduled_posts: {
         Row: {
+          approved_at: string | null
           caption: string
           created_at: string
           id: string
@@ -353,6 +354,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          approved_at?: string | null
           caption: string
           created_at?: string
           id?: string
@@ -373,6 +375,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          approved_at?: string | null
           caption?: string
           created_at?: string
           id?: string

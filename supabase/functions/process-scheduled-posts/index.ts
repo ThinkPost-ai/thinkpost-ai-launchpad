@@ -20,9 +20,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get all scheduled posts that are due to be posted
+    // Get all scheduled posts that are due to be posted AND approved
     const now = new Date().toISOString();
-    console.log(`[AUTO-POST] Checking for posts due before: ${now}`);
+    console.log(`[AUTO-POST] Checking for posts due before: ${now} that are approved`);
     
     const { data: duePosts, error: fetchError } = await supabase
       .from('scheduled_posts')
@@ -33,7 +33,8 @@ serve(async (req) => {
       `)
       .eq('status', 'scheduled')
       .eq('platform', 'tiktok')
-      .lte('scheduled_date', now);
+      .lte('scheduled_date', now)
+      .not('approved_at', 'is', null);
 
     if (fetchError) {
       console.error('[AUTO-POST] Error fetching due posts:', fetchError);

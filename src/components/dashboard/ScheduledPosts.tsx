@@ -546,20 +546,83 @@ const ScheduledPosts = () => {
     }
   };
 
-  const handleReviewedAndSubmitted = () => {
-    setPostsLocked(true);
-    toast({
-      title: t('schedule.postsLocked'),
-      description: t('schedule.postsLockedDesc'),
-    });
+  const handleReviewedAndSubmitted = async () => {
+    try {
+      setPostsLocked(true);
+      
+      // Get all scheduled posts for this user
+      const { data: scheduledPostsToApprove, error: fetchError } = await supabase
+        .from('scheduled_posts')
+        .select('id')
+        .eq('user_id', user?.id)
+        .eq('status', 'scheduled')
+        .eq('platform', 'tiktok');
+
+      if (fetchError) throw fetchError;
+
+      if (scheduledPostsToApprove && scheduledPostsToApprove.length > 0) {
+        // Approve all scheduled posts by setting approved_at timestamp
+        const { error: approveError } = await supabase
+          .from('scheduled_posts')
+          .update({ 
+            approved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user?.id)
+          .eq('status', 'scheduled')
+          .eq('platform', 'tiktok');
+
+        if (approveError) throw approveError;
+
+        toast({
+          title: t('schedule.postsLocked'),
+          description: t('schedule.postsLockedDesc'),
+        });
+      } else {
+        toast({
+          title: t('schedule.noPostsToApprove'),
+          description: t('schedule.noPostsToApproveDesc'),
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: t('schedule.approvalError') + ": " + error.message,
+        variant: "destructive"
+      });
+      setPostsLocked(false); // Reset if failed
+    }
   };
 
-  const handleCancelScheduledPostsAndEdits = () => {
-    setPostsLocked(false);
-    toast({
-      title: t('schedule.postsUnlocked'),
-      description: t('schedule.postsUnlockedDesc'),
-    });
+  const handleCancelScheduledPostsAndEdits = async () => {
+    try {
+      setPostsLocked(false);
+      
+      // Remove approval from all scheduled posts by setting approved_at to null
+      const { error: unapproveError } = await supabase
+        .from('scheduled_posts')
+        .update({ 
+          approved_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user?.id)
+        .eq('status', 'scheduled')
+        .eq('platform', 'tiktok');
+
+      if (unapproveError) throw unapproveError;
+
+      toast({
+        title: t('schedule.postsUnlocked'),
+        description: t('schedule.postsUnlockedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: t('schedule.unapprovalError') + ": " + error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getImageUrl = (filePath: string) => {
@@ -903,14 +966,14 @@ const ScheduledPosts = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Posting Date</DialogTitle>
+            <DialogTitle>{t('schedule.editPostingDate')}</DialogTitle>
             <DialogDescription>
-              Choose a new date and time for this scheduled post.
+              {t('schedule.editPostingDateDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Date</label>
+              <label className="text-sm font-medium">{t('schedule.date')}</label>
               <Calendar
                 mode="single"
                 selected={newScheduleDate}
@@ -927,7 +990,7 @@ const ScheduledPosts = () => {
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-2 block">Time</label>
+              <label className="text-sm font-medium mb-2 block">{t('schedule.time')}</label>
               <div className="flex gap-2 items-center">
                 <Select value={selectedHour} onValueChange={setSelectedHour}>
                   <SelectTrigger className="w-20">
@@ -959,16 +1022,16 @@ const ScheduledPosts = () => {
               </div>
               
               <div className="text-xs text-muted-foreground mt-1">
-                Selected time: {selectedHour}:{selectedMinute}
+                {t('schedule.selectedTime')}: {selectedHour}:{selectedMinute}
               </div>
             </div>
             
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
+                {t('schedule.cancel')}
               </Button>
               <Button onClick={updatePostDate} disabled={!newScheduleDate}>
-                Update Date
+                {t('schedule.updateDate')}
               </Button>
             </div>
           </div>
