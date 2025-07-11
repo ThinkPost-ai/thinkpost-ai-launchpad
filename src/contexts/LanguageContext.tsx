@@ -155,6 +155,7 @@ const getTranslations = () => {
       'hero.loading': 'Loading...',
       'hero.demoTitle': 'Demo Video Coming Soon',
       'hero.demoDescription': 'See our AI in action',
+      'hero.scrollDown': 'Scroll Down',
       
       // Features
       'features.title.powerful': 'Powerful Features for',
@@ -800,6 +801,7 @@ const getTranslations = () => {
       'hero.loading': 'جارٍ التحميل...',
       'hero.demoTitle': 'فيديو العرض التوضيحي قريباً',
       'hero.demoDescription': 'شاهد نموذج العمل',
+      'hero.scrollDown': 'تمرير لأسفل',
       
       // Features
       'features.title.powerful': 'مميزات رهيبة',

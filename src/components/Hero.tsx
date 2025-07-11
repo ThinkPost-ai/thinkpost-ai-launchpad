@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, Play } from 'lucide-react';
+import { ArrowRight, Sparkles, Play, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +30,16 @@ const Hero = () => {
     if (!user) return t('hero.startCreating');
     if (loading) return t('hero.loading');
     return t('hero.goToDashboard');
+  };
+
+  const scrollToNextSection = () => {
+    const nextSection = document.querySelector('#features');
+    if (nextSection) {
+      nextSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
   };
 
   return (
@@ -113,6 +123,20 @@ const Hero = () => {
                 </p>
               </div>
             </div>
+          </div>
+          
+          {/* Scroll Down Indicator */}
+          <div className="flex justify-center mt-8 sm:mt-12">
+            <button
+              onClick={scrollToNextSection}
+              className="flex flex-col items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-vibrant-purple dark:hover:text-vibrant-purple transition-all duration-300 group animate-pulse"
+              aria-label={t('hero.scrollDown')}
+            >
+              <span className="text-sm font-medium group-hover:scale-105 transition-transform duration-300">{t('hero.scrollDown')}</span>
+              <div className="w-6 h-6 border-2 border-current rounded-full flex items-center justify-center group-hover:animate-bounce transition-all duration-300">
+                <ChevronDown className="h-4 w-4 animate-bounce" />
+              </div>
+            </button>
           </div>
         </div>
       </section>
