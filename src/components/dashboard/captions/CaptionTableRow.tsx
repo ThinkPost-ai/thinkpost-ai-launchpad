@@ -103,7 +103,7 @@ const CaptionTableRow = ({
           </div>
         </div>
       </TableCell>
-      <TableCell className="max-w-xs text-center">
+      <TableCell className="text-center">
         {isEditing ? (
           <div className="flex flex-col gap-2">
             <Textarea
@@ -130,13 +130,17 @@ const CaptionTableRow = ({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-center line-clamp-3">
-            {caption.caption || (
+          <div className="text-sm text-center max-w-md mx-auto">
+            {caption.caption ? (
+              <p className="text-right whitespace-pre-wrap break-words leading-relaxed" dir="rtl">
+                {caption.caption}
+              </p>
+            ) : (
               <span className="text-muted-foreground italic">
                 No caption generated yet
               </span>
             )}
-          </p>
+          </div>
         )}
       </TableCell>
       <TableCell className="text-center">
