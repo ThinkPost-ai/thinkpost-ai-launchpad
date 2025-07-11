@@ -18,6 +18,8 @@ export const useTikTokConnection = () => {
   const [tiktokProfile, setTikTokProfile] = useState<TikTokProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showReconnectDialog, setShowReconnectDialog] = useState(false);
+  const [previousTikTokInfo, setPreviousTikTokInfo] = useState<{username: string | null, avatar_url: string | null} | null>(null);
 
   const fetchTikTokProfile = async () => {
     if (!user?.id) return;
@@ -48,7 +50,7 @@ export const useTikTokConnection = () => {
     }
   };
 
-  const connectTikTok = async () => {
+  const connectTikTok = async (forceNewConnection = false) => {
     if (!user) {
       console.error('❌ No user found for TikTok connection');
       toast({
@@ -56,6 +58,18 @@ export const useTikTokConnection = () => {
         description: t('toast.authRequiredDesc'),
         variant: "destructive"
       });
+      return;
+    }
+
+    // Check if user has previously connected a TikTok account but is not currently connected
+    if (!forceNewConnection && tiktokProfile && !tiktokProfile.tiktok_connected && 
+        (tiktokProfile.tiktok_open_id || tiktokProfile.tiktok_username)) {
+      
+      setPreviousTikTokInfo({
+        username: tiktokProfile.tiktok_username,
+        avatar_url: tiktokProfile.tiktok_avatar_url
+      });
+      setShowReconnectDialog(true);
       return;
     }
 
@@ -182,6 +196,20 @@ export const useTikTokConnection = () => {
     }
   };
 
+  const handleReconnectSameAccount = () => {
+    setShowReconnectDialog(false);
+    connectTikTok(true); // Force new connection without dialog
+  };
+
+  const handleConnectDifferentAccount = () => {
+    setShowReconnectDialog(false);
+    connectTikTok(true); // Force new connection without dialog
+  };
+
+  const handleCancelReconnect = () => {
+    setShowReconnectDialog(false);
+  };
+
   useEffect(() => {
     if (user) {
       fetchTikTokProfile();
@@ -207,6 +235,11 @@ export const useTikTokConnection = () => {
     connectTikTok,
     disconnectTikTok,
     refetch: fetchTikTokProfile,
+    showReconnectDialog,
+    previousTikTokInfo,
+    handleReconnectSameAccount,
+    handleConnectDifferentAccount,
+    handleCancelReconnect,
   };
 };
 

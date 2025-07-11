@@ -81,6 +81,7 @@ const getTranslations = () => {
     en: {
       // Common
       'common.back': 'Back',
+      'common.cancel': 'Cancel',
       
       // Brand Setup
       'brandSetup.title.complete': 'Complete Brand Profile',
@@ -326,6 +327,11 @@ const getTranslations = () => {
       'dashboard.tiktok.processingConnection': 'Processing TikTok Connection...',
       'dashboard.tiktok.processingConnectionDescription': 'Please wait while we complete your TikTok login.',
       'dashboard.tiktok.redirectingToDashboard': 'Redirecting to your dashboard...',
+      'dashboard.tiktok.reconnectTitle': 'Reconnect TikTok Account',
+      'dashboard.tiktok.reconnectDescription': 'We found that you previously connected a TikTok account. Would you like to reconnect to the same account or connect a different one?',
+      'dashboard.tiktok.previousAccount': 'Previously connected account',
+      'dashboard.tiktok.reconnectSameAccount': 'Reconnect to Same Account',
+      'dashboard.tiktok.connectDifferentAccount': 'Connect Different Account',
       
       // Instagram Connection
       'dashboard.instagram.title': 'Instagram Business',
@@ -727,6 +733,7 @@ const getTranslations = () => {
     ar: {
       // Common
       'common.back': 'رجوع',
+      'common.cancel': 'إلغاء',
       
       // Brand Setup
       'brandSetup.title.complete': 'إكمال ملف العلامة التجارية',
@@ -972,6 +979,11 @@ const getTranslations = () => {
       'dashboard.tiktok.processingConnection': 'جارٍ معالجة اتصال TikTok...',
       'dashboard.tiktok.processingConnectionDescription': 'يرجى الانتظار بينما نكمل تسجيل دخولك إلى TikTok.',
       'dashboard.tiktok.redirectingToDashboard': 'جارٍ التوجيه إلى لوحة التحكم...',
+      'dashboard.tiktok.reconnectTitle': 'إعادة ربط حساب TikTok',
+      'dashboard.tiktok.reconnectDescription': 'وجدنا أنك ربطت حساب TikTok من قبل. هل تريد إعادة الربط بنفس الحساب أم ربط حساب مختلف؟',
+      'dashboard.tiktok.previousAccount': 'الحساب المرتبط سابقاً',
+      'dashboard.tiktok.reconnectSameAccount': 'إعادة الربط بنفس الحساب',
+      'dashboard.tiktok.connectDifferentAccount': 'ربط حساب مختلف',
       
       // Instagram Connection
       'dashboard.instagram.title': 'Instagram Business',
