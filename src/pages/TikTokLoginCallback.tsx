@@ -16,26 +16,26 @@ const TikTokLoginCallback = () => {
     const error = searchParams.get('error');
 
     if (error) {
-      let errorMessage = "There was an error connecting your TikTok account.";
+      let errorMessage = t('toast.tiktokErrorGeneral');
       
       switch (error) {
         case 'missing_parameters':
-          errorMessage = "Missing required parameters from TikTok.";
+          errorMessage = t('toast.tiktokErrorMissingParams');
           break;
         case 'invalid_state':
-          errorMessage = "Invalid or expired authorization state.";
+          errorMessage = t('toast.tiktokErrorInvalidState');
           break;
         case 'token_exchange_failed':
-          errorMessage = "Failed to exchange authorization code for access token.";
+          errorMessage = t('toast.tiktokErrorTokenExchange');
           break;
         case 'invalid_token_response':
-          errorMessage = "Invalid response from TikTok's token service.";
+          errorMessage = t('toast.tiktokErrorInvalidToken');
           break;
         case 'profile_update_failed':
-          errorMessage = "Failed to update your profile with TikTok information.";
+          errorMessage = t('toast.tiktokErrorProfileUpdate');
           break;
         case 'internal_error':
-          errorMessage = "An internal error occurred during the connection process.";
+          errorMessage = t('toast.tiktokErrorInternal');
           break;
       }
 

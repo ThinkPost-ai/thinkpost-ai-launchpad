@@ -7,11 +7,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const EmailConfirmation = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -39,8 +41,8 @@ const EmailConfirmation = () => {
         } else if (data.user) {
           setStatus('success');
           toast({
-            title: "Email confirmed!",
-            description: "Your email has been successfully confirmed. You can now sign in to your account."
+            title: t('toast.emailConfirmed'),
+            description: t('toast.emailConfirmedDesc')
           });
           
           // Redirect to home page after 3 seconds

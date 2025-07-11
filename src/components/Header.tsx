@@ -7,12 +7,14 @@ import LanguageToggle from '@/components/LanguageToggle';
 import AuthDialog from '@/components/auth/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { t, isRTL } = useLanguage();
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: t('nav.features'), href: '#features' },
@@ -24,8 +26,9 @@ const Header = () => {
     setIsAuthDialogOpen(true);
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (

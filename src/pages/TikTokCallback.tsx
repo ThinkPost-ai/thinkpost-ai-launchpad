@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TikTokCallback = () => {
+  const { t } = useLanguage();
+  
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -103,10 +106,10 @@ const TikTokCallback = () => {
           <Loader2 className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
         </div>
         <h2 className="text-xl font-semibold text-deep-blue dark:text-white mb-2">
-          Processing TikTok Connection...
+          {t('dashboard.tiktok.processingConnection')}
         </h2>
         <p className="text-muted-foreground">
-          Please wait while we complete your TikTok login.
+          {t('dashboard.tiktok.processingConnectionDescription')}
         </p>
       </div>
     </div>

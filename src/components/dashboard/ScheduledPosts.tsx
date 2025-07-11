@@ -119,9 +119,8 @@ const ScheduledPosts = () => {
   const [postsLocked, setPostsLocked] = useState(false);
   const [showSchedulingModal, setShowSchedulingModal] = useState(false);
   const [schedulingPreferences, setSchedulingPreferences] = useState({
-    days: '4-weekly' as '2-weekly' | '4-weekly' | 'daily' | 'custom' | 'every-x',
+    days: '4-weekly' as '2-weekly' | '4-weekly' | 'daily' | 'custom',
     customDays: [] as string[],
-    everyXDays: 3,
     timeSlot: 'morning' as 'morning' | 'lunch' | 'evening' | 'night' | 'random'
   });
   
@@ -298,11 +297,6 @@ const ScheduledPosts = () => {
           // Check if current day is in custom selected days
           const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
           shouldScheduleToday = schedulingPreferences.customDays.includes(dayNames[currentDate.getDay()]);
-          break;
-        case 'every-x':
-          // Schedule every X days
-          const daysDiff = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-          shouldScheduleToday = daysDiff % schedulingPreferences.everyXDays === 0;
           break;
       }
 
@@ -857,27 +851,7 @@ const ScheduledPosts = () => {
                               </div>
                             </div>
                             {(post.status === 'scheduled' || post.status === 'failed') && (
-                              <div className="flex flex-col gap-2">
-                                {post.platform === 'tiktok' && (
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-gradient-primary hover:opacity-90"
-                                    onClick={() => postToTikTokDirectly(post)}
-                                    disabled={postingNow === post.id || postsLocked}
-                                  >
-                                    {postingNow === post.id ? (
-                                      <>
-                                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                        Posting...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Send className="h-3 w-3 mr-1" />
-                                        {post.status === 'failed' ? 'Retry Post' : 'Post To TikTok'}
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
+                              <div className="flex gap-2">
                                 <Button 
                                   size="sm" 
                                   variant="outline"
@@ -893,6 +867,7 @@ const ScheduledPosts = () => {
                                   onClick={() => deletePost(post.id)}
                                   disabled={postsLocked}
                                 >
+                                  <Trash2 className="h-3 w-3 mr-1" />
                                   {t('schedule.delete')}
                                 </Button>
                               </div>
@@ -1087,39 +1062,6 @@ const ScheduledPosts = () => {
                           </label>
                         </div>
                       ))}
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="every-x"
-                      name="schedulingDays"
-                      checked={schedulingPreferences.days === 'every-x'}
-                      onChange={() => setSchedulingPreferences(prev => ({ ...prev, days: 'every-x' }))}
-                      className="h-4 w-4"
-                    />
-                    <label htmlFor="every-x" className="text-sm font-medium">
-                      {t('schedule.preferences.days.everyX')}
-                    </label>
-                  </div>
-                  
-                  {schedulingPreferences.days === 'every-x' && (
-                    <div className="ml-6 flex items-center space-x-2">
-                      <Input
-                        type="number"
-                        min="1"
-                        max="30"
-                        value={schedulingPreferences.everyXDays}
-                        onChange={(e) => setSchedulingPreferences(prev => ({ 
-                          ...prev, 
-                          everyXDays: parseInt(e.target.value) || 1 
-                        }))}
-                        className="w-20"
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {t('schedule.preferences.everyXDays', { x: schedulingPreferences.everyXDays })}
-                      </span>
                     </div>
                   )}
                 </div>

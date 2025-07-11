@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,65 @@ import { useNavigate } from 'react-router-dom';
 interface SignUpFormProps {
   onSuccess?: () => void;
 }
+
+interface PasswordRequirement {
+  key: string;
+  label: string;
+  isValid: boolean;
+}
+
+const PasswordRequirements = ({ password }: { password: string }) => {
+  const { t, isRTL } = useLanguage();
+  
+  const requirements: PasswordRequirement[] = [
+    {
+      key: 'length',
+      label: t('auth.passwordMinLength'),
+      isValid: password.length >= 8
+    },
+    {
+      key: 'uppercase',
+      label: t('auth.passwordUppercase'),
+      isValid: /[A-Z]/.test(password)
+    },
+    {
+      key: 'lowercase',
+      label: t('auth.passwordLowercase'),
+      isValid: /[a-z]/.test(password)
+    }
+  ];
+
+  return (
+    <div className="mt-2">
+      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {t('auth.passwordRequirements')}
+      </p>
+      <div className="space-y-1">
+        {requirements.map((req) => (
+          <div 
+            key={req.key} 
+            className={`flex items-center gap-2 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}
+          >
+            {req.isValid ? (
+              <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+            ) : (
+              <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+            )}
+            <span 
+              className={`${
+                req.isValid 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-gray-500 dark:text-gray-400'
+              } ${isRTL ? 'text-right' : 'text-left'}`}
+            >
+              {req.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [name, setName] = useState('');
@@ -29,22 +88,13 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
   // Password validation function
   const validatePassword = (password: string) => {
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
-    }
+    const requirements = [
+      password.length >= 8,
+      /[A-Z]/.test(password),
+      /[a-z]/.test(password)
+    ];
     
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    
-    if (!hasUpperCase) {
-      return 'Password must contain at least one uppercase letter';
-    }
-    
-    if (!hasLowerCase) {
-      return 'Password must contain at least one lowercase letter';
-    }
-    
-    return '';
+    return requirements.every(req => req) ? '' : t('auth.passwordRequirementsNotMet');
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +107,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     
     // Check password match if confirm password is already filled
     if (confirmPassword && newPassword !== confirmPassword) {
-      setPasswordMatchError('Passwords do not match');
+      setPasswordMatchError(t('auth.passwordsDoNotMatch'));
     } else {
       setPasswordMatchError('');
     }
@@ -69,7 +119,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     
     // Check if passwords match
     if (password && password !== newConfirmPassword) {
-      setPasswordMatchError('Passwords do not match');
+      setPasswordMatchError(t('auth.passwordsDoNotMatch'));
     } else {
       setPasswordMatchError('');
     }
@@ -96,7 +146,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     
     // Check if passwords match
     if (password !== confirmPassword) {
-      setPasswordMatchError('Passwords do not match');
+      setPasswordMatchError(t('auth.passwordsDoNotMatch'));
       console.error('❌ Passwords do not match');
       return;
     }
@@ -208,9 +258,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
                 {passwordError}
               </p>
             )}
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Password must be at least 8 characters with one uppercase and one lowercase letter
-            </div>
+            <PasswordRequirements password={password} />
           </div>
 
           <div className="space-y-2">

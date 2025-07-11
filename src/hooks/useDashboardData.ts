@@ -95,6 +95,7 @@ export const useDashboardData = () => {
       setStats(prev => ({
         ...prev,
         captionCredits: profileData?.caption_credits || 0,
+        captionQuotaTotal: 15,
         totalImages: imagesCount || 0,
         totalProducts: productsCount || 0
       }));

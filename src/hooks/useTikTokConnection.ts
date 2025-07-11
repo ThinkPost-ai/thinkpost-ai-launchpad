@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TikTokProfile {
@@ -13,6 +14,7 @@ interface TikTokProfile {
 export const useTikTokConnection = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [tiktokProfile, setTikTokProfile] = useState<TikTokProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -50,8 +52,8 @@ export const useTikTokConnection = () => {
     if (!user) {
       console.error('❌ No user found for TikTok connection');
       toast({
-        title: "Authentication Required",
-        description: "Please log in to connect your TikTok account.",
+        title: t('toast.authRequired'),
+        description: t('toast.authRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -68,8 +70,8 @@ export const useTikTokConnection = () => {
       if (sessionError || !sessionData.session) {
         console.error('❌ No valid session found:', sessionError);
         toast({
-          title: "Authentication Error",
-          description: "Please log out and log back in, then try connecting TikTok again.",
+          title: t('toast.authError'),
+          description: t('toast.authErrorDesc'),
           variant: "destructive"
         });
         return;
@@ -101,8 +103,8 @@ export const useTikTokConnection = () => {
       if (error) {
         console.error('❌ Supabase function error:', error);
         toast({
-          title: "Connection Failed",
-          description: `Failed to initiate TikTok OAuth: ${error.message}`,
+          title: t('toast.connectionFailed'),
+          description: t('toast.connectionFailedTikTok', { error: error.message }),
           variant: "destructive"
         });
         return;
@@ -111,8 +113,8 @@ export const useTikTokConnection = () => {
       if (!data?.authUrl) {
         console.error('❌ No auth URL received:', data);
         toast({
-          title: "Connection Failed",
-          description: "No authorization URL received from server.",
+          title: t('toast.connectionFailed'),
+          description: t('toast.connectionFailedNoUrl'),
           variant: "destructive"
         });
         return;
@@ -129,8 +131,8 @@ export const useTikTokConnection = () => {
     } catch (error) {
       console.error('💥 TikTok connection error:', error);
       toast({
-        title: "Connection Failed",
-        description: `Unexpected error: ${error.message}. Please try again.`,
+        title: t('toast.connectionFailed'),
+        description: t('toast.connectionFailedUnexpected', { error: error.message }),
         variant: "destructive"
       });
     } finally {
@@ -167,14 +169,14 @@ export const useTikTokConnection = () => {
       });
 
       toast({
-        title: "TikTok Disconnected",
-        description: "Your TikTok account has been disconnected successfully.",
+        title: t('toast.tiktokDisconnected'),
+        description: t('toast.tiktokDisconnectedDesc'),
       });
     } catch (error) {
       console.error('Error disconnecting TikTok:', error);
       toast({
-        title: "Disconnection Failed",
-        description: "Failed to disconnect TikTok. Please try again.",
+        title: t('toast.disconnectionFailed'),
+        description: t('toast.disconnectionFailedDesc'),
         variant: "destructive"
       });
     }

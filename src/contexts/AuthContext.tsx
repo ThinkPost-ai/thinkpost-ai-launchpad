@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AuthContextType {
   user: User | null;
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const checkUserProfile = async () => {
     if (!user) {
@@ -249,8 +251,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('✅ AuthContext: Signin successful');
       toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully."
+        title: t('toast.welcomeBack'),
+        description: t('toast.signedInSuccessfully')
       });
 
       return { error: null };
@@ -272,8 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setHasRestaurant(null);
         toast({
-          title: "Signed out",
-          description: "You have been signed out successfully."
+          title: t('toast.signedOut'),
+          description: t('toast.signedOutSuccessfully')
         });
       }
     } catch (error: any) {

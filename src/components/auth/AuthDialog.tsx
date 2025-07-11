@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -14,9 +15,14 @@ interface AuthDialogProps {
 const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps) => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const handleAuthSuccess = () => {
     onClose();
+    // Navigate to dashboard after successful authentication
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 100);
   };
 
   return (
