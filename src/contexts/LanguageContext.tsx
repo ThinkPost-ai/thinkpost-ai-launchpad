@@ -330,6 +330,7 @@ const getTranslations = () => {
       'dashboard.instagram.connecting': 'Connecting...',
       'dashboard.instagram.connect': 'Connect Instagram Business',
       'dashboard.instagram.readyToConnect': 'Ready to connect',
+      'dashboard.instagram.comingSoon': 'Connection to Instagram coming soon',
       
       // User Profile
       'dashboard.profile.owner': 'Owner',
@@ -667,7 +668,7 @@ const getTranslations = () => {
       'brandSetup.infoMessage.description': 'قدم معلومات مفصلة ودقيقة حول علامتك التجارية لمساعدة الذكاء الاصطناعي في إنشاء محتوى أفضل وأكثر جاذبية لمنشورات وسائل التواصل الاجتماعي الخاصة بك.',
       'brandSetup.form.brandName.label': 'اسم العلامة التجارية *',
       'brandSetup.form.brandName.placeholder': 'أدخل اسم علامتك التجارية',
-      'brandSetup.form.brandLocation.label': 'موقع العلامة التجارية',
+      'brandSetup.form.brandLocation.label': 'موقع العلامة التجارية (يمكنك اختيار جميع مواقع الفروع)',
       'brandSetup.form.brandLocation.placeholder': 'اختر المواقع',
       'brandSetup.form.brandLocation.specify': 'حدد موقعك',
       'brandSetup.form.brandType.label': 'نوع العلامة التجارية *',
@@ -873,7 +874,7 @@ const getTranslations = () => {
       'dashboard.overview.mediaLibrarySubtext': 'صور مرفوعة',
       
       // Quick Actions
-      'dashboard.quickActions.title': 'إجراءات سريعة',
+      'dashboard.quickActions.title': 'ابدأ هنا',
       'dashboard.quickActions.addProducts': 'ابدأ وأضف منتجات',
       'dashboard.quickActions.viewCaptions': 'عرض المحتويات التي تم توليدها',
       'dashboard.quickActions.schedulePost': 'جدولة منشور',
@@ -890,7 +891,7 @@ const getTranslations = () => {
       'dashboard.tiktok.connect': 'اربط TikTok',
       'dashboard.tiktok.readyToConnect': 'جاهز للاتصال',
       'dashboard.tiktok.connectionSuccess': 'تم ربط TikTok!',
-      'dashboard.tiktok.connectionSuccessDescription': 'تم ربط حساب TikTok الخاص بك بنجاح.',
+      'dashboard.tiktok.connectionSuccessDescription': 'Your TikTok account has been connected successfully.',
       'dashboard.tiktok.connectionFailed': 'فشل ربط TikTok',
       'dashboard.tiktok.connectionSuccessPageTitle': 'تم ربط TikTok بنجاح!',
       'dashboard.tiktok.connectionFailedPageTitle': 'فشل الاتصال',
@@ -905,7 +906,8 @@ const getTranslations = () => {
       'dashboard.instagram.disconnect': 'قطع الاتصال',
       'dashboard.instagram.connecting': 'جارٍ الاتصال...',
       'dashboard.instagram.connect': 'اربط Instagram Business',
-      'dashboard.instagram.readyToConnect': 'جاهز للاتصال',
+      'dashboard.instagram.readyToConnect': 'قريبا...',
+      'dashboard.instagram.comingSoon': 'الاتصال بـ Instagram قريباً',
       
       // User Profile
       'dashboard.profile.owner': 'المالك',
@@ -935,7 +937,7 @@ const getTranslations = () => {
 
       // Product Upload Page
       'upload.title': 'إضافة المنتجات',
-      'upload.description': 'أضف أطباقك اللذيذة مع التفاصيل والصور لتوليد محتوى مدعوم بالذكاء الاصطناعي',
+      'upload.description': 'أضف منتجاتك مع التفاصيل والصور لتوليد محتوى مدعوم بالذكاء الاصطناعي',
       'upload.backToDashboard': 'العودة للوحة التحكم',
       'upload.platformConnectionStatus': 'حالة اتصال المنصات',
       'upload.platformConnectionDescription': 'اتصالات المنصات الحالية للنشر',

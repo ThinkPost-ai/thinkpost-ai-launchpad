@@ -6,6 +6,12 @@ import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const InstagramConnection = () => {
   const { profile, isLoading, isConnecting, setIsConnecting, disconnectInstagram } = useInstagramConnection();
@@ -117,23 +123,25 @@ const InstagramConnection = () => {
               </div>
             </div>
             
-            <Button 
-              onClick={handleConnect}
-              disabled={isConnecting}
-              className="w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 hover:from-yellow-500 hover:via-red-600 hover:to-pink-600"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('dashboard.instagram.connecting')}
-                </>
-              ) : (
-                <>
-                  <Instagram className="mr-2 h-4 w-4" />
-                  {t('dashboard.instagram.connect')}
-                </>
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <Button 
+                      onClick={handleConnect}
+                      disabled={true}
+                      className="w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 hover:from-yellow-500 hover:via-red-600 hover:to-pink-600 opacity-50 cursor-not-allowed"
+                    >
+                      <Instagram className="mr-2 h-4 w-4" />
+                      {t('dashboard.instagram.connect')}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('dashboard.instagram.comingSoon')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
       </CardContent>

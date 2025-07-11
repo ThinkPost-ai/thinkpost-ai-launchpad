@@ -197,6 +197,18 @@ export default {
 						'margin-left': 'auto',
 					},
 				},
+				'.switch-translate-checked': {
+					'transform': 'translateX(1.25rem)', // 20px, same as translate-x-5
+					'[dir="rtl"] &': {
+						'transform': 'translateX(-1.25rem)', // -20px for RTL
+					},
+				},
+				'.switch-translate-unchecked': {
+					'transform': 'translateX(0)',
+					'[dir="rtl"] &': {
+						'transform': 'translateX(0)',
+					},
+				},
 			}
 			addUtilities(newUtilities)
 		}
