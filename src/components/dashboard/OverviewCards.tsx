@@ -17,7 +17,7 @@ interface OverviewCardsProps {
 
 const OverviewCards = ({ stats }: OverviewCardsProps) => {
   const { t } = useLanguage();
-  const quotaPercentage = ((stats.captionQuotaTotal - stats.captionCredits) / stats.captionQuotaTotal) * 100;
+  const quotaPercentage = (stats.captionCredits / stats.captionQuotaTotal) * 100;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -28,9 +28,9 @@ const OverviewCards = ({ stats }: OverviewCardsProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-deep-blue dark:text-white">
-            {stats.captionCredits}/{stats.captionQuotaTotal}
+            {stats.captionCredits}
           </div>
-          <Progress value={100 - quotaPercentage} className="mt-2" />
+          <Progress value={quotaPercentage} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
             {t('dashboard.overview.captionCreditsSubtext', { credits: stats.captionCredits })}
           </p>
