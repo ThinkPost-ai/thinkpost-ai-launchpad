@@ -79,33 +79,147 @@ serve(async (req) => {
       });
     }
 
+    // Get brand information for the user
+    console.log('Fetching brand information for user:', user.id);
+    const { data: brandData, error: brandError } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (brandError) {
+      console.error('Error fetching brand data:', brandError);
+      throw new Error('Failed to fetch brand information');
+    }
+
+    if (!brandData) {
+      console.error('No brand data found for user:', user.id);
+      throw new Error('Brand information not found. Please complete your brand setup first.');
+    }
+
+    console.log('Brand data retrieved:', brandData);
+
     const requestBody = await req.json();
     const { productName, price, description } = requestBody;
     
     console.log('Caption generation request:', { productName, price, description });
 
-    const prompt = `أنت صانع محتوى محترف ومبدع من السعودية، ومتخصص في التسويق للمطاعم والأكلات على وسائل التواصل الاجتماعي.
-اكتب وصف جذاب ومشهي (بين 100 إلى 200 حرف) لمنشور على إنستغرام عن الطبق التالي:
+    // Prepare brand information for the prompt
+    const brandName = brandData.name;
+    const brandType = brandData.brand_type || 'other';
+    const visionAndValues = brandData.vision || 'تقديم أفضل تجربة للعملاء';
+    
+    // Handle locations - combine primary location and additional locations
+    let brandLocations = [brandData.location];
+    if (brandData.additional_locations && brandData.additional_locations.length > 0) {
+      brandLocations = brandLocations.concat(brandData.additional_locations);
+    }
+    
+    // Handle "Other" location with custom input
+    if (brandData.custom_location) {
+      brandLocations = brandLocations.map(loc => 
+        loc === 'Other' ? brandData.custom_location : loc
+      );
+    }
+    
+    const brandLocationsText = brandLocations.join('، ');
+    
+    // Handle restaurant category (only for restaurants)
+    let restaurantCategory = '';
+    if (brandType === 'restaurant') {
+      if (brandData.category === 'other' && brandData.custom_category) {
+        restaurantCategory = brandData.custom_category;
+      } else {
+        // Map category enum to Arabic
+        const categoryMap = {
+          'fast_food': 'وجبات سريعة',
+          'casual_dining': 'مطاعم عائلية',
+          'fine_dining': 'مطاعم راقية',
+          'middle_eastern': 'مأكولات شرق أوسطية',
+          'asian': 'مأكولات آسيوية',
+          'italian': 'مأكولات إيطالية',
+          'american': 'مأكولات أمريكية',
+          'seafood': 'مأكولات بحرية',
+          'vegetarian': 'مأكولات نباتية',
+          'cafe': 'مقهى',
+          'bakery': 'مخبز',
+          'other': 'أخرى'
+        };
+        restaurantCategory = categoryMap[brandData.category] || brandData.category;
+      }
+    }
 
-اسم المنتج: ${productName}
+    // Select prompt template based on brand_type
+    let prompt = '';
+    
+    if (brandType === 'restaurant') {
+      prompt = `أنت كاتب محتوى محترف لمنصة TikTok. المطلوب كتابة وصف مختصر وجذاب يُستخدم مع صورة منتج غذائي من مطعم.
 
-السعر: $${price}
+معلومات النشاط التجاري:
+- اسم العلامة التجارية: ${brandName}
+- مواقع الفروع: ${brandLocationsText}
+- فئة المطعم: ${restaurantCategory}
+- رؤية العلامة التجارية: ${visionAndValues}
 
-الوصف: ${description}
+معلومات المنتج:
+- اسم المنتج: ${productName}
+- السعر: ${price} ريال
+- وصف المنتج: ${description}
 
 التعليمات:
+اكتب وصفًا مميزًا لمنشور TikTok يحتوي على صورة هذا المنتج. اجعل أول جملة تشد الانتباه، ثم صف المنتج بلغة شهية وجذابة، واختتم بنداء خفيف مثل "لا تفوّت التجربة".
+اجعل النص يعكس هوية المطعم وفئته.`;
+    } else if (brandType === 'coffee') {
+      prompt = `أنت مسؤول عن كتابة محتوى لمنشورات TikTok الخاصة بمقهى.
 
-استخدم كلمات سعودية حسّية توصف الطعم أو الريحة أو الملمس بشكل يخلّي المتابع يشتهي الطبق.
+معلومات النشاط التجاري:
+- اسم العلامة التجارية: ${brandName}
+- مواقع الفروع: ${brandLocationsText}
+- رؤية العلامة التجارية: ${visionAndValues}
 
-وضّح وش يميز الطبق عن غيره بطريقة مشوّقة.
+معلومات المنتج:
+- اسم المنتج: ${productName}
+- السعر: ${price} ريال
+- وصف المنتج: ${description}
 
-أضف هاشتاقات محلية مشهورة مثل: #مطاعم_السعودية #جدة_ذوق #الرياض_تايمز
+التعليمات:
+ابدأ بجملة ملفتة، ثم تحدث عن النكهة أو تجربة الزبون.
+اختم بجملة تشجيعية.`;
+    } else if (brandType === 'bakery') {
+      prompt = `اكتب وصفًا لمنشور TikTok مخصص لصورة منتج حلا أو مخبوزات.
 
-لازم تكون النبرة حماسية، محلية، لكن مرتبة ومحترفة.
+معلومات النشاط التجاري:
+- اسم العلامة التجارية: ${brandName}
+- مواقع الفروع: ${brandLocationsText}
+- رؤية العلامة التجارية: ${visionAndValues}
 
-لا تستخدم عبارات عامة أو مكررة، خلك واقعي وودود كأنك تتكلم مع الناس في سناب أو إنستا.
+معلومات المنتج:
+- اسم المنتج: ${productName}
+- السعر: ${price} ريال
+- وصف المنتج: ${description}
 
-عدد الأحرف بين 100 و200 كحد أقصى.`;
+التعليمات:
+ابدأ بجملة مغرية، صف النكهة والمكونات،`;
+    } else {
+      // brand_type === 'other' or any other value
+      prompt = `اكتب وصفًا قصيرًا وجذابًا لصورة منتج من علامة تجارية في مجال غير تقليدي.
+
+معلومات النشاط التجاري:
+- اسم العلامة التجارية: ${brandName}
+- مواقع الفروع: ${brandLocationsText}
+- رؤية العلامة التجارية: ${visionAndValues}
+
+معلومات المنتج:
+- اسم المنتج: ${productName}
+- السعر: ${price} ريال
+- وصف المنتج: ${description}
+
+التعليمات:
+ابدأ بجملة تبرز فائدة المنتج، ثم صفه، وانهِ بنداء للتفاعل أو التجربة.`;
+    }
+
+    console.log('Using prompt template for brand type:', brandType);
+    console.log('Generated prompt:', prompt);
 
     console.log('Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -117,10 +231,10 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a professional social media content creator specializing in food and restaurant marketing.' },
+          { role: 'system', content: 'You are a professional social media content creator specializing in TikTok captions for brands in Saudi Arabia. Generate engaging, authentic Arabic captions that reflect the brand identity and appeal to the Saudi audience.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 200,
+        max_tokens: 300,
         temperature: 0.8,
       }),
     });
