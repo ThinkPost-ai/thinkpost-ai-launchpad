@@ -140,6 +140,9 @@ const getTranslations = () => {
       'header.signOut': 'Sign Out',
       'header.welcomeBack': 'Welcome back!',
       
+      // Navigation
+      'navigation.backToDashboard': 'Back to Dashboard',
+      
       // Hero
       'hero.badge': 'AI-Powered Content Generation',
       'hero.title.transform': 'Transform Your',
@@ -717,6 +720,9 @@ const getTranslations = () => {
       'header.signOut': 'تسجيل الخروج',
       'header.welcomeBack': 'أهلاً بعودتك!',
       
+      // Navigation
+      'navigation.backToDashboard': 'العودة للوحة التحكم',
+      
       // Hero
       'hero.badge': 'إنتاج محتوى بالذكاء الاصطناعي',
       'hero.title.transform': 'ركز على شغفك',
@@ -1072,7 +1078,7 @@ const getTranslations = () => {
       'captions.addProducts': 'أضف منتجات مع صور لتوليد محتوى بالذكاء الاصطناعي',
       'captions.addFirst': 'أضف أول منتج',
       'captions.addMore': 'إضافة المزيد من المحتوى',
-      'captions.schedule': 'جدولة',
+      'captions.schedule': 'الانتقال لجدولة المنشورات',
 
       // Table Headers
       'table.content': 'المنتج',

@@ -42,6 +42,33 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
+// Add custom styles for scheduled days
+const scheduledDayStyles = `
+  .scheduled-day {
+    background: linear-gradient(135deg, rgb(243 232 255) 0%, rgb(219 234 254) 100%);
+    color: rgb(88 28 135);
+    font-weight: 500;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    border: 1px solid rgb(196 181 253);
+  }
+  
+  .dark .scheduled-day {
+    background: linear-gradient(135deg, rgb(88 28 135 / 0.3) 0%, rgb(30 58 138 / 0.3) 100%);
+    color: rgb(196 181 253);
+    border: 1px solid rgb(88 28 135 / 0.5);
+  }
+  
+  .scheduled-day:hover {
+    background: linear-gradient(135deg, rgb(233 213 255) 0%, rgb(191 219 254) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .dark .scheduled-day:hover {
+    background: linear-gradient(135deg, rgb(88 28 135 / 0.4) 0%, rgb(30 58 138 / 0.4) 100%);
+  }
+`;
+
 interface ScheduledPost {
   id: string;
   product_id?: string;
@@ -661,16 +688,20 @@ const ScheduledPosts = () => {
 
   // Custom day content component for calendar
   const DayContent = ({ date }: DayContentProps) => {
-    const hasPost = hasScheduledPosts(date);
-    
     return (
       <div className="relative w-full h-full flex items-center justify-center">
         <span>{date.getDate()}</span>
-        {hasPost && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border border-yellow-500"></div>
-        )}
       </div>
     );
+  };
+
+  // Create modifiers for the calendar
+  const calendarModifiers = {
+    hasScheduledPosts: (date: Date) => hasScheduledPosts(date)
+  };
+
+  const calendarModifiersClassNames = {
+    hasScheduledPosts: "scheduled-day"
   };
 
   if (loading) {
@@ -683,6 +714,9 @@ const ScheduledPosts = () => {
 
   return (
     <div className="space-y-6">
+      {/* Inject custom styles for scheduled days */}
+      <style dangerouslySetInnerHTML={{ __html: scheduledDayStyles }} />
+      
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -735,9 +769,8 @@ const ScheduledPosts = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'daily' | 'weekly')}>
-            <TabsList className="grid w-full grid-cols-2 lg:w-auto">
+            <TabsList className="grid w-full grid-cols-1 lg:w-auto">
               <TabsTrigger value="daily">{t('schedule.dailyView')}</TabsTrigger>
-              <TabsTrigger value="weekly">{t('schedule.weeklyView')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="daily" className="space-y-6">
@@ -756,6 +789,8 @@ const ScheduledPosts = () => {
                       components={{
                         DayContent: DayContent
                       }}
+                      modifiers={calendarModifiers}
+                      modifiersClassNames={calendarModifiersClassNames}
                     />
                     
                     {/* Lock/Unlock Buttons - Only show if there are scheduled posts */}
@@ -879,53 +914,6 @@ const ScheduledPosts = () => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="weekly" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Weekly Schedule</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-7 gap-4">
-                    {Array.from({ length: 7 }, (_, i) => {
-                      const date = new Date();
-                      date.setDate(date.getDate() - date.getDay() + i);
-                      
-                      return (
-                        <div key={i} className="border rounded-lg p-4">
-                          <h4 className="font-medium text-center mb-2">
-                            {date.toLocaleDateString('en', { weekday: 'short' })}
-                          </h4>
-                          <p className="text-sm text-center text-muted-foreground mb-4">
-                            {date.getDate()}
-                          </p>
-                          
-                          {/* Posts for this day */}
-                          <div className="space-y-2">
-                            {scheduledPosts
-                              .filter(post => new Date(post.scheduled_date).toDateString() === date.toDateString() && post.platform === 'tiktok')
-                              .map(post => (
-                                <div key={post.id} className="p-2 bg-muted rounded text-xs">
-                                  <div className="flex items-center gap-1 mb-1">
-                                    {getPlatformIcon(post.platform)}
-                                    <span>{new Date(post.scheduled_date).toLocaleTimeString([], { 
-                                      hour: '2-digit', 
-                                      minute: '2-digit' 
-                                    })}</span>
-                                  </div>
-                                  <p className="truncate text-right" dir="rtl">
-                                    {post.caption.substring(0, 30)}...
-                                  </p>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </CardContent>
