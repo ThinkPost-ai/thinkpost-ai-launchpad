@@ -489,8 +489,8 @@ const getTranslations = () => {
       'categories.other': 'Other',
 
       // Generated Captions
-      'captions.title': 'Generated Captions',
-      'captions.description': 'Manage your AI-generated captions for images and products',
+      'captions.title': 'Review Captions',
+      'captions.description': 'You can review and edits captions',
       'captions.regenerate': 'Regenerate caption',
       'captions.noCredits': 'No caption credits remaining',
       'captions.generating': 'Generating...',
@@ -500,7 +500,7 @@ const getTranslations = () => {
       'captions.addProducts': 'Add some products with images to generate AI captions',
       'captions.addFirst': 'Add Your First Product',
       'captions.addMore': 'Add More Content',
-      'captions.schedule': 'Schedule',
+      'captions.schedule': 'Move to Post Scheduling',
 
       // Table Headers
       'table.content': 'Content',
@@ -1135,8 +1135,8 @@ const getTranslations = () => {
       'categories.other': 'أخرى',
 
       // Generated Captions
-      'captions.title': 'توليد المحتوى',
-      'captions.description': 'إدارة المحتوى المولد بالذكاء الاصطناعي للصور والمنتجات',
+      'captions.title': 'مراجعة المحتوى',
+      'captions.description': 'يمكنك مراجعة وتعديل المحتوى',
       'captions.regenerate': 'إعادة توليد المحتوى',
       'captions.noCredits': 'لا توجد رصيد كافي لتوليد المحتوى',
       'captions.generating': 'جارٍ التوليد...',

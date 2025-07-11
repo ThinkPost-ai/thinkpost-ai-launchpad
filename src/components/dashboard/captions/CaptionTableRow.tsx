@@ -166,11 +166,6 @@ const CaptionTableRow = ({
               <Wand2 className="h-3 w-3" />
             )}
           </Button>
-          {caption.status === 'draft' && (
-            <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-              <Play className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       </TableCell>
     </TableRow>
