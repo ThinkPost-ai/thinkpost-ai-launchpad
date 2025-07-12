@@ -28,8 +28,8 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
     
     if (!isTikTokConnected && !isInstagramConnected) {
       toast({
-        title: "Social Media Connection Required",
-        description: "Please connect at least 1 social media account (TikTok or Instagram) before adding products.",
+        title: t('toast.socialMediaConnectionRequired'),
+        description: t('toast.socialMediaConnectionRequiredDesc'),
         variant: "destructive"
       });
       return;
