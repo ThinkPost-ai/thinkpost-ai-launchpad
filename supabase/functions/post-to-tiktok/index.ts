@@ -251,7 +251,7 @@ serve(async (req) => {
 
       // Add title and description only if they're not empty
       if (title && title.trim()) {
-        requestBody.post_info.title = title.trim().substring(0, 90); // TikTok limit: 90 characters
+        requestBody.post_info.title = ''; // title.trim().substring(0, 90); // TikTok limit: 90 characters
       }
       
       if (description && description.trim()) {
