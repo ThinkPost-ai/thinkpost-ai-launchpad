@@ -174,7 +174,7 @@ serve(async (req) => {
     - لا تذكر السعر إلا إذا حسيت إنه محفز (مثلا قيمة المطعم انه يقدم منتجات بأسعار تنافسية).
     -  أحيانا اذكر الموقع او المواقع واحيانا لا تذكرها.
     - لا تستخدم عبارات غير منطقية أو غير دارجة باللهجة.
-    - اختم بنداء خفيف مثل: "ذق الطعم بنفسك وخلك الحكم".
+    - اختم بنداء خفيف.
 
     🎯 الهدف: نص يحمّس ويشوق القارئ، ويعكس هوية المطعم وقيمة ور، بأسلوب يقربه من الجمهور.`;
     } else if (brandType === 'coffee') {
@@ -275,7 +275,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: 'You are a professional social media content creator specializing in TikTok captions for brands in Saudi Arabia. Generate engaging, authentic Arabic captions that reflect the brand identity and appeal to the Saudi audience.' },
           { role: 'user', content: prompt }

@@ -942,7 +942,7 @@ const getTranslations = () => {
       'dashboard.tabs.captions': 'توليد المحتوى',
       'dashboard.tabs.schedule': 'الجدولة',
       'dashboard.tabs.statistics': 'الإحصائيات',
-      
+        
       // Overview Cards
       'dashboard.overview.totalPosts': 'إجمالي المنشورات',
       'dashboard.overview.totalPostsSubtext': '+12% من الشهر الماضي',
