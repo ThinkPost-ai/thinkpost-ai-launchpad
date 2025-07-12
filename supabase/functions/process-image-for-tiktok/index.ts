@@ -132,7 +132,10 @@ serve(async (req) => {
     // Generate a new filename for the processed image
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(7);
+    // Use only ASCII characters for maximum compatibility
     const processedFileName = `${user.id}/${timestamp}-${randomId}-tiktok-optimized.jpg`;
+    
+    console.log('Generated TikTok-compatible filename:', processedFileName);
     
     // Upload the processed image to storage
     const { data: uploadData, error: uploadError } = await supabase.storage

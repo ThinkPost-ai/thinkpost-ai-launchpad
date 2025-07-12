@@ -227,6 +227,7 @@ serve(async (req) => {
       // Check if we have a processed image URL for TikTok compatibility
       let finalImageUrl = videoUrl;
       let proxyImageUrl = '';
+      let needsProcessing = true;
       
       if (scheduledPostId) {
         // Check if we have a processed image for this scheduled post
@@ -242,45 +243,52 @@ serve(async (req) => {
           finalImageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${postData.processed_image_path}`;
           proxyImageUrl = postData.proxy_image_url || `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${postData.processed_image_path}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
           console.log('Using processed image for TikTok compatibility:', finalImageUrl);
-        } else {
-          // Process the image on-demand
-          console.log('Processing image on-demand for TikTok compatibility...');
-          try {
-            const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
-              body: { 
-                imageUrl: videoUrl,
-                scheduledPostId: scheduledPostId
-              }
-            });
-
-            if (!processError && processData?.processedImageUrl) {
-              finalImageUrl = processData.processedImageUrl;
-              proxyImageUrl = processData.proxyImageUrl;
-              console.log('Image processed successfully for TikTok:', finalImageUrl);
-            } else {
-              console.warn('Image processing failed, using original:', processError);
-              // Fallback to original image processing
-              const urlParts = videoUrl.split('/');
-              const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
-              const filePath = urlParts.slice(bucketIndex + 1).join('/');
-              proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+          needsProcessing = false;
+        }
+      }
+      
+      // Always process the image if it hasn't been processed yet
+      if (needsProcessing) {
+        console.log('Processing image on-demand for TikTok compatibility...');
+        try {
+          const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
+            body: { 
+              imageUrl: videoUrl,
+              scheduledPostId: scheduledPostId
             }
-          } catch (processError) {
-            console.warn('Image processing failed, using original:', processError);
-            // Fallback to original image processing
+          });
+
+          if (!processError && processData?.processedImageUrl) {
+            finalImageUrl = processData.processedImageUrl;
+            proxyImageUrl = processData.proxyImageUrl;
+            console.log('Image processed successfully for TikTok:', finalImageUrl);
+          } else {
+            console.warn('Image processing failed, using original with proxy:', processError);
+            // Fallback to original image with proxy
             const urlParts = videoUrl.split('/');
             const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
             const filePath = urlParts.slice(bucketIndex + 1).join('/');
             proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
           }
+        } catch (processError) {
+          console.warn('Image processing failed, using original with proxy:', processError);
+          // Fallback to original image with proxy
+          const urlParts = videoUrl.split('/');
+          const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+          const filePath = urlParts.slice(bucketIndex + 1).join('/');
+          proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
         }
-      } else {
-        // No scheduled post ID, use original image processing
+      }
+
+      // Ensure we have a proxy URL
+      if (!proxyImageUrl) {
         const urlParts = videoUrl.split('/');
         const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
         const filePath = urlParts.slice(bucketIndex + 1).join('/');
         proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
       }
+
+      console.log('Final proxy image URL for TikTok:', proxyImageUrl);
 
       // Build request body using TikTok's photo content posting API format
       requestBody = {
