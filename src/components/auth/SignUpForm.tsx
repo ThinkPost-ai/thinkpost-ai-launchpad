@@ -189,16 +189,16 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
   return (
     <Card className="w-full">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-deep-blue dark:text-white">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-xl sm:text-2xl font-bold text-deep-blue dark:text-white">
           {t('auth.joinThinkPost')}
         </CardTitle>
-        <CardDescription className="text-gray-600 dark:text-gray-300">
+        <CardDescription className="text-gray-600 dark:text-gray-300 text-sm">
           {t('auth.createAccountToStart')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-deep-blue dark:text-white font-medium">
               {t('auth.fullName')}
@@ -292,7 +292,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             )}
           </div>
 
-          <div className="text-xs text-gray-600 dark:text-gray-400 pt-2">
+          <div className="text-xs text-gray-600 dark:text-gray-400 pt-1 leading-relaxed">
             {t('auth.agreeToTerms')}{' '}
             <a 
               href="https://thinkpost.co/terms" 
@@ -324,7 +324,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           <Button
             type="submit"
             disabled={isLoading || !!passwordError || !!passwordMatchError}
-            className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-2.5 mt-6"
+            className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-3 mt-4 min-h-[44px] text-base"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
@@ -340,6 +340,8 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           </Button>
         </form>
       </CardContent>
+      {/* Add extra bottom padding on mobile to ensure button visibility */}
+      <div className="pb-4 sm:pb-0"></div>
     </Card>
   );
 };

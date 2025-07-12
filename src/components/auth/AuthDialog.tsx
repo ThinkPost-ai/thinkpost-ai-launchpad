@@ -27,7 +27,7 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 max-h-[90vh] max-h-[90dvh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-full mx-4 my-4 sm:mx-auto sm:my-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">
             {activeTab === 'signin' ? t('auth.signIn') : t('auth.signUp')} to ThinkPost

@@ -88,6 +88,8 @@
     -webkit-text-size-adjust: 100%;
     /* Enable smooth scrolling */
     scroll-behavior: smooth;
+    /* Fix mobile viewport issues */
+    height: 100%;
   }
 
   body {
@@ -96,6 +98,9 @@
     overflow-x: hidden;
     /* Improve touch scrolling on iOS */
     -webkit-overflow-scrolling: touch;
+    /* Fix mobile viewport height issues */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 
   /* Improve button touch targets on mobile */
@@ -154,6 +159,16 @@
     animation-duration: 0.2s !important;
     transition-duration: 0.2s !important;
   }
+  
+  /* Fix dialog positioning on mobile */
+  [data-radix-dialog-content] {
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    margin: 1rem !important;
+    width: calc(100vw - 2rem) !important;
+    max-width: 28rem !important;
+  }
 }
 
 /* Animation delays */
@@ -177,5 +192,27 @@
   button:focus {
     outline: 2px solid #5F29B4;
     outline-offset: 2px;
+  }
+}
+
+/* iPhone Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for iPhone Safari viewport height */
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Ensure dialogs work properly on iPhone */
+  [data-radix-dialog-content] {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-height: 85vh !important;
+    max-height: 85dvh !important;
   }
 }
