@@ -36,7 +36,7 @@ const TikTokConnection = () => {
 
   return (
     <>
-      <Card className={`border-2 hover:shadow-lg transition-shadow ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
+      <Card data-testid="tiktok-connection" className={`border-2 hover:shadow-lg transition-shadow ${isConnected ? 'border-green-200 bg-green-50' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isConnected ? 'bg-green-600' : 'bg-black'}`}>

@@ -32,6 +32,17 @@ const QuickActions = ({ onCaptionsClick, onScheduleClick }: QuickActionsProps) =
         description: t('toast.socialMediaConnectionRequiredDesc'),
         variant: "destructive"
       });
+      
+      // Scroll to the first social media connection card
+      setTimeout(() => {
+        const socialMediaCards = document.querySelector('[data-testid="tiktok-connection"], [data-testid="instagram-connection"]');
+        if (socialMediaCards) {
+          socialMediaCards.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 100);
       return;
     }
 

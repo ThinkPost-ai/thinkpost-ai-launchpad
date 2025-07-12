@@ -70,7 +70,7 @@ const InstagramConnection = () => {
   }
 
   return (
-    <Card className={`border-2 hover:shadow-lg transition-shadow ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
+    <Card data-testid="instagram-connection" className={`border-2 hover:shadow-lg transition-shadow ${profile.connected ? 'border-green-200 bg-green-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${profile.connected ? 'bg-green-600' : 'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500'}`}>
