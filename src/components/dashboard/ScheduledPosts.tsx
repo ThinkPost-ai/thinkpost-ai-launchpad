@@ -367,6 +367,9 @@ const ScheduledPosts = () => {
 
       const postsToCreate = schedule.map((date, index) => {
         const mediaItem = mediaItems[index % mediaItems.length];
+        
+        // Generate the image URL for this media item
+        const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaItem.file_path}`;
 
         return {
           user_id: user!.id,
@@ -376,7 +379,10 @@ const ScheduledPosts = () => {
           scheduled_date: date.toISOString(),
           platform: 'tiktok',
           status: 'scheduled' as const,
-          media_type: getMediaTypeFromPath(mediaItem.file_path)
+          media_type: getMediaTypeFromPath(mediaItem.file_path),
+          image_url: imageUrl, // Add the image URL
+          original_image_url: imageUrl, // Store as original image URL
+          processing_status: 'pending' // Mark as pending processing
         };
       });
 
@@ -390,6 +396,37 @@ const ScheduledPosts = () => {
         title: "Success!",
         description: `${schedule.length} TikTok posts have been scheduled over the next 4 weeks`,
       });
+
+      // Process images for TikTok compatibility
+      try {
+        console.log('🔄 Starting image processing for TikTok compatibility...');
+        
+        const { data: processData, error: processError } = await supabase.functions.invoke('process-scheduled-posts', {
+          body: {}
+        });
+
+        if (processError) {
+          console.warn('Image processing failed:', processError);
+          toast({
+            title: "Posts Scheduled",
+            description: "Posts scheduled successfully. Images will be processed in the background.",
+            variant: "default"
+          });
+        } else {
+          console.log('✅ Image processing completed:', processData);
+          toast({
+            title: "Posts Scheduled & Processed",
+            description: `${schedule.length} posts scheduled and optimized for TikTok`,
+          });
+        }
+      } catch (processError) {
+        console.warn('Image processing failed:', processError);
+        toast({
+          title: "Posts Scheduled",
+          description: "Posts scheduled successfully. Images will be processed in the background.",
+          variant: "default"
+        });
+      }
 
       await fetchScheduledPosts();
     } catch (error: any) {

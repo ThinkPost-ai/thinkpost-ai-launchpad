@@ -1,10 +1,10 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,200 +12,115 @@ serve(async (req) => {
   }
 
   try {
-    console.log('[AUTO-POST] Processing scheduled posts automatically...');
-    
-    // Use service role key directly - no authentication required for this internal function
+    console.log('🔄 Processing scheduled posts for TikTok compatibility...');
+
+    // Use service role key for database access
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // Get all scheduled posts that are due to be posted AND approved
-    const now = new Date().toISOString();
-    console.log(`[AUTO-POST] Checking for posts due before: ${now} that are approved`);
-    
-    const { data: duePosts, error: fetchError } = await supabase
+    // Get all scheduled posts with pending processing status
+    const { data: pendingPosts, error: fetchError } = await supabase
       .from('scheduled_posts')
-      .select(`
-        *,
-        products(image_path),
-        images(file_path)
-      `)
-      .eq('status', 'scheduled')
+      .select('id, user_id, image_url, original_image_url, processing_status')
+      .eq('processing_status', 'pending')
       .eq('platform', 'tiktok')
-      .lte('scheduled_date', now)
-      .not('approved_at', 'is', null);
+      .eq('status', 'scheduled')
+      .limit(10); // Process in batches
 
     if (fetchError) {
-      console.error('[AUTO-POST] Error fetching due posts:', fetchError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch scheduled posts' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+      console.error('Error fetching pending posts:', fetchError);
+      throw fetchError;
     }
 
-    console.log(`[AUTO-POST] Found ${duePosts?.length || 0} posts due for posting`);
-
-    if (!duePosts || duePosts.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'No posts due for posting', processed: 0 }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (!pendingPosts || pendingPosts.length === 0) {
+      console.log('✅ No pending posts to process');
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'No pending posts to process',
+        processed: 0
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    let successCount = 0;
-    let failCount = 0;
+    console.log(`📋 Found ${pendingPosts.length} posts to process`);
 
-    // Process each due post immediately
-    for (const post of duePosts) {
+    let processed = 0;
+    let failed = 0;
+
+    // Process each post
+    for (const post of pendingPosts) {
       try {
-        console.log(`[AUTO-POST] Processing post ${post.id} scheduled for ${post.scheduled_date}`);
+        console.log(`🖼️ Processing post ${post.id} for user ${post.user_id}`);
 
-        // Get the media path
-        const mediaPath = post.products?.image_path || post.images?.file_path;
-        if (!mediaPath) {
-          console.error(`[AUTO-POST] No media found for post ${post.id}`);
-          await supabase
-            .from('scheduled_posts')
-            .update({ 
-              status: 'failed',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', post.id);
-          failCount++;
-          continue;
-        }
+        // Update status to processing
+        await supabase
+          .from('scheduled_posts')
+          .update({ processing_status: 'processing' })
+          .eq('id', post.id);
 
-        // Get user's TikTok connection first
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('tiktok_access_token, tiktok_refresh_token, tiktok_token_expires_at')
-          .eq('id', post.user_id)
-          .maybeSingle();
-
-        if (profileError || !profile || !profile.tiktok_access_token) {
-          console.error(`[AUTO-POST] No TikTok connection found for user ${post.user_id}`);
-          await supabase
-            .from('scheduled_posts')
-            .update({ 
-              status: 'failed',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', post.id);
-          failCount++;
-          continue;
-        }
-
-        // Determine media type and construct URL
-        const isVideo = mediaPath.toLowerCase().endsWith('.mp4') || 
-                       mediaPath.toLowerCase().endsWith('.mov') || 
-                       mediaPath.toLowerCase().endsWith('.avi') ||
-                       mediaPath.toLowerCase().endsWith('.webm');
-
-        const mediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${mediaPath}`;
-        
-        console.log(`[AUTO-POST] Media type: ${isVideo ? 'video' : 'photo'}, URL: ${mediaUrl}`);
-
-        // Get TikTok settings from the post or use defaults
-        const tiktokSettings = {
-          privacyLevel: post.tiktok_privacy_level || 'PUBLIC_TO_EVERYONE',
-          allowComment: post.tiktok_allow_comments ?? true,
-          allowDuet: !post.tiktok_disable_duet,
-          allowStitch: !post.tiktok_disable_stitch,
-          commercialContent: post.tiktok_commercial_content || false,
-          yourBrand: post.tiktok_your_brand || false,
-          brandedContent: post.tiktok_branded_content || false
-        };
-
-        console.log(`[AUTO-POST] Using TikTok settings:`, tiktokSettings);
-
-        // Post directly to TikTok using the post-to-tiktok function
-        const postResponse = await supabase.functions.invoke('post-to-tiktok', {
+        // Call the image processing function
+        const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
           body: {
+            imageUrl: post.image_url || post.original_image_url,
             scheduledPostId: post.id,
-            videoUrl: mediaUrl,
-            caption: post.caption,
-            title: post.title || post.caption?.substring(0, 90),
-            description: post.description || post.caption,
-            privacyLevel: tiktokSettings.privacyLevel,
-            allowComment: tiktokSettings.allowComment,
-            allowDuet: tiktokSettings.allowDuet,
-            allowStitch: tiktokSettings.allowStitch,
-            commercialContent: tiktokSettings.commercialContent,
-            yourBrand: tiktokSettings.yourBrand,
-            brandedContent: tiktokSettings.brandedContent
-          },
-          headers: {
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          },
+            userId: post.user_id
+          }
         });
 
-        if (postResponse.error) {
-          console.error(`[AUTO-POST] Failed to post ${post.id} to TikTok:`, postResponse.error);
+        if (processError) {
+          console.error(`❌ Processing failed for post ${post.id}:`, processError);
+          
+          // Update status to failed
           await supabase
             .from('scheduled_posts')
-            .update({ 
-              status: 'failed',
-              updated_at: new Date().toISOString()
-            })
+            .update({ processing_status: 'failed' })
             .eq('id', post.id);
-          failCount++;
+          
+          failed++;
         } else {
-          console.log(`[AUTO-POST] ✅ Successfully posted ${post.id} to TikTok`);
-          // The post-to-tiktok function already updates the status to 'posted'
-          successCount++;
+          console.log(`✅ Successfully processed post ${post.id}`);
+          processed++;
         }
 
       } catch (error) {
-        console.error(`[AUTO-POST] Error processing post ${post.id}:`, error);
+        console.error(`❌ Error processing post ${post.id}:`, error);
+        
+        // Update status to failed
         await supabase
           .from('scheduled_posts')
-          .update({ 
-            status: 'failed',
-            updated_at: new Date().toISOString()
-          })
+          .update({ processing_status: 'failed' })
           .eq('id', post.id);
-        failCount++;
+        
+        failed++;
       }
     }
 
-    const result = {
-      message: 'Scheduled posts processing complete',
-      processed: duePosts.length,
-      success: successCount,
-      failed: failCount,
-      timestamp: new Date().toISOString()
-    };
+    console.log(`📊 Processing complete: ${processed} successful, ${failed} failed`);
 
-    console.log(`[AUTO-POST] Processing complete:`, result);
-
-    return new Response(
-      JSON.stringify(result),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      message: `Processed ${processed} posts successfully, ${failed} failed`,
+      processed: processed,
+      failed: failed
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('[AUTO-POST] Process scheduled posts error:', error);
+    console.error('❌ Error in process-scheduled-posts:', error);
     
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to process scheduled posts',
+      details: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 }); 
