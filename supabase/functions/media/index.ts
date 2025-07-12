@@ -44,7 +44,6 @@ serve(async (req) => {
       const extension = filename.split('.').pop()?.toLowerCase();
       switch (extension) {
         case 'jpg':
-          return 'image/jpg';
         case 'jpeg':
           return 'image/jpeg';
         case 'png':
