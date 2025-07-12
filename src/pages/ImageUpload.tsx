@@ -38,8 +38,9 @@ const ImageUpload = () => {
 
     try {
       const uploadPromises = selectedFiles.map(async (file) => {
-        // Create unique filename
-        const fileExt = file.name.split('.').pop();
+        // Create unique filename with sanitized name
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_'); // Sanitize filename
         const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         // Upload to Supabase Storage
@@ -49,13 +50,33 @@ const ImageUpload = () => {
 
         if (uploadError) throw uploadError;
 
+        // Generate the image URL for processing
+        const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${uploadData.path}`;
+
+        // Process the image for TikTok compatibility
+        try {
+          const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
+            body: { 
+              imageUrl: imageUrl
+            }
+          });
+
+          if (processError) {
+            console.warn('Image processing failed, using original:', processError);
+          } else {
+            console.log('Image processed for TikTok compatibility:', processData);
+          }
+        } catch (processError) {
+          console.warn('Image processing failed, using original:', processError);
+        }
+
         // Insert record into database
         const { error: dbError } = await supabase
           .from('images')
           .insert({
             user_id: user.id,
             file_path: uploadData.path,
-            original_filename: file.name
+            original_filename: sanitizedFileName
           });
 
         if (dbError) throw dbError;

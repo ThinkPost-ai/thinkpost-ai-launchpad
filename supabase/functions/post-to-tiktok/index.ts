@@ -224,13 +224,63 @@ serve(async (req) => {
         throw new Error('Missing required fields for photo posting: videoUrl and privacyLevel are required');
       }
 
-      // Convert Supabase storage URL to verified domain media URL
-      const urlParts = videoUrl.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
-      const filePath = urlParts.slice(bucketIndex + 1).join('/');
+      // Check if we have a processed image URL for TikTok compatibility
+      let finalImageUrl = videoUrl;
+      let proxyImageUrl = '';
       
-      // Use verified domain with anonymous key for TikTok access
-      const proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+      if (scheduledPostId) {
+        // Check if we have a processed image for this scheduled post
+        const { data: postData, error: postError } = await supabase
+          .from('scheduled_posts')
+          .select('processed_image_path, proxy_image_url')
+          .eq('id', scheduledPostId)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!postError && postData?.processed_image_path) {
+          // Use the processed image
+          finalImageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${postData.processed_image_path}`;
+          proxyImageUrl = postData.proxy_image_url || `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${postData.processed_image_path}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+          console.log('Using processed image for TikTok compatibility:', finalImageUrl);
+        } else {
+          // Process the image on-demand
+          console.log('Processing image on-demand for TikTok compatibility...');
+          try {
+            const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
+              body: { 
+                imageUrl: videoUrl,
+                scheduledPostId: scheduledPostId
+              }
+            });
+
+            if (!processError && processData?.processedImageUrl) {
+              finalImageUrl = processData.processedImageUrl;
+              proxyImageUrl = processData.proxyImageUrl;
+              console.log('Image processed successfully for TikTok:', finalImageUrl);
+            } else {
+              console.warn('Image processing failed, using original:', processError);
+              // Fallback to original image processing
+              const urlParts = videoUrl.split('/');
+              const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+              const filePath = urlParts.slice(bucketIndex + 1).join('/');
+              proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+            }
+          } catch (processError) {
+            console.warn('Image processing failed, using original:', processError);
+            // Fallback to original image processing
+            const urlParts = videoUrl.split('/');
+            const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+            const filePath = urlParts.slice(bucketIndex + 1).join('/');
+            proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+          }
+        }
+      } else {
+        // No scheduled post ID, use original image processing
+        const urlParts = videoUrl.split('/');
+        const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
+        const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+      }
 
       // Build request body using TikTok's photo content posting API format
       requestBody = {
