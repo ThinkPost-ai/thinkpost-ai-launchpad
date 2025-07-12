@@ -200,12 +200,6 @@ const ImageUpload = () => {
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      <div className="absolute bottom-2 left-2 right-2">
-                        <div className="bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          {t('upload.tiktokReady')}
-                        </div>
-                      </div>
                       <p className={`text-sm text-gray-600 dark:text-gray-400 mt-1 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
                         {file.name}
                       </p>

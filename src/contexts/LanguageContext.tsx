@@ -733,15 +733,13 @@ const getTranslations = () => {
       'upload.tiktokOptimizationDescription': 'Images are automatically processed to remove metadata, optimize resolution (max 1080x1920), and ensure TikTok compatibility.',
       'upload.processingImages': 'Processing images...',
       'upload.optimizingForTikTok': 'Optimizing for TikTok compatibility...',
-      'upload.tiktokReady': '',
       'upload.imagesProcessed': 'Images Processed',
       'upload.processingError': 'Processing Error',
       'upload.processingErrorDescription': 'Some images could not be processed. Please try again.',
       'upload.imageOptimized': 'Image Optimized',
       'upload.imageOptimizedDescription': 'Image processed for TikTok compatibility',
-      'upload.imageOptimizedAndResized': 'Image processed for TikTok compatibility and resized',
+      'upload.imageOptimizedAndResized': 'Image processed for social media apps compatibility',
       'upload.tiktokOptimizedSuccess': 'TikTok-optimized images uploaded successfully!',
-      'upload.autoOptimizedForTikTok': 'Images are automatically optimized for TikTok',
 
     },
     ar: {
@@ -1399,15 +1397,13 @@ const getTranslations = () => {
       'upload.tiktokOptimizationDescription': 'يتم معالجة الصور تلقائياً لإزالة البيانات الوصفية وتحسين الدقة (حد أقصى 1080x1920) وضمان التوافق مع TikTok.',
       'upload.processingImages': 'معالجة الصور...',
       'upload.optimizingForTikTok': 'تحسين للتوافق مع TikTok...',
-      'upload.tiktokReady': '',
       'upload.imagesProcessed': 'تم معالجة الصور',
       'upload.processingError': 'خطأ في المعالجة',
       'upload.processingErrorDescription': 'لم يتم معالجة بعض الصور. يرجى المحاولة مرة أخرى.',
       'upload.imageOptimized': 'تم تحسين الصورة',
       'upload.imageOptimizedDescription': 'تم معالجة الصورة للتوافق مع TikTok',
-      'upload.imageOptimizedAndResized': 'تم معالجة الصورة للتوافق مع TikTok وتغيير حجمها',
+      'upload.imageOptimizedAndResized': 'تم معالجة الصورة للتوافق مع برامج التواصل',
       'upload.tiktokOptimizedSuccess': 'تم رفع الصور المحسنة لـ TikTok بنجاح!',
-      'upload.autoOptimizedForTikTok': 'يتم تحسين الصور تلقائياً لـ TikTok',
 
     }
   };
