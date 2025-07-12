@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X, Loader2, ArrowLeft } from 'lucide-react';
+import { Upload, X, Loader2, ArrowLeft, ImageIcon, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { processImagesForTikTok, getProcessingSummary } from '@/utils/imageProcessing';
 
 const ImageUpload = () => {
   const { user } = useAuth();
@@ -19,13 +20,41 @@ const ImageUpload = () => {
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setSelectedFiles(prev => [...prev, ...files]);
+      
+      // Show processing indicator
+      setProcessing(true);
+      
+      try {
+        // Process images for TikTok compatibility
+        const processedResults = await processImagesForTikTok(files);
+        const processedFiles = processedResults.map(result => result.file);
+        
+        setSelectedFiles(prev => [...prev, ...processedFiles]);
+        
+        // Show processing summary
+        const summary = getProcessingSummary(processedResults);
+        toast({
+          title: t('upload.imagesProcessed'),
+          description: `${summary} - Ready for TikTok posting!`,
+          duration: 4000,
+        });
+      } catch (error) {
+        console.error('Error processing images:', error);
+        toast({
+          title: t('upload.processingError'),
+          description: t('upload.processingErrorDescription'),
+          variant: "destructive"
+        });
+      } finally {
+        setProcessing(false);
+      }
     }
-  }, []);
+  }, [toast, t]);
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
@@ -67,7 +96,7 @@ const ImageUpload = () => {
 
       toast({
         title: t('upload.uploadSuccess'),
-        description: t('upload.uploadSuccessDescription', { count: selectedFiles.length })
+        description: t('upload.tiktokOptimizedSuccess')
       });
 
       navigate('/images');
@@ -100,11 +129,25 @@ const ImageUpload = () => {
           <p className="text-gray-600 dark:text-gray-300">
             {t('upload.description')}
           </p>
+          
+          {/* TikTok Optimization Notice */}
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">{t('upload.tiktokOptimizationEnabled')}</span>
+            </div>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+              {t('upload.tiktokOptimizationDescription')}
+            </p>
+          </div>
         </div>
 
         <Card>
           <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-            <CardTitle>{t('upload.selectImages')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5" />
+              {t('upload.selectImages')}
+            </CardTitle>
             <CardDescription>
               {t('upload.selectImagesDescription')}
             </CardDescription>
@@ -114,10 +157,10 @@ const ImageUpload = () => {
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <Label htmlFor="file-upload" className="cursor-pointer">
                 <span className="text-lg font-medium text-deep-blue dark:text-white">
-                  {t('upload.clickToUpload')}
+                  {processing ? t('upload.processingImages') : t('upload.clickToUpload')}
                 </span>
                 <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  {t('upload.dragAndDrop')}
+                  {processing ? t('upload.optimizingForTikTok') : t('upload.dragAndDrop')}
                 </p>
               </Label>
               <Input
@@ -127,7 +170,13 @@ const ImageUpload = () => {
                 accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
+                disabled={processing}
               />
+              {processing && (
+                <div className="mt-4">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-vibrant-purple" />
+                </div>
+              )}
             </div>
 
             {selectedFiles.length > 0 && (
@@ -151,6 +200,12 @@ const ImageUpload = () => {
                       >
                         <X className="h-4 w-4" />
                       </button>
+                      <div className="absolute bottom-2 left-2 right-2">
+                        <div className="bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          {t('upload.tiktokReady')}
+                        </div>
+                      </div>
                       <p className={`text-sm text-gray-600 dark:text-gray-400 mt-1 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
                         {file.name}
                       </p>
@@ -161,7 +216,7 @@ const ImageUpload = () => {
                 <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Button
                     onClick={uploadImages}
-                    disabled={uploading}
+                    disabled={uploading || processing}
                     className="bg-gradient-primary hover:opacity-90"
                   >
                     {uploading ? (
@@ -170,13 +225,16 @@ const ImageUpload = () => {
                         {t('upload.uploading')}
                       </>
                     ) : (
-                      t('upload.uploadButton', { count: selectedFiles.length })
+                      <>
+                        <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('upload.uploadButton', { count: selectedFiles.length })}
+                      </>
                     )}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setSelectedFiles([])}
-                    disabled={uploading}
+                    disabled={uploading || processing}
                   >
                     {t('upload.clearAll')}
                   </Button>

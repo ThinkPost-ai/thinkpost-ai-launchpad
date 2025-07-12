@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
+import { processImageForTikTok } from '@/utils/imageProcessing';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TikTokSettings {
   privacyLevel: 'public' | 'friends' | 'only_me';
@@ -31,6 +33,7 @@ export const useProductManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { tiktokProfile } = useTikTokConnection();
   const { profile: instagramProfile } = useInstagramConnection();
   
@@ -112,26 +115,68 @@ export const useProductManagement = () => {
     });
   }, []);
 
-  const handleImageSelect = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = useCallback(async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
       
-      setProducts(prevProducts => {
-        const updatedProducts = prevProducts.map((product, i) => {
-          if (i === index) {
-            return { 
-              ...product, 
-              image: file,
-              imagePreview: imageUrl
-            };
-          }
-          return product;
+      try {
+        // Process image for TikTok compatibility
+        const processedResult = await processImageForTikTok(file);
+        const processedFile = processedResult.file;
+        const imageUrl = URL.createObjectURL(processedFile);
+        
+        setProducts(prevProducts => {
+          const updatedProducts = prevProducts.map((product, i) => {
+            if (i === index) {
+              return { 
+                ...product, 
+                image: processedFile,
+                imagePreview: imageUrl
+              };
+            }
+            return product;
+          });
+          return updatedProducts;
         });
-        return updatedProducts;
-      });
+
+        // Show processing feedback if image was optimized
+        if (processedResult.wasProcessed) {
+          const descriptionKey = processedResult.originalSize.width > processedResult.processedSize.width 
+            ? 'upload.imageOptimizedAndResized' 
+            : 'upload.imageOptimizedDescription';
+          
+          toast({
+            title: t('upload.imageOptimized'),
+            description: t(descriptionKey),
+            duration: 3000,
+          });
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+        toast({
+          title: t('upload.processingError'),
+          description: "Could not process image. Using original file.",
+          variant: "destructive"
+        });
+        
+        // Fall back to original file if processing fails
+        const imageUrl = URL.createObjectURL(file);
+        setProducts(prevProducts => {
+          const updatedProducts = prevProducts.map((product, i) => {
+            if (i === index) {
+              return { 
+                ...product, 
+                image: file,
+                imagePreview: imageUrl
+              };
+            }
+            return product;
+          });
+          return updatedProducts;
+        });
+      }
     }
-  }, []);
+  }, [toast, t]);
 
   const removeImage = useCallback((index: number) => {
     setProducts(prevProducts => {

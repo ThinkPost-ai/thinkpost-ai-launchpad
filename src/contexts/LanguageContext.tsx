@@ -728,6 +728,20 @@ const getTranslations = () => {
       'toast.socialMediaConnectionRequired': 'Social Media Connection Required',
       'toast.socialMediaConnectionRequiredDesc': 'Please connect at least 1 social media account (TikTok or Instagram) before adding products.',
 
+      // Upload page enhancements
+      'upload.tiktokOptimizationEnabled': 'TikTok Optimization Enabled',
+      'upload.tiktokOptimizationDescription': 'Images are automatically processed to remove metadata, optimize resolution (max 1080x1920), and ensure TikTok compatibility.',
+      'upload.processingImages': 'Processing images...',
+      'upload.optimizingForTikTok': 'Optimizing for TikTok compatibility...',
+      'upload.tiktokReady': 'TikTok Ready',
+      'upload.imagesProcessed': 'Images Processed',
+      'upload.processingError': 'Processing Error',
+      'upload.processingErrorDescription': 'Some images could not be processed. Please try again.',
+      'upload.imageOptimized': 'Image Optimized',
+      'upload.imageOptimizedDescription': 'Image processed for TikTok compatibility',
+      'upload.imageOptimizedAndResized': 'Image processed for TikTok compatibility and resized',
+      'upload.tiktokOptimizedSuccess': 'TikTok-optimized images uploaded successfully!',
+      'upload.autoOptimizedForTikTok': 'Images are automatically optimized for TikTok',
 
     },
     ar: {
@@ -1380,6 +1394,20 @@ const getTranslations = () => {
       'toast.socialMediaConnectionRequired': 'ربط وسائل التواصل الاجتماعي مطلوب',
       'toast.socialMediaConnectionRequiredDesc': 'يرجى ربط حساب واحد على الأقل من وسائل التواصل الاجتماعي (TikTok أو Instagram) قبل إضافة المنتجات.',
 
+      // Upload page enhancements
+      'upload.tiktokOptimizationEnabled': 'تم تفعيل تحسين TikTok',
+      'upload.tiktokOptimizationDescription': 'يتم معالجة الصور تلقائياً لإزالة البيانات الوصفية وتحسين الدقة (حد أقصى 1080x1920) وضمان التوافق مع TikTok.',
+      'upload.processingImages': 'معالجة الصور...',
+      'upload.optimizingForTikTok': 'تحسين للتوافق مع TikTok...',
+      'upload.tiktokReady': 'جاهز لـ TikTok',
+      'upload.imagesProcessed': 'تم معالجة الصور',
+      'upload.processingError': 'خطأ في المعالجة',
+      'upload.processingErrorDescription': 'لم يتم معالجة بعض الصور. يرجى المحاولة مرة أخرى.',
+      'upload.imageOptimized': 'تم تحسين الصورة',
+      'upload.imageOptimizedDescription': 'تم معالجة الصورة للتوافق مع TikTok',
+      'upload.imageOptimizedAndResized': 'تم معالجة الصورة للتوافق مع TikTok وتغيير حجمها',
+      'upload.tiktokOptimizedSuccess': 'تم رفع الصور المحسنة لـ TikTok بنجاح!',
+      'upload.autoOptimizedForTikTok': 'يتم تحسين الصور تلقائياً لـ TikTok',
 
     }
   };

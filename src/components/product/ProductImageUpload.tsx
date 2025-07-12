@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, ImageIcon } from 'lucide-react';
+import { X, ImageIcon, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductImageUploadProps {
@@ -40,6 +40,13 @@ const ProductImageUpload = ({
             >
               <X className="h-4 w-4" />
             </button>
+            {/* TikTok Optimization Badge */}
+            <div className="absolute bottom-2 left-2">
+              <div className="bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" />
+                {t('upload.tiktokReady')}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="text-center">
@@ -48,6 +55,9 @@ const ProductImageUpload = ({
               <span className="text-lg font-medium text-deep-blue dark:text-white">
                 {t('productImage.clickToUpload')} <span className="text-red-500">{t('productForm.required')}</span>
               </span>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                {t('upload.autoOptimizedForTikTok')}
+              </p>
             </Label>
             <Input
               id={`image-${index}`}
