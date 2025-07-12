@@ -176,7 +176,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         onSuccess?.();
         // Small delay to ensure auth state is updated before navigation
         setTimeout(() => {
-          navigate('/home');
+          navigate('/dashboard');
         }, 500);
       }
     } catch (error: any) {

@@ -22,8 +22,8 @@ const Hero = () => {
       return; // Wait for auth to complete
     }
 
-    // Always navigate to user-dashboard directly
-    navigate('/user-dashboard');
+    // Navigate to dashboard which will handle brand setup flow
+    navigate('/dashboard');
   };
 
   const getButtonText = () => {

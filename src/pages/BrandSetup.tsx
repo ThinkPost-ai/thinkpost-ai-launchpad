@@ -12,7 +12,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { MultiSelect, type Option } from '../components/ui/multi-select';
 import { useToast } from '../components/ui/use-toast';
-import { Loader2, Sun, Moon, Globe, Info, AlertTriangle } from 'lucide-react';
+import { Loader2, Sun, Moon, Globe, Info } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type RestaurantCategory = Database['public']['Enums']['restaurant_category'];
@@ -107,19 +107,72 @@ const saudiCities = {
 
 // Map Arabic cities to English for database storage
 const cityMapping: { [key: string]: string } = {
+  // Riyadh Region
   "الرياض": "Riyadh",
-  "مكة المكرمة": "Makkah",
+  "الخرج": "Al Kharj",
+  "المجمعة": "Al Majmaah",
+  
+  // Makkah Region
+  "جدة": "Jeddah",
+  "مكة": "Makkah",
+  "الطائف": "Taif",
+  
+  // Madinah Region
   "المدينة المنورة": "Madinah",
-  "القصيم": "Qassim",
-  "المنطقة الشرقية": "Eastern Province",
-  "عسير": "Asir",
+  "ينبع": "Yanbu",
+  "العلا": "Al-Ula",
+  
+  // Qassim Region
+  "بريدة": "Buraidah",
+  "عنيزة": "Unaizah",
+  "الرس": "Ar Rass",
+  
+  // Eastern Province
+  "الدمام": "Dammam",
+  "الخبر": "Al Khobar",
+  "الأحساء": "Al Ahsa",
+  
+  // Tabuk Region
   "تبوك": "Tabuk",
+  "ضباء": "Duba",
+  "حقل": "Haql",
+  
+  // Hail Region
   "حائل": "Hail",
-  "الحدود الشمالية": "Northern Borders",
+  "بقعاء": "Baqqa",
+  "الغزالة": "Al-Ghazalah",
+  
+  // Northern Borders
+  "عرعر": "Arar",
+  "رفحاء": "Rafha",
+  "طريف": "Turaif",
+  
+  // Asir Region
+  "أبها": "Abha",
+  "خميس مشيط": "Khamis Mushait",
+  "محايل": "Mahayel",
+  
+  // Jazan Region
   "جازان": "Jazan",
+  "صبياء": "Sabya",
+  "أبو عريش": "Abu Arish",
+  
+  // Najran Region
   "نجران": "Najran",
+  "شرورة": "Sharurah",
+  "حبونا": "Habona",
+  
+  // Al Bahah Region
   "الباحة": "Al Bahah",
-  "الجوف": "Al Jouf",
+  "بلجرشي": "Baljurashi",
+  "المندق": "Al Mandaq",
+  
+  // Al Jouf Region
+  "سكاكا": "Sakaka",
+  "دومة الجندل": "Dumat Al-Jandal",
+  "طبرجل": "Tabarjal",
+  
+  // Other
   "أخرى": "Other"
 };
 
@@ -148,7 +201,6 @@ const BrandSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [brandId, setBrandId] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   // Get current cities based on language
   const currentCities = saudiCities[language] || saudiCities.en;
@@ -159,48 +211,10 @@ const BrandSetup = () => {
       return;
     }
 
-    if (user) {
-      checkUserAuth();
+    if (user && !loading) {
+      checkExistingBrand();
     }
   }, [user, loading, navigate]);
-
-  const checkUserAuth = async () => {
-    try {
-      // Verify that the user exists in the auth system
-      const { data: authUser, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authUser.user) {
-        setAuthError('Your session has expired or is invalid. Please sign in again.');
-        return;
-      }
-
-      // Check if user ID matches
-      if (authUser.user.id !== user?.id) {
-        setAuthError('Session mismatch detected. Please sign in again.');
-        return;
-      }
-
-      // Clear any previous auth errors
-      setAuthError(null);
-      
-      // Proceed with checking existing brand
-      checkExistingBrand();
-    } catch (error: any) {
-      console.error('Error checking user authentication:', error);
-      setAuthError('Authentication verification failed. Please sign in again.');
-    }
-  };
-
-  const handleAuthError = async () => {
-    try {
-      await signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      // Force navigation even if sign out fails
-      navigate('/');
-    }
-  };
 
   const checkExistingBrand = async () => {
     try {
@@ -250,17 +264,6 @@ const BrandSetup = () => {
         // Determine brand type from stored brand_type or fallback to category
         const brandType = data.brand_type || getBrandTypeFromCategory(data.category);
         
-        console.log('Setting form data with:', {
-          name: data.name,
-          locations: locations,
-          brandType: brandType,
-          category: brandType === 'restaurant' ? data.category : '' as RestaurantCategory,
-          vision: data.vision || '',
-          otherLocation: data.custom_location || '',
-          customBrandType: data.custom_brand_type || '',
-          customCategory: data.custom_category || ''
-        });
-        
         setFormData({
           name: data.name,
           locations: locations,
@@ -273,13 +276,9 @@ const BrandSetup = () => {
         });
         setIsEditing(true);
         setBrandId(data.id);
-        
-        console.log('Set editing mode:', { isEditing: true, brandId: data.id });
-      } else {
-        console.log('No existing restaurant found');
       }
     } catch (error: any) {
-      console.error('Error in checkExistingBrand:', error);
+      console.error('Error checking existing brand:', error);
       toast({
         title: "Error",
         description: "Failed to load brand information",
@@ -325,17 +324,6 @@ const BrandSetup = () => {
     setIsSubmitting(true);
 
     try {
-      // Double-check authentication before submitting
-      const { data: authUser, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authUser.user) {
-        throw new Error('Your session has expired. Please sign in again.');
-      }
-
-      if (authUser.user.id !== user?.id) {
-        throw new Error('Session mismatch detected. Please sign in again.');
-      }
-
       // Convert locations to English for database storage and handle "Other"
       let finalLocation = '';
       let additionalLocations: string[] = [];
@@ -421,12 +409,7 @@ const BrandSetup = () => {
           .update(updateData)
           .eq('id', brandId);
 
-        if (error) {
-          if (error.message.includes('foreign key constraint')) {
-            throw new Error('Your session has expired. Please sign in again.');
-          }
-          throw error;
-        }
+        if (error) throw error;
 
         toast({
           title: "Success",
@@ -436,16 +419,11 @@ const BrandSetup = () => {
         const { error } = await supabase
           .from('restaurants')
           .insert({
-            owner_id: authUser.user.id,
+            owner_id: user?.id,
             ...updateData
           });
 
-        if (error) {
-          if (error.message.includes('foreign key constraint')) {
-            throw new Error('Your session has expired. Please sign in again.');
-          }
-          throw error;
-        }
+        if (error) throw error;
 
         toast({
           title: "Success", 
@@ -460,16 +438,11 @@ const BrandSetup = () => {
       navigate('/user-dashboard');
     } catch (error: any) {
       console.error('Brand setup error:', error);
-      
-      if (error.message.includes('session has expired') || error.message.includes('sign in again')) {
-        setAuthError(error.message);
-      } else {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to save brand information",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save brand information",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -479,35 +452,6 @@ const BrandSetup = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-4">
         <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple" />
-      </div>
-    );
-  }
-
-  // Show authentication error screen
-  if (authError) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-            <CardTitle className="text-xl font-bold text-deep-blue dark:text-white">
-              {t('brandSetup.authError.title')}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {t('brandSetup.authError.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={handleAuthError}
-              className="w-full bg-gradient-primary hover:opacity-90"
-            >
-              {t('brandSetup.authError.signInAgain')}
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
