@@ -39,13 +39,8 @@ serve(async (req) => {
     // Extract bucket and file path
     const bucket = pathSegments[1]; // e.g., 'restaurant-images'
     const filePath = pathSegments.slice(2).join('/'); // e.g., 'user-id/filename.jpg'
-    
-    // Decode URL components to handle Arabic characters and special characters
-    const decodedFilePath = decodeURIComponent(filePath);
 
-    console.log(`[MEDIA-PROXY] Serving media from bucket: ${bucket}, path: ${decodedFilePath}`);
-    console.log(`[MEDIA-PROXY] Original path: ${filePath}`);
-    console.log(`[MEDIA-PROXY] Decoded path: ${decodedFilePath}`);
+    console.log(`[MEDIA-PROXY] Serving media from bucket: ${bucket}, path: ${filePath}`);
 
     // Check if authorization header is present, if not use anonymous key
     const authHeader = req.headers.get('Authorization');
@@ -107,7 +102,7 @@ serve(async (req) => {
     // Get the file from Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .download(decodedFilePath);
+      .download(filePath);
 
     if (error) {
       console.error('[MEDIA-PROXY] Storage download error:', error);
@@ -118,19 +113,19 @@ serve(async (req) => {
     }
 
     if (!data) {
-      console.log('[MEDIA-PROXY] No data returned for file:', decodedFilePath);
+      console.log('[MEDIA-PROXY] No data returned for file:', filePath);
       return new Response('Not Found', { 
         status: 404,
         headers: { 'Content-Type': 'text/plain' }
       });
     }
 
-    const contentType = getContentType(decodedFilePath);
+    const contentType = getContentType(filePath);
     
     // Convert Blob to ArrayBuffer for direct serving
     const arrayBuffer = await data.arrayBuffer();
 
-    console.log(`[MEDIA-PROXY] Successfully serving file: ${decodedFilePath} (${contentType}) - ${arrayBuffer.byteLength} bytes`);
+    console.log(`[MEDIA-PROXY] Successfully serving file: ${filePath} (${contentType}) - ${arrayBuffer.byteLength} bytes`);
 
     // Return the file with appropriate headers for external services like TikTok
     return new Response(arrayBuffer, {
