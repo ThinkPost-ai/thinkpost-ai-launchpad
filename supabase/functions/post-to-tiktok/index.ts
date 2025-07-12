@@ -254,7 +254,8 @@ serve(async (req) => {
           const { data: processData, error: processError } = await supabase.functions.invoke('process-image-for-tiktok', {
             body: { 
               imageUrl: videoUrl,
-              scheduledPostId: scheduledPostId
+              scheduledPostId: scheduledPostId,
+              userId: user.id
             }
           });
 

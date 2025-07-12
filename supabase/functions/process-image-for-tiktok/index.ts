@@ -70,7 +70,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, scheduledPostId } = await req.json();
+    const { imageUrl, scheduledPostId, userId } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -86,25 +86,70 @@ serve(async (req) => {
     if (scheduledPostId) {
       console.log(`Scheduled post ID: ${scheduledPostId}`);
     }
+    if (userId) {
+      console.log(`User ID provided: ${userId}`);
+    }
 
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
 
+    // If no auth header and we have a scheduledPostId, use service role for database access
+    const supabaseKey = authHeader ? 
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '' : 
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseKey,
       {
         global: {
-          headers: { Authorization: authHeader! },
+          headers: authHeader ? { Authorization: authHeader } : {},
         },
       }
     );
 
-    // Authenticate the user to get their ID
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    let user: any = null;
+    
+    // If we have an auth header, try to authenticate
+    if (authHeader) {
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      if (!userError && authUser) {
+        user = authUser;
+      }
+    }
 
-    if (userError || !user) {
-      console.error('Authentication error:', userError);
+    // If no authenticated user but we have a userId parameter, use it directly
+    if (!user && userId) {
+      user = { id: userId };
+      console.log(`Using provided user ID: ${userId}`);
+    }
+
+    // If no authenticated user but we have a scheduledPostId, get user from scheduled post
+    if (!user && scheduledPostId) {
+      const { data: postData, error: postError } = await supabase
+        .from('scheduled_posts')
+        .select('user_id')
+        .eq('id', scheduledPostId)
+        .single();
+      
+      if (postError || !postData?.user_id) {
+        console.error('Failed to get user from scheduled post:', postError);
+        return new Response(
+          JSON.stringify({ error: 'Scheduled post not found or missing user ID' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      // Create a user-like object for compatibility
+      user = { id: postData.user_id };
+    }
+
+    // If still no user, throw error
+    if (!user) {
+      console.error('No user found - neither authenticated nor from scheduled post');
       return new Response(
         JSON.stringify({ error: 'User not authenticated or not found' }),
         { 
@@ -114,7 +159,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing image for TikTok compatibility...');
+    console.log(`Processing image for TikTok compatibility for user: ${user.id}`);
     
     // Download the original image
     const imageResponse = await fetch(imageUrl);
