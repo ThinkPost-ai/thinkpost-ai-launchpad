@@ -762,6 +762,8 @@ const getTranslations = () => {
       // Common
       'common.back': 'رجوع',
       'common.cancel': 'إلغاء',
+      'common.save': 'حفظ التعديلات',
+
       
       // Brand Setup
       'brandSetup.title.complete': 'إكمال ملف العلامة التجارية',
