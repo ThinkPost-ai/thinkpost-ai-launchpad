@@ -149,6 +149,7 @@ export type Database = {
           instagram_test_mode: boolean | null
           instagram_user_id: string | null
           instagram_username: string | null
+          remaining_credits: number
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -175,6 +176,7 @@ export type Database = {
           instagram_test_mode?: boolean | null
           instagram_user_id?: string | null
           instagram_username?: string | null
+          remaining_credits?: number
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -201,6 +203,7 @@ export type Database = {
           instagram_test_mode?: boolean | null
           instagram_user_id?: string | null
           instagram_username?: string | null
+          remaining_credits?: number
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -488,6 +491,10 @@ export type Database = {
       delete_user_and_data: {
         Args: { user_id_to_delete: string }
         Returns: undefined
+      }
+      get_total_credits: {
+        Args: { user_id: string }
+        Returns: number
       }
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }

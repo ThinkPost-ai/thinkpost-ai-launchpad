@@ -15,7 +15,7 @@ export const useCaptionData = () => {
     try {
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('caption_credits')
+        .select('caption_credits, remaining_credits')
         .eq('id', user?.id)
         .single();
 
@@ -24,7 +24,8 @@ export const useCaptionData = () => {
         return;
       }
 
-      setUserCredits(profileData?.caption_credits || 0);
+      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
+      setUserCredits(totalCredits);
     } catch (error) {
       console.error('Failed to fetch user credits:', error);
     }

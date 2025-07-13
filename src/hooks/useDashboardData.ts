@@ -70,7 +70,7 @@ export const useDashboardData = () => {
       // Fetch user profile with caption credits
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('caption_credits')
+        .select('caption_credits, remaining_credits')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -79,6 +79,9 @@ export const useDashboardData = () => {
       } else {
         console.log('Profile data fetched:', profileData);
       }
+
+      // Calculate total credits (base + remaining)
+      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
 
       // Fetch images count
       const { count: imagesCount } = await supabase
@@ -94,7 +97,7 @@ export const useDashboardData = () => {
 
       setStats(prev => ({
         ...prev,
-        captionCredits: profileData?.caption_credits || 0,
+        captionCredits: totalCredits,
         captionQuotaTotal: 15,
         totalImages: imagesCount || 0,
         totalProducts: productsCount || 0
@@ -118,7 +121,7 @@ export const useDashboardData = () => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('caption_credits')
+        .select('caption_credits, remaining_credits')
         .eq('id', user.id)
         .single();
 
@@ -127,7 +130,7 @@ export const useDashboardData = () => {
         return;
       }
 
-      const newCredits = profileData?.caption_credits || 0;
+      const newCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
       setStats(prev => ({
         ...prev,
         captionCredits: newCredits
