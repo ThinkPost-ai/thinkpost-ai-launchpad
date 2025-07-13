@@ -671,6 +671,9 @@ const getTranslations = () => {
       'schedule.preferences.customDays.friday': 'Friday',
       'schedule.preferences.customDays.saturday': 'Saturday',
       'schedule.preferences.customDays.sunday': 'Sunday',
+      'schedule.tikTokScheduled': 'TikTok posts have been scheduled over the next 4 weeks',
+      'schedule.allPostsDeleted': 'All scheduled posts have been deleted',
+      'product.savedWithCaptions': 'product(s) saved and captions generated successfully',
 
       // Notifications
       'notifications.title': 'Notifications',
@@ -885,13 +888,13 @@ const getTranslations = () => {
       'pricing.plans.business.features.branding': 'علامة تجارية مخصصة',
       'pricing.plans.business.features.analytics': 'تحليلات متقدمة',
       'pricing.plans.business.features.collaboration': 'تعاون الفريق',
-      'pricing.plans.business.features.api': 'وصول API',
-      'pricing.plans.business.features.whiteLabel': 'حل العلامة البيضاء',
-      'pricing.plans.business.features.integrations': 'تكاملات مخصصة',
-      'pricing.plans.business.buttonText': 'ابدأ التجاري',
-      'pricing.enterprise.title': 'تحتاج شيئاً مخصصاً؟',
-      'pricing.enterprise.description': 'لعملاء المؤسسات ذوي المتطلبات الخاصة، نقدم حلول مخصصة ودعماً مخصصاً.',
-      'pricing.enterprise.buttonText': 'اتصل بالمبيعات',
+      'pricing.plans.business.features.api': 'API access',
+      'pricing.plans.business.features.whiteLabel': 'White-label solution',
+      'pricing.plans.business.features.integrations': 'Custom integrations',
+      'pricing.plans.business.buttonText': 'Start Business',
+      'pricing.enterprise.title': 'Need Something Custom?',
+      'pricing.enterprise.description': 'For enterprise clients with special requirements, we offer custom solutions and dedicated support.',
+      'pricing.enterprise.buttonText': 'Contact Sales',
 
       // FAQ
       'faq.title': 'الأسئلة الشائعة',
@@ -913,14 +916,14 @@ const getTranslations = () => {
       'faq.questions.q8.question': 'ما مدى أمان محتواي؟',
       'faq.questions.q8.answer': 'نأخذ الأمان على محمل الجد. جميع التحميلات مشفرة، ولا نخزن محتواك أطول من اللازم.',
       'faq.contact.title': 'لا تزال لديك أسئلة؟',
-      'faq.contact.description': 'فريق الدعم لدينا هنا لمساعدتك في الحصول على أقصى الاستفادة من ThinkPost',
-      'faq.contact.buttonText': 'اتصل بالدعم',
+      'faq.contact.description': 'Our support team is here to help you get the most out of ThinkPost',
+      'faq.contact.buttonText': 'Contact Support',
 
       // Footer
       'footer.newsletter.title': 'ابق محدثاً مع ThinkPost',
       'footer.newsletter.description': 'احصل على آخر التحديثات والنصائح واستراتيجيات إنشاء المحتوى الحصرية في صندوق الوارد الخاص بك.',
-      'footer.newsletter.placeholder': 'أدخل بريدك الإلكتروني',
-      'footer.newsletter.buttonText': 'اشترك',
+      'footer.newsletter.placeholder': 'Enter your email',
+      'footer.newsletter.buttonText': 'Subscribe',
       'footer.description': 'نحدث ثورة في إنشاء المحتوى بأدوات مدعومة بالذكاء الاصطناعي تساعدك على إنشاء محتوى جذاب وعالي الجودة في ثوانٍ.',
       'footer.sections.product': 'المنتج',
       'footer.sections.company': 'الشركة',
@@ -1312,7 +1315,7 @@ const getTranslations = () => {
       'schedule.noPostsToApproveDesc': 'لا توجد منشورات مجدولة للاعتماد.',
       'schedule.approvalError': 'فشل في اعتماد المنشورات',
       'schedule.unapprovalError': 'فشل في إلغاء اعتماد المنشورات',
-      'schedule.cancelScheduledPostsAndEdits': 'إلغاء جدولة المشاركات والتعديلات',
+      'schedule.cancelScheduledPostsAndEdits': 'إلغاء جدولة المنشورات أو طلب تعديل',
       'schedule.preferences.title': 'تفضيلات الجدولة',
       'schedule.preferences.description': 'اختر كيف تريد جدولة منشوراتك',
       'schedule.preferences.days': 'أيام الجدولة',
@@ -1335,6 +1338,9 @@ const getTranslations = () => {
       'schedule.preferences.customDays.friday': 'الجمعة',
       'schedule.preferences.customDays.saturday': 'السبت',
       'schedule.preferences.customDays.sunday': 'الأحد',
+      'schedule.tikTokScheduled': 'تم جدولة منشورات TikTok خلال الأسابيع الأربعة القادمة',
+      'schedule.allPostsDeleted': 'تم حذف جميع المنشورات المجدولة',
+      'product.savedWithCaptions': 'تم حفظ المنتج(المنتجات) وتوليد المحتوى بنجاح',
 
       // Notifications
       'notifications.title': 'الإشعارات',

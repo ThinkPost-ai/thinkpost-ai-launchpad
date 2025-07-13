@@ -458,8 +458,8 @@ export const useProductManagement = () => {
       await Promise.all(captionPromises);
 
       toast({
-        title: "Success!",
-        description: `${products.length} product(s) saved and captions generated successfully`
+        title: t('toast.success'),
+        description: `${products.length} ${t('product.savedWithCaptions')}`
       });
 
       // Redirect to review content page

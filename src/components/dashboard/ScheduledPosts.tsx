@@ -387,8 +387,8 @@ const ScheduledPosts = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: `${schedule.length} TikTok posts have been scheduled over the next 4 weeks`,
+        title: t('toast.success'),
+        description: `${schedule.length} ${t('schedule.tikTokScheduled')}`,
       });
 
       await fetchScheduledPosts();
@@ -416,8 +416,8 @@ const ScheduledPosts = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "All scheduled posts have been deleted",
+        title: t('toast.success'),
+        description: t('schedule.allPostsDeleted'),
       });
 
       await fetchScheduledPosts();
