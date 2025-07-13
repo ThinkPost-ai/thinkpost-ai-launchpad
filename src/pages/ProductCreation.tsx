@@ -95,72 +95,7 @@ const ProductCreation = () => {
         </div>
 
         {/* Platform Connection Status */}
-        <Card className="mb-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">{t('upload.platformConnectionStatus')}</CardTitle>
-            <CardDescription>{t('upload.platformConnectionDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* TikTok Connection Status */}
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={tiktokProfile?.tiktok_avatar_url || ''} />
-                  <AvatarFallback className={`${tiktokProfile?.tiktok_connected ? 'bg-green-600' : 'bg-gray-400'}`}>
-                    <TikTokIcon className="h-5 w-5 text-white" size={20} />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">TikTok</span>
-                    {tiktokProfile?.tiktok_connected ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <div className="h-4 w-4 rounded-full bg-gray-400" />
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {tiktokProfile?.tiktok_connected ? (
-                      <span>
-                        <span className="font-medium">{t('upload.tiktokName')}</span>{' '}
-                        {loadingDisplayName ? (
-                          t('upload.loading')
-                        ) : (
-                          tiktokDisplayName || tiktokProfile.tiktok_username || 'TikTok User'
-                        )}
-                      </span>
-                    ) : (
-                      t('upload.notConnected')
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Instagram Connection Status */}
-              <div className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className={`p-2 rounded-lg ${instagramProfile?.connected ? 'bg-green-600' : 'bg-gray-400'}`}>
-                  <Instagram className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Instagram</span>
-                    {instagramProfile?.connected ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <div className="h-4 w-4 rounded-full bg-gray-400" />
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {instagramProfile?.connected 
-                      ? t('upload.connectedAs', { username: instagramProfile.username || 'Instagram User' })
-                      : t('upload.notConnected')
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Card for platform connection status removed as per request */}
 
         <div className="space-y-6">
           {products.map((product, index) => (
