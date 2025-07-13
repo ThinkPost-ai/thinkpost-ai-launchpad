@@ -789,58 +789,20 @@ const ScheduledPosts = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {/* Inject custom styles for scheduled days */}
       <style dangerouslySetInnerHTML={{ __html: scheduledDayStyles }} />
       
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-vibrant-purple" />
-                {t('schedule.title')}
-              </CardTitle>
-              <CardDescription>
-                {t('schedule.description')}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button 
-                variant="outline"
-                onClick={cancelAllScheduledPosts}
-                disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0 || postsLocked}
-              >
-                {cancellingAll ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {t('schedule.deleteAll')}
-                  </>
-                )}
-              </Button>
-              <Button 
-                className="bg-gradient-primary hover:opacity-90"
-                onClick={() => setShowSchedulingModal(true)}
-                disabled={scheduling || postsLocked}
-              >
-                {scheduling ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Scheduling...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t('schedule.schedulePosts')}
-                  </>
-                )}
-              </Button>
-            </div>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-vibrant-purple" />
+              {t('schedule.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('schedule.description')}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -1060,6 +1022,47 @@ const ScheduledPosts = () => {
           </div>
                   </DialogContent>
         </Dialog>
+
+        {/* Fixed Bottom Action Buttons */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-4 z-50">
+          <div className="container mx-auto flex gap-3 justify-center max-w-md">
+            <Button 
+              variant="outline"
+              onClick={cancelAllScheduledPosts}
+              disabled={cancellingAll || scheduledPosts.filter(p => p.status === 'scheduled').length === 0 || postsLocked}
+              className="flex-1"
+            >
+              {cancellingAll ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('schedule.deleting')}
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('schedule.deleteAll')}
+                </>
+              )}
+            </Button>
+            <Button 
+              className="bg-gradient-primary hover:opacity-90 flex-1"
+              onClick={() => setShowSchedulingModal(true)}
+              disabled={scheduling || postsLocked}
+            >
+              {scheduling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('schedule.scheduling')}
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('schedule.schedulePosts')}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
 
         {/* Scheduling Preferences Modal */}
         <Dialog open={showSchedulingModal} onOpenChange={setShowSchedulingModal}>
