@@ -23,7 +23,6 @@ import TikTokCallback from "./pages/TikTokCallback";
 import TikTokLoginCallback from "./pages/TikTokLoginCallback";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import InstagramLoginCallback from "./pages/InstagramLoginCallback";
-import AdminDashboard from './pages/AdminDashboard';
 
 const queryClient = new QueryClient();
 
@@ -56,7 +55,6 @@ const App = () => {
                   <Route path="/tiktok-login-callback" element={<TikTokLoginCallback />} />
                   <Route path="/instagram-callback" element={<InstagramLoginCallback />} />
                   <Route path="/email-confirmation" element={<EmailConfirmation />} />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
