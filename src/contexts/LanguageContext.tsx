@@ -380,7 +380,7 @@ const getTranslations = () => {
       'upload.notConnected': 'Not connected',
       'upload.connectedAs': 'Connected as @{username}',
       'upload.productNumber': 'Product {number}',
-      'upload.socialMediaApps': '📱 Social Media Apps',
+      'upload.socialMediaApps': 'Enable social media apps to post to:',
       'upload.postToTikTok': 'Post to TikTok',
       'upload.postToInstagram': 'Post to Instagram',
       'upload.connectTikTokFirst': 'Connect TikTok account first',
@@ -1066,7 +1066,7 @@ const getTranslations = () => {
       'upload.notConnected': 'غير متصل',
       'upload.connectedAs': 'متصل باسم @{username}',
       'upload.productNumber': 'المنتج {number}',
-      'upload.socialMediaApps': '📱 تطبيقات التواصل الاجتماعي',
+      'upload.socialMediaApps': 'فعل التطبيقات المراد النشر عليها لهذا المنتج: ',
       'upload.postToTikTok': 'النشر على TikTok',
       'upload.postToInstagram': 'النشر على Instagram',
       'upload.connectTikTokFirst': 'اربط حساب TikTok أولاً',
