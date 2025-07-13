@@ -17,10 +17,13 @@ import { useCaptionData } from './captions/useCaptionData';
 import { GeneratedCaptionsProps } from './captions/types';
 import CaptionTableRow from './captions/CaptionTableRow';
 import EmptyCaptionsState from './captions/EmptyCaptionsState';
+import MobileGeneratedCaptions from './MobileGeneratedCaptions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   const { 
     captions, 
     setCaptions, 
@@ -148,6 +151,11 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-purple"></div>
       </div>
     );
+  }
+
+  // Use mobile layout for mobile devices
+  if (isMobile) {
+    return <MobileGeneratedCaptions onCreditsUpdate={onCreditsUpdate} />;
   }
 
   return (

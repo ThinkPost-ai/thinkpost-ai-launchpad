@@ -14,90 +14,15 @@ export type Database = {
   }
   public: {
     Tables: {
-      cars: {
-        Row: {
-          brand: string
-          color: string | null
-          condition: string | null
-          created_at: string | null
-          description: string | null
-          drivetrain: string | null
-          engine_size: string | null
-          fuel_type: string
-          id: string
-          image_url: string | null
-          is_featured: boolean | null
-          is_sold: boolean | null
-          mileage: number | null
-          model: string
-          price: number
-          showroom_id: string | null
-          transmission: string
-          updated_at: string | null
-          views: number | null
-          year: number
-        }
-        Insert: {
-          brand: string
-          color?: string | null
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          drivetrain?: string | null
-          engine_size?: string | null
-          fuel_type: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_sold?: boolean | null
-          mileage?: number | null
-          model: string
-          price: number
-          showroom_id?: string | null
-          transmission: string
-          updated_at?: string | null
-          views?: number | null
-          year: number
-        }
-        Update: {
-          brand?: string
-          color?: string | null
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          drivetrain?: string | null
-          engine_size?: string | null
-          fuel_type?: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_sold?: boolean | null
-          mileage?: number | null
-          model?: string
-          price?: number
-          showroom_id?: string | null
-          transmission?: string
-          updated_at?: string | null
-          views?: number | null
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cars_showroom_id_fkey"
-            columns: ["showroom_id"]
-            isOneToOne: false
-            referencedRelation: "showrooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       images: {
         Row: {
           caption: string | null
           created_at: string | null
           file_path: string
           id: string
+          is_tiktok_optimized: boolean | null
           original_filename: string
+          processed_image_path: string | null
           updated_at: string | null
           user_id: string
         }
@@ -106,7 +31,9 @@ export type Database = {
           created_at?: string | null
           file_path: string
           id?: string
+          is_tiktok_optimized?: boolean | null
           original_filename: string
+          processed_image_path?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -115,7 +42,9 @@ export type Database = {
           created_at?: string | null
           file_path?: string
           id?: string
+          is_tiktok_optimized?: boolean | null
           original_filename?: string
+          processed_image_path?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -340,7 +269,9 @@ export type Database = {
           image_id: string | null
           image_url: string | null
           media_type: string | null
+          original_image_url: string | null
           platform: string
+          processed_image_path: string | null
           processing_status: string | null
           product_id: string | null
           proxy_image_url: string | null
@@ -362,7 +293,9 @@ export type Database = {
           image_id?: string | null
           image_url?: string | null
           media_type?: string | null
+          original_image_url?: string | null
           platform: string
+          processed_image_path?: string | null
           processing_status?: string | null
           product_id?: string | null
           proxy_image_url?: string | null
@@ -384,7 +317,9 @@ export type Database = {
           image_id?: string | null
           image_url?: string | null
           media_type?: string | null
+          original_image_url?: string | null
           platform?: string
+          processed_image_path?: string | null
           processing_status?: string | null
           product_id?: string | null
           proxy_image_url?: string | null
