@@ -200,7 +200,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                 {caption.name || caption.original_filename}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {caption.type === 'product' ? t('table.product') : t('table.image')} • {new Date(caption.created_at).toLocaleDateString()}
+                {new Date(caption.created_at).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -234,7 +234,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                     className="bg-gradient-primary hover:opacity-90"
                   >
                     <Check className="h-3 w-3 mr-1" />
-                    {t('common.save')}
+                    {t('captions.save')}
                   </Button>
                 </div>
               </div>
@@ -291,7 +291,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                   <AlertDialogFooter>
                     <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={() => regenerateCaption(caption.id, caption.type)}>
-                      {t('common.yes')}
+                      {t('captions.approve')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
