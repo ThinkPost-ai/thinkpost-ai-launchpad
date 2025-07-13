@@ -150,6 +150,7 @@ export type Database = {
           instagram_user_id: string | null
           instagram_username: string | null
           remaining_credits: number
+          role: 'user' | 'admin'
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -177,6 +178,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -204,6 +206,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null

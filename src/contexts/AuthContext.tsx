@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,7 @@ interface AuthContextType {
   loading: boolean;
   hasRestaurant: boolean | null;
   checkingProfile: boolean;
+  profile: any | null; // Add profile to context
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -32,8 +34,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);
+  const [profile, setProfile] = useState<any | null>(null); // Add profile state
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  // Fetch user profile from 'profiles' table
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (!error && data) {
+      setProfile(data);
+      return data;
+    } else {
+      setProfile(null);
+      return null;
+    }
+  };
 
   const checkUserProfile = async () => {
     if (!user) {
@@ -70,11 +90,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Check profile when user logs in
         if (session?.user && event === 'SIGNED_IN') {
+          // Fetch profile and check role
+          const profileData = await fetchUserProfile(session.user.id);
+          if (profileData && profileData.role === 'admin') {
+            navigate('/admin-dashboard', { replace: true });
+            return;
+          }
           setTimeout(() => {
             checkUserProfile();
           }, 0);
         } else if (!session?.user) {
           setHasRestaurant(null);
+          setProfile(null);
         }
         
         setLoading(false);
@@ -88,6 +115,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        const profileData = await fetchUserProfile(session.user.id);
+        if (profileData && profileData.role === 'admin') {
+          navigate('/admin-dashboard', { replace: true });
+          return;
+        }
         setTimeout(() => {
           checkUserProfile();
         }, 0);
@@ -293,6 +325,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     hasRestaurant,
     checkingProfile,
+    profile, // Expose profile in context
     signUp,
     signIn,
     signOut,
