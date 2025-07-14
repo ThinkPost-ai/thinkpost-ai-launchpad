@@ -890,7 +890,7 @@ const ScheduledPosts = () => {
                 <Card className="lg:col-span-2">
                   <CardHeader>
                     <CardTitle className="text-lg">
-                      Posts for {selectedDate?.toLocaleDateString()}
+                      {t('schedule.postsFor')} {selectedDate?.toLocaleDateString()}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
