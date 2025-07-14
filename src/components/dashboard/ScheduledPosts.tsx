@@ -104,7 +104,7 @@ interface MediaItem {
 const ScheduledPosts = () => {
   const { user, session } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily');
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
@@ -116,6 +116,7 @@ const ScheduledPosts = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedHour, setSelectedHour] = useState<string>('12');
   const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('PM');
   const [postingNow, setPostingNow] = useState<string | null>(null);
   const [postsLocked, setPostsLocked] = useState(false);
   const [showSchedulingModal, setShowSchedulingModal] = useState(false);
@@ -699,21 +700,42 @@ const ScheduledPosts = () => {
     }
   };
 
+  // Helper functions for 12-hour time conversion
+  const convertTo12Hour = (hour24: number) => {
+    if (hour24 === 0) return { hour: '12', period: 'AM' as const };
+    if (hour24 < 12) return { hour: hour24.toString(), period: 'AM' as const };
+    if (hour24 === 12) return { hour: '12', period: 'PM' as const };
+    return { hour: (hour24 - 12).toString(), period: 'PM' as const };
+  };
+
+  const convertTo24Hour = (hour12: string, period: 'AM' | 'PM') => {
+    const hour = parseInt(hour12);
+    if (period === 'AM') {
+      return hour === 12 ? 0 : hour;
+    } else {
+      return hour === 12 ? 12 : hour + 12;
+    }
+  };
+
   const startEditDate = (post: ScheduledPost) => {
     setEditingPost(post.id);
     const postDate = new Date(post.scheduled_date);
     setNewScheduleDate(postDate);
-    setSelectedHour(postDate.getHours().toString().padStart(2, '0'));
+    
+    const { hour, period } = convertTo12Hour(postDate.getHours());
+    setSelectedHour(hour.padStart(2, '0'));
     setSelectedMinute(postDate.getMinutes().toString().padStart(2, '0'));
+    setSelectedPeriod(period);
     setEditDialogOpen(true);
   };
 
   const updatePostDate = async () => {
     if (!editingPost || !newScheduleDate) return;
 
-    // Create the final date with selected time
+    // Create the final date with selected time (convert from 12-hour to 24-hour)
     const finalDate = new Date(newScheduleDate);
-    finalDate.setHours(parseInt(selectedHour), parseInt(selectedMinute), 0, 0);
+    const hour24 = convertTo24Hour(selectedHour, selectedPeriod);
+    finalDate.setHours(hour24, parseInt(selectedMinute), 0, 0);
 
     try {
       const { error } = await supabase
@@ -737,6 +759,7 @@ const ScheduledPosts = () => {
       setNewScheduleDate(undefined);
       setSelectedHour('12');
       setSelectedMinute('00');
+      setSelectedPeriod('PM');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -976,38 +999,63 @@ const ScheduledPosts = () => {
             
             <div>
               <label className="text-sm font-medium mb-2 block">{t('schedule.time')}</label>
-              <div className="flex gap-2 items-center">
-                <Select value={selectedHour} onValueChange={setSelectedHour}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue placeholder="Hour" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                        {i.toString().padStart(2, '0')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className={`flex gap-2 items-end ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {/* Hour selector */}
+                <div className="flex flex-col">
+                  <label className="text-xs text-muted-foreground mb-1 text-center">{t('schedule.hour')}</label>
+                  <Select value={selectedHour} onValueChange={setSelectedHour}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue placeholder="Hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const hour = (i + 1).toString().padStart(2, '0');
+                        return (
+                          <SelectItem key={i} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
-                <span className="text-muted-foreground">:</span>
+                <span className="text-muted-foreground pb-2">:</span>
                 
-                <Select value={selectedMinute} onValueChange={setSelectedMinute}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue placeholder="Min" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 60 }, (_, i) => (
-                      <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                        {i.toString().padStart(2, '0')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Minute selector */}
+                <div className="flex flex-col">
+                  <label className="text-xs text-muted-foreground mb-1 text-center">{t('schedule.minute')}</label>
+                  <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue placeholder="Min" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 60 }, (_, i) => (
+                        <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                          {i.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* AM/PM selector */}
+                <div className="flex flex-col">
+                  <label className="text-xs text-muted-foreground mb-1 text-center">&nbsp;</label>
+                  <Select value={selectedPeriod} onValueChange={(value: 'AM' | 'PM') => setSelectedPeriod(value)}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AM">{t('schedule.am')}</SelectItem>
+                      <SelectItem value="PM">{t('schedule.pm')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <div className="text-xs text-muted-foreground mt-1">
-                {t('schedule.selectedTime')}: {selectedHour}:{selectedMinute}
+                {t('schedule.selectedTime')}: {selectedHour}:{selectedMinute} {t(`schedule.${selectedPeriod.toLowerCase()}`)}
               </div>
             </div>
             

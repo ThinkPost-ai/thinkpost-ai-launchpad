@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -28,19 +29,21 @@ const DeleteConfirmationDialog = ({
   selectedCount,
   isDeleteAll
 }: DeleteConfirmationDialogProps) => {
+  const { t } = useLanguage();
+
   const getTitle = () => {
-    if (isDeleteAll) return 'Delete All Products?';
-    return selectedCount === 1 ? 'Delete Product?' : 'Delete Products?';
+    if (isDeleteAll) return t('product.deleteAll.title');
+    return selectedCount === 1 ? t('product.delete.title') : t('product.delete.titlePlural');
   };
 
   const getDescription = () => {
     if (isDeleteAll) {
-      return 'This action will permanently delete all your products and their associated images. This cannot be undone.';
+      return t('product.deleteAll.description');
     }
     if (selectedCount === 1) {
-      return 'This action will permanently delete this product and its associated image. This cannot be undone.';
+      return t('product.delete.description');
     }
-    return `This action will permanently delete ${selectedCount} products and their associated images. This cannot be undone.`;
+    return t('product.delete.descriptionPlural', { count: selectedCount });
   };
 
   return (
@@ -53,7 +56,7 @@ const DeleteConfirmationDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('product.delete.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isDeleting}
@@ -62,10 +65,10 @@ const DeleteConfirmationDialog = ({
             {isDeleting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
+                {t('product.delete.deleting')}
               </>
             ) : (
-              'Delete'
+              t('product.delete.confirm')
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
