@@ -186,7 +186,7 @@ const MediaManagement = () => {
       {/* Header Actions */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-vibrant-purple" />
@@ -196,12 +196,12 @@ const MediaManagement = () => {
                 {t('media.description')}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               {!selectionMode ? (
                 <>
                   <Button
                     onClick={() => navigate('/upload')}
-                    className="bg-gradient-primary hover:opacity-90"
+                    className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {t('media.addProducts')}
@@ -210,6 +210,7 @@ const MediaManagement = () => {
                     <Button
                       onClick={() => setSelectionMode(true)}
                       variant="outline"
+                      className="w-full sm:w-auto"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       {t('media.deleteProducts')}
@@ -218,42 +219,50 @@ const MediaManagement = () => {
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={cancelSelection}
-                    variant="outline"
-                  >
-                    {t('schedule.cancel')}
-                  </Button>
-                  <Button
-                    onClick={() => selectAllItems(filteredItems)}
-                    variant="outline"
-                    disabled={selectedItems.size === productItems.length}
-                  >
-                    {t('media.selectAll')}
-                  </Button>
-                  <Button
-                    onClick={handleDeleteAllProducts}
-                    variant="destructive"
-                    disabled={!hasProducts}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {t('media.deleteAll')}
-                  </Button>
-                  <Button
-                    onClick={handleDeleteProducts}
-                    variant="destructive"
-                    disabled={selectedItems.size === 0}
-                                    >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {t('media.deleteSelected', { count: selectedItems.size })}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={cancelSelection}
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                    >
+                      {t('schedule.cancel')}
+                    </Button>
+                    <Button
+                      onClick={() => selectAllItems(filteredItems)}
+                      variant="outline"
+                      disabled={selectedItems.size === productItems.length}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {t('media.selectAll')}
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleDeleteAllProducts}
+                      variant="destructive"
+                      disabled={!hasProducts}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {t('media.deleteAll')}
+                    </Button>
+                    <Button
+                      onClick={handleDeleteProducts}
+                      variant="destructive"
+                      disabled={selectedItems.size === 0}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {t('media.deleteSelected', { count: selectedItems.size })}
+                    </Button>
+                  </div>
                 </>
               )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             {/* View Mode Toggle */}
             <div className="flex items-center gap-2">
               <Button
@@ -273,14 +282,17 @@ const MediaManagement = () => {
             </div>
 
             {/* Tag Filters */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground hidden sm:block">Filter:</span>
+              </div>
+              <div className="flex gap-2 flex-wrap">
                 {getFilterTags().map((tag) => (
                   <Badge
                     key={tag.key}
                     variant={filter === tag.key ? 'default' : 'outline'}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-xs"
                     onClick={() => setFilter(tag.key)}
                   >
                     {tag.label}
