@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SignInFormProps {
   onSuccess?: () => void;
@@ -19,8 +20,22 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, role, user } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Only redirect if user is present (signed in) and role is loaded (not null)
+    if (user && role) {
+      if (role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/user-dashboard');
+      }
+      onSuccess?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +68,7 @@ const SignInForm = ({ onSuccess }: SignInFormProps) => {
       }
     } else {
       console.log('✅ SignInForm: Signin successful');
-      onSuccess?.();
+      // No redirect here; handled by useEffect
     }
   };
 

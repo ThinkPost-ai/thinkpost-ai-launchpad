@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   hasRestaurant: boolean | null;
   checkingProfile: boolean;
+  role: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -32,8 +33,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      if (error) throw error;
+      setRole(data?.role || null);
+    } catch (error) {
+      setRole(null);
+    }
+  };
 
   const checkUserProfile = async () => {
     if (!user) {
@@ -67,6 +83,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchUserRole(session.user.id);
+        } else {
+          setRole(null);
+        }
         
         // Check profile when user logs in
         if (session?.user && event === 'SIGNED_IN') {
@@ -86,6 +107,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      } else {
+        setRole(null);
+      }
       
       if (session?.user) {
         setTimeout(() => {
@@ -293,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     hasRestaurant,
     checkingProfile,
+    role,
     signUp,
     signIn,
     signOut,

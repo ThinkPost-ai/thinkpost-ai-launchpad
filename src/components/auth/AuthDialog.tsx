@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -16,13 +17,23 @@ const AuthDialog = ({ isOpen, onClose, defaultTab = 'signin' }: AuthDialogProps)
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { role, user } = useAuth();
+
+  useEffect(() => {
+    if (user && role) {
+      if (role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/user-dashboard');
+      }
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role]);
 
   const handleAuthSuccess = () => {
     onClose();
-    // Navigate to dashboard after successful authentication
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 100);
+    // No redirect here; handled by useEffect
   };
 
   return (
