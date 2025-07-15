@@ -150,7 +150,6 @@ export type Database = {
           instagram_user_id: string | null
           instagram_username: string | null
           remaining_credits: number
-          role: string
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -178,7 +177,6 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
-          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -206,7 +204,6 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
-          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -355,6 +352,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      showrooms: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          location: string
+          name: string
+          owner_id: string | null
+          phone: string | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string | null
+          website: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location: string
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          website?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
       }
       tiktok_oauth_states: {
         Row: {
