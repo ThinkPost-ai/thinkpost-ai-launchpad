@@ -31,8 +31,7 @@ serve(async (req) => {
         full_name: record.raw_user_meta_data?.full_name,
         avatar_url: record.raw_user_meta_data?.avatar_url,
         auth_provider: record.raw_user_meta_data?.auth_provider || 'email',
-        tiktok_open_id: record.raw_user_meta_data?.tiktok_open_id,
-        remaining_credits: 30
+        tiktok_open_id: record.raw_user_meta_data?.tiktok_open_id
       })
 
     if (profileError) {

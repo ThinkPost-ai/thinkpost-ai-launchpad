@@ -37,7 +37,7 @@ export const useDashboardData = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalPosts: 0,
     upcomingPosts: 0,
-    captionCredits: 30,
+    captionCredits: 0,
     captionQuotaTotal: 0,
     totalImages: 0,
     totalProducts: 0
