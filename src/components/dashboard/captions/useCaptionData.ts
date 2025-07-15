@@ -24,7 +24,7 @@ export const useCaptionData = () => {
         return;
       }
 
-      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
+      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 10);
       setUserCredits(totalCredits);
     } catch (error) {
       console.error('Failed to fetch user credits:', error);
