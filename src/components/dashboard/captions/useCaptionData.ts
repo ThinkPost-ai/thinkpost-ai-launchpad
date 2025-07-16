@@ -13,19 +13,17 @@ export const useCaptionData = () => {
 
   const fetchUserCredits = async () => {
     try {
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('caption_credits, remaining_credits')
-        .eq('id', user?.id)
-        .single();
+      // Use the new get_total_credits function for consistency with backend
+      const { data: totalCredits, error } = await supabase.rpc('get_total_credits', {
+        user_id: user?.id
+      });
 
       if (error) {
         console.error('Error fetching user credits:', error);
         return;
       }
 
-      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
-      setUserCredits(totalCredits);
+      setUserCredits(totalCredits || 0);
     } catch (error) {
       console.error('Failed to fetch user credits:', error);
     }

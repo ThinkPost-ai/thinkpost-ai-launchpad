@@ -67,21 +67,16 @@ export const useDashboardData = () => {
         setRestaurant(restaurantData);
       }
 
-      // Fetch user profile with caption credits
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('caption_credits, remaining_credits')
-        .eq('id', user.id)
-        .maybeSingle();
+      // Use the new get_total_credits function for consistency with backend
+      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits', {
+        user_id: user.id
+      });
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
+      if (creditsError) {
+        console.error('Credits fetch error:', creditsError);
       } else {
-        console.log('Profile data fetched:', profileData);
+        console.log('Credits data fetched:', totalCredits);
       }
-
-      // Calculate total credits (base + remaining)
-      const totalCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
 
       // Fetch images count
       const { count: imagesCount } = await supabase
@@ -97,8 +92,8 @@ export const useDashboardData = () => {
 
       setStats(prev => ({
         ...prev,
-        captionCredits: totalCredits,
-        captionQuotaTotal: 15,
+        captionCredits: totalCredits || 0,
+        captionQuotaTotal: 30,
         totalImages: imagesCount || 0,
         totalProducts: productsCount || 0
       }));
@@ -119,25 +114,23 @@ export const useDashboardData = () => {
     if (!user?.id) return;
     
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('caption_credits, remaining_credits')
-        .eq('id', user.id)
-        .single();
+      // Use the new get_total_credits function for consistency with backend
+      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits', {
+        user_id: user.id
+      });
 
-      if (profileError) {
-        console.error('Credits update fetch error:', profileError);
+      if (creditsError) {
+        console.error('Credits update fetch error:', creditsError);
         return;
       }
 
-      const newCredits = (profileData?.caption_credits || 0) + (profileData?.remaining_credits || 0);
       setStats(prev => ({
         ...prev,
-        captionCredits: newCredits
+        captionCredits: totalCredits || 0
       }));
 
       // Show message when credits reach 0
-      if (newCredits === 0) {
+      if ((totalCredits || 0) === 0) {
         toast({
           title: "No Remaining Credits",
           description: "You have 0 caption credits remaining. You've reached your monthly limit.",
