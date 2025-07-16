@@ -39,14 +39,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('🔍 Fetching role for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
       if (error) throw error;
+      console.log('✅ Role fetched successfully:', data?.role);
       setRole(data?.role || null);
     } catch (error) {
+      console.error('❌ Error fetching user role:', error);
       setRole(null);
     }
   };
