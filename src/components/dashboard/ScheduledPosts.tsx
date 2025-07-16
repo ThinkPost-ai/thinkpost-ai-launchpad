@@ -357,8 +357,8 @@ const ScheduledPosts = () => {
 
       if (mediaItems.length === 0) {
         toast({
-          title: "No Content Available",
-          description: "You need products or images with captions to schedule posts",
+          title: t('toast.error'),
+          description: t('schedule.needContent'),
           variant: "destructive"
         });
         return;
