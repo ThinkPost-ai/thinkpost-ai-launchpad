@@ -83,6 +83,8 @@ export const useCaptionData = () => {
           image_path: image.file_path,
           original_filename: image.original_filename,
           caption: image.caption,
+          description: image.description,
+          content_type: image.content_type,
           created_at: image.created_at,
           status,
           type: 'image' as const,

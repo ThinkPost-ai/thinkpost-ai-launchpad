@@ -151,6 +151,7 @@ const GeneralContentUpload = () => {
     try {
       const uploadedItems = [];
 
+      // First, upload all files and save to database
       for (const item of items) {
         if (!item.file) continue;
 
@@ -167,7 +168,7 @@ const GeneralContentUpload = () => {
             user_id: user!.id,
             file_path: filePath,
             original_filename: item.file.name,
-            caption: null, // Will be generated later
+            caption: null, // Will be generated next
             content_type: item.contentType,
             description: item.description || null,
             media_type: isVideo ? 'video' : 'photo',
@@ -183,14 +184,103 @@ const GeneralContentUpload = () => {
 
       // Generate captions for uploaded items
       if (uploadedItems.length > 0) {
+        console.log('Starting caption generation for', uploadedItems.length, 'items');
+        
+        // Generate captions for each uploaded item
+        const captionPromises = uploadedItems.map(async (imageData) => {
+          try {
+            console.log(`Generating caption for content: ${imageData.content_type}`, {
+              imageId: imageData.id,
+              contentType: imageData.content_type,
+              description: imageData.description
+            });
+
+            const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
+              body: {
+                productName: null,
+                price: null,
+                description: imageData.description || '',
+                contentType: 'general',
+                contentCategory: imageData.content_type
+              }
+            });
+
+            console.log(`Caption generation response for ${imageData.content_type}:`, {
+              data: captionData,
+              error: captionError
+            });
+
+            if (captionError) {
+              console.error('Caption generation error:', captionError);
+              
+              // Show specific error message to user
+              toast({
+                title: t('toast.error'),
+                description: captionError.message || `Failed to generate caption for ${imageData.original_filename}`,
+                variant: "destructive"
+              });
+
+              if (captionError.message?.includes('Insufficient caption credits') || captionError.message?.includes('402')) {
+                toast({
+                  title: t('captions.noCredits'),
+                  description: t('captions.noCreditsDescription'),
+                  variant: "destructive"
+                });
+              }
+              return imageData;
+            }
+
+            const caption = captionData?.caption;
+
+            if (!caption) {
+              console.error('No caption received for content:', imageData.original_filename);
+              toast({
+                title: t('toast.error'),
+                description: `No caption generated for ${imageData.original_filename}`,
+                variant: "destructive"
+              });
+              return imageData;
+            }
+
+            console.log(`Generated caption for ${imageData.original_filename}:`, caption);
+
+            // Update the image with the generated caption
+            const { error: updateError } = await supabase
+              .from('images')
+              .update({ caption })
+              .eq('id', imageData.id);
+
+            if (updateError) {
+              console.error('Caption update error:', updateError);
+              toast({
+                title: t('toast.error'),
+                description: `Failed to save caption for ${imageData.original_filename}`,
+                variant: "destructive"
+              });
+            }
+
+            return { ...imageData, caption };
+          } catch (error) {
+            console.error('Failed to generate caption for content:', imageData.original_filename, error);
+            toast({
+              title: t('toast.error'),
+              description: `Error processing ${imageData.original_filename}: ${error.message}`,
+              variant: "destructive"
+            });
+            return imageData;
+          }
+        });
+
+        await Promise.all(captionPromises);
+
+        toast({
+          title: t('toast.success'),
+          description: `${uploadedItems.length} ${t('generalContent.uploadSuccess')}`,
+        });
+
         // Navigate to captions review page
         navigate('/review-content');
       }
-
-      toast({
-        title: t('toast.success'),
-        description: `${uploadedItems.length} ${t('generalContent.uploadAndGenerate')}`,
-      });
 
     } catch (error: any) {
       console.error('Error uploading general content:', error);

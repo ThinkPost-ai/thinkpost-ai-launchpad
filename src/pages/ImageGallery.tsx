@@ -130,8 +130,11 @@ const ImageGallery = () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-caption', {
         body: { 
-          imageId,
-          mealName: mealName || 'وجبة مميزة'
+          productName: mealName || 'وجبة مميزة',
+          price: null,
+          description: '',
+          contentType: 'product', // Default to product for backward compatibility
+          contentCategory: null
         }
       });
 

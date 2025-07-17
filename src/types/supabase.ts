@@ -14,108 +14,52 @@ export type Database = {
   }
   public: {
     Tables: {
-      cars: {
-        Row: {
-          brand: string
-          color: string | null
-          condition: string | null
-          created_at: string | null
-          description: string | null
-          drivetrain: string | null
-          engine_size: string | null
-          fuel_type: string
-          id: string
-          image_url: string | null
-          is_featured: boolean | null
-          is_sold: boolean | null
-          mileage: number | null
-          model: string
-          price: number
-          showroom_id: string | null
-          transmission: string
-          updated_at: string | null
-          views: number | null
-          year: number
-        }
-        Insert: {
-          brand: string
-          color?: string | null
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          drivetrain?: string | null
-          engine_size?: string | null
-          fuel_type: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_sold?: boolean | null
-          mileage?: number | null
-          model: string
-          price: number
-          showroom_id?: string | null
-          transmission: string
-          updated_at?: string | null
-          views?: number | null
-          year: number
-        }
-        Update: {
-          brand?: string
-          color?: string | null
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          drivetrain?: string | null
-          engine_size?: string | null
-          fuel_type?: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          is_sold?: boolean | null
-          mileage?: number | null
-          model?: string
-          price?: number
-          showroom_id?: string | null
-          transmission?: string
-          updated_at?: string | null
-          views?: number | null
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cars_showroom_id_fkey"
-            columns: ["showroom_id"]
-            isOneToOne: false
-            referencedRelation: "showrooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       images: {
         Row: {
           caption: string | null
+          content_type: string | null
           created_at: string | null
+          description: string | null
           file_path: string
           id: string
+          instagram_enabled: boolean | null
+          is_tiktok_optimized: boolean | null
+          media_type: string | null
           original_filename: string
+          processed_image_path: string | null
+          tiktok_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           caption?: string | null
+          content_type?: string | null
           created_at?: string | null
+          description?: string | null
           file_path: string
           id?: string
+          instagram_enabled?: boolean | null
+          is_tiktok_optimized?: boolean | null
+          media_type?: string | null
           original_filename: string
+          processed_image_path?: string | null
+          tiktok_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           caption?: string | null
+          content_type?: string | null
           created_at?: string | null
+          description?: string | null
           file_path?: string
           id?: string
+          instagram_enabled?: boolean | null
+          is_tiktok_optimized?: boolean | null
+          media_type?: string | null
           original_filename?: string
+          processed_image_path?: string | null
+          tiktok_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -155,6 +99,12 @@ export type Database = {
           is_new: boolean | null
           name: string
           price: number | null
+          tiktok_allow_comments: boolean | null
+          tiktok_branded_content: boolean | null
+          tiktok_commercial_content: boolean | null
+          tiktok_enabled: boolean | null
+          tiktok_privacy_level: string | null
+          tiktok_your_brand: boolean | null
           updated_at: string
           user_id: string
         }
@@ -167,6 +117,12 @@ export type Database = {
           is_new?: boolean | null
           name: string
           price?: number | null
+          tiktok_allow_comments?: boolean | null
+          tiktok_branded_content?: boolean | null
+          tiktok_commercial_content?: boolean | null
+          tiktok_enabled?: boolean | null
+          tiktok_privacy_level?: string | null
+          tiktok_your_brand?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -179,6 +135,12 @@ export type Database = {
           is_new?: boolean | null
           name?: string
           price?: number | null
+          tiktok_allow_comments?: boolean | null
+          tiktok_branded_content?: boolean | null
+          tiktok_commercial_content?: boolean | null
+          tiktok_enabled?: boolean | null
+          tiktok_privacy_level?: string | null
+          tiktok_your_brand?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -203,6 +165,7 @@ export type Database = {
           instagram_user_id: string | null
           instagram_username: string | null
           remaining_credits: number
+          role: string
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -230,6 +193,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -257,6 +221,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -270,8 +235,13 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          additional_locations: string[] | null
+          brand_type: string | null
           category: Database["public"]["Enums"]["restaurant_category"]
           created_at: string | null
+          custom_brand_type: string | null
+          custom_category: string | null
+          custom_location: string | null
           id: string
           location: string
           name: string
@@ -280,8 +250,13 @@ export type Database = {
           vision: string | null
         }
         Insert: {
+          additional_locations?: string[] | null
+          brand_type?: string | null
           category: Database["public"]["Enums"]["restaurant_category"]
           created_at?: string | null
+          custom_brand_type?: string | null
+          custom_category?: string | null
+          custom_location?: string | null
           id?: string
           location: string
           name: string
@@ -290,8 +265,13 @@ export type Database = {
           vision?: string | null
         }
         Update: {
+          additional_locations?: string[] | null
+          brand_type?: string | null
           category?: Database["public"]["Enums"]["restaurant_category"]
           created_at?: string | null
+          custom_brand_type?: string | null
+          custom_category?: string | null
+          custom_location?: string | null
           id?: string
           location?: string
           name?: string
@@ -299,7 +279,15 @@ export type Database = {
           updated_at?: string | null
           vision?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_owner_id_profiles_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_posts: {
         Row: {
@@ -310,11 +298,14 @@ export type Database = {
           image_id: string | null
           image_url: string | null
           media_type: string | null
+          original_image_url: string | null
           platform: string
+          processed_image_path: string | null
           processing_status: string | null
           product_id: string | null
           proxy_image_url: string | null
           proxy_video_url: string | null
+          reviewed_and_approved: boolean | null
           scheduled_date: string
           status: string
           tiktok_publish_id: string | null
@@ -331,11 +322,14 @@ export type Database = {
           image_id?: string | null
           image_url?: string | null
           media_type?: string | null
+          original_image_url?: string | null
           platform: string
+          processed_image_path?: string | null
           processing_status?: string | null
           product_id?: string | null
           proxy_image_url?: string | null
           proxy_video_url?: string | null
+          reviewed_and_approved?: boolean | null
           scheduled_date: string
           status?: string
           tiktok_publish_id?: string | null
@@ -352,11 +346,14 @@ export type Database = {
           image_id?: string | null
           image_url?: string | null
           media_type?: string | null
+          original_image_url?: string | null
           platform?: string
+          processed_image_path?: string | null
           processing_status?: string | null
           product_id?: string | null
           proxy_image_url?: string | null
           proxy_video_url?: string | null
+          reviewed_and_approved?: boolean | null
           scheduled_date?: string
           status?: string
           tiktok_publish_id?: string | null
@@ -381,60 +378,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      showrooms: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          email: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean | null
-          location: string
-          name: string
-          owner_id: string | null
-          phone: string | null
-          rating: number | null
-          total_reviews: number | null
-          updated_at: string | null
-          website: string | null
-          whatsapp_number: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          email?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          location: string
-          name: string
-          owner_id?: string | null
-          phone?: string | null
-          rating?: number | null
-          total_reviews?: number | null
-          updated_at?: string | null
-          website?: string | null
-          whatsapp_number?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          email?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          location?: string
-          name?: string
-          owner_id?: string | null
-          phone?: string | null
-          rating?: number | null
-          total_reviews?: number | null
-          updated_at?: string | null
-          website?: string | null
-          whatsapp_number?: string | null
-        }
-        Relationships: []
       }
       tiktok_oauth_states: {
         Row: {
@@ -489,6 +432,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_post_due_scheduled_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          processed_count: number
+          success_count: number
+          failed_count: number
+        }[]
+      }
+      auto_post_scheduler: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      auto_process_scheduled_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      bytea_to_text: {
+        Args: { data: string }
+        Returns: string
+      }
       cleanup_expired_oauth_states: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -497,9 +460,109 @@ export type Database = {
         Args: { user_id: string }
         Returns: number
       }
+      delete_user_and_data: {
+        Args: { user_id_to_delete: string }
+        Returns: undefined
+      }
+      get_admin_users_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string
+          caption_credits: number
+          remaining_credits: number
+          tiktok_connected: boolean
+          instagram_connected: boolean
+          updated_at: string
+          auth_provider: string
+          restaurant_name: string
+          category: string
+          created_at: string
+          email: string
+        }[]
+      }
       get_total_credits: {
         Args: { user_id: string }
         Returns: number
+      }
+      http: {
+        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_delete: {
+        Args:
+          | { uri: string }
+          | { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_get: {
+        Args: { uri: string } | { uri: string; data: Json }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_head: {
+        Args: { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_header: {
+        Args: { field: string; value: string }
+        Returns: Database["public"]["CompositeTypes"]["http_header"]
+      }
+      http_list_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          curlopt: string
+          value: string
+        }[]
+      }
+      http_patch: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_post: {
+        Args:
+          | { uri: string; content: string; content_type: string }
+          | { uri: string; data: Json }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_put: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_reset_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      http_set_curlopt: {
+        Args: { curlopt: string; value: string }
+        Returns: boolean
+      }
+      process_due_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      process_due_scheduled_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          processed_count: number
+          success_count: number
+          failed_count: number
+        }[]
+      }
+      set_user_role: {
+        Args: { user_id_param: string; new_role: string }
+        Returns: undefined
+      }
+      setup_first_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      text_to_bytea: {
+        Args: { data: string }
+        Returns: string
+      }
+      urlencode: {
+        Args: { data: Json } | { string: string } | { string: string }
+        Returns: string
       }
     }
     Enums: {
@@ -520,7 +583,23 @@ export type Database = {
         | "other"
     }
     CompositeTypes: {
-      [_ in never]: never
+      http_header: {
+        field: string | null
+        value: string | null
+      }
+      http_request: {
+        method: unknown | null
+        uri: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content_type: string | null
+        content: string | null
+      }
+      http_response: {
+        status: number | null
+        content_type: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content: string | null
+      }
     }
   }
 }

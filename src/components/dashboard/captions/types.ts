@@ -10,6 +10,7 @@ export interface CaptionData {
   status: 'draft' | 'scheduled' | 'posted';
   type: 'image' | 'product';
   is_new?: boolean;
+  content_type?: string; // For general content categorization
   social_stats?: {
     instagram_views?: number;
     instagram_likes?: number;

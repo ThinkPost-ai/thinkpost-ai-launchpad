@@ -68,12 +68,18 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
         requestBody = {
           productName: product?.name || 'وجبة مميزة',
           price: product?.price,
-          description: product?.description
+          description: product?.description,
+          contentType: 'product',
+          contentCategory: null
         };
       } else {
+        const image = captions.find(c => c.id === itemId && c.type === 'image');
         requestBody = { 
-          imageId: itemId,
-          mealName: 'وجبة مميزة'
+          productName: null,
+          price: null,
+          description: image?.description || '',
+          contentType: image?.content_type ? 'general' : 'product', // If content_type exists, it's general content
+          contentCategory: image?.content_type || null
         };
       }
 

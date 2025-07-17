@@ -805,6 +805,7 @@ const getTranslations = () => {
       'generalContent.addMore': 'Add More Content',
       'generalContent.uploadAndGenerate': 'Upload & Generate Content',
       'generalContent.uploading': 'Uploading & Generating...',
+      'generalContent.uploadSuccess': 'items uploaded with captions generated successfully',
       'generalContent.item': 'Item {number}',
 
     },
@@ -1537,6 +1538,7 @@ const getTranslations = () => {
       'generalContent.addMore': 'إضافة المزيد من المحتوى',
       'generalContent.uploadAndGenerate': 'رفع وتوليد المحتوى',
       'generalContent.uploading': 'جارٍ الرفع والتوليد...',
+      'generalContent.uploadSuccess': 'عنصر تم رفعه مع توليد المحتوى بنجاح',
       'generalContent.item': 'العنصر {number}',
 
     }

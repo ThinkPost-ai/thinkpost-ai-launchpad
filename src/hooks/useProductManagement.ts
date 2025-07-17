@@ -386,7 +386,9 @@ export const useProductManagement = () => {
             body: {
               productName: product.name,
               price: product.price,
-              description: product.description
+              description: product.description,
+              contentType: 'product',
+              contentCategory: null
             }
           });
 

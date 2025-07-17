@@ -17,34 +17,49 @@ export type Database = {
       images: {
         Row: {
           caption: string | null
+          content_type: string | null
           created_at: string | null
+          description: string | null
           file_path: string
           id: string
+          instagram_enabled: boolean | null
           is_tiktok_optimized: boolean | null
+          media_type: string | null
           original_filename: string
           processed_image_path: string | null
+          tiktok_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           caption?: string | null
+          content_type?: string | null
           created_at?: string | null
+          description?: string | null
           file_path: string
           id?: string
+          instagram_enabled?: boolean | null
           is_tiktok_optimized?: boolean | null
+          media_type?: string | null
           original_filename: string
           processed_image_path?: string | null
+          tiktok_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           caption?: string | null
+          content_type?: string | null
           created_at?: string | null
+          description?: string | null
           file_path?: string
           id?: string
+          instagram_enabled?: boolean | null
           is_tiktok_optimized?: boolean | null
+          media_type?: string | null
           original_filename?: string
           processed_image_path?: string | null
+          tiktok_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -150,6 +165,7 @@ export type Database = {
           instagram_user_id: string | null
           instagram_username: string | null
           remaining_credits: number
+          role: string
           tiktok_access_token: string | null
           tiktok_avatar_url: string | null
           tiktok_connected: boolean | null
@@ -177,6 +193,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -204,6 +221,7 @@ export type Database = {
           instagram_user_id?: string | null
           instagram_username?: string | null
           remaining_credits?: number
+          role?: string
           tiktok_access_token?: string | null
           tiktok_avatar_url?: string | null
           tiktok_connected?: boolean | null
@@ -261,7 +279,15 @@ export type Database = {
           updated_at?: string | null
           vision?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_owner_id_profiles_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_posts: {
         Row: {
@@ -492,6 +518,23 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: undefined
       }
+      get_admin_users_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string
+          caption_credits: number
+          remaining_credits: number
+          tiktok_connected: boolean
+          instagram_connected: boolean
+          updated_at: string
+          auth_provider: string
+          restaurant_name: string
+          category: string
+          created_at: string
+          email: string
+        }[]
+      }
       get_total_credits: {
         Args: { user_id: string }
         Returns: number
@@ -558,6 +601,14 @@ export type Database = {
           success_count: number
           failed_count: number
         }[]
+      }
+      set_user_role: {
+        Args: { user_id_param: string; new_role: string }
+        Returns: undefined
+      }
+      setup_first_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       text_to_bytea: {
         Args: { data: string }
