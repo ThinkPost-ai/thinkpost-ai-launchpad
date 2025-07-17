@@ -14,6 +14,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import AccountSettings from "./pages/AccountSettings";
 import ImageUpload from "./pages/ImageUpload";
 import ProductCreation from "./pages/ProductCreation";
+import GeneralContentUpload from "./pages/GeneralContentUpload";
 import CaptionsPage from "./pages/CaptionsPage";
 import SchedulePage from "./pages/SchedulePage";
 import Privacy from "./pages/Privacy";
@@ -48,6 +49,7 @@ const App = () => {
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route path="/account-settings" element={<AccountSettings />} />
                   <Route path="/upload" element={<ProductCreation />} />
+                  <Route path="/general-content-upload" element={<GeneralContentUpload />} />
                   <Route path="/review-content" element={<CaptionsPage />} />
                   <Route path="/schedule" element={<SchedulePage />} />
                   <Route path="/privacy" element={<Privacy />} />

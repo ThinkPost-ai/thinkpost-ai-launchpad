@@ -775,6 +775,38 @@ const getTranslations = () => {
       'upload.imageOptimizedAndResized': 'Image processed for social media apps compatibility',
       'upload.tiktokOptimizedSuccess': 'TikTok-optimized images uploaded successfully!',
 
+      // Content Type Selection
+      'contentType.title': 'Select Content Type',
+      'contentType.description': 'What type of content do you want to upload?',
+      'contentType.productContent': 'Product photos or videos',
+      'contentType.generalContent': 'General photos or videos (not product-specific)',
+
+      // General Content Upload
+      'generalContent.title': 'General Content Upload',
+      'generalContent.description': 'Upload general photos or videos with content type selection',
+      'generalContent.backToDashboard': 'Back to Dashboard',
+      'generalContent.contentType': 'Content Type',
+      'generalContent.selectContentType': 'Select content type',
+      'generalContent.contentTypes.venue': 'Venue scenes',
+      'generalContent.contentTypes.busy': 'Busy moments',
+      'generalContent.contentTypes.preparation': 'Preparation process',
+      'generalContent.contentTypes.atmosphere': 'General atmosphere',
+      'generalContent.contentTypes.behindScenes': 'Behind the scenes',
+      'generalContent.contentTypes.customerMessages': 'Customer messages',
+      'generalContent.contentTypes.educational': 'Educational or awareness content',
+      'generalContent.contentTypes.events': 'Occasions or events',
+      'generalContent.contentTypes.announcement': 'Announcement or alert',
+      'generalContent.contentTypes.random': 'Random',
+      'generalContent.description.label': 'Description (Optional)',
+      'generalContent.description.placeholder': 'Describe your content...',
+      'generalContent.mediaFile': 'Media File',
+      'generalContent.mediaPreview': 'Media preview',
+      'generalContent.clickToUpload': 'Click to upload image or video',
+      'generalContent.addMore': 'Add More Content',
+      'generalContent.uploadAndGenerate': 'Upload & Generate Content',
+      'generalContent.uploading': 'Uploading & Generating...',
+      'generalContent.item': 'Item {number}',
+
     },
     ar: {
       // Common
@@ -1474,6 +1506,38 @@ const getTranslations = () => {
       'upload.imageOptimizedDescription': 'تم معالجة الصورة للتوافق مع TikTok',
       'upload.imageOptimizedAndResized': 'تم معالجة الصورة للتوافق مع برامج التواصل',
       'upload.tiktokOptimizedSuccess': 'تم رفع الصور المحسنة لـ TikTok بنجاح!',
+
+      // Content Type Selection
+      'contentType.title': 'ما نوع المحتوى الذي تريد رفعه',
+      'contentType.description': 'اختر نوع المحتوى الذي تريد رفعه',
+      'contentType.productContent': 'صور أو فيديوهات خاصة بمنتجاتك',
+      'contentType.generalContent': 'صور أو فيديوهات عامة (لا تتعلق بمنتج معين)',
+
+      // General Content Upload
+      'generalContent.title': 'رفع محتوى عام',
+      'generalContent.description': 'ارفع صور أو فيديوهات عامة مع اختيار نوع المحتوى',
+      'generalContent.backToDashboard': 'العودة للوحة التحكم',
+      'generalContent.contentType': 'اختر نوع المحتوى',
+      'generalContent.selectContentType': 'اختر نوع المحتوى',
+      'generalContent.contentTypes.venue': 'مشاهد من المكان',
+      'generalContent.contentTypes.busy': 'لحظات مزدحمة',
+      'generalContent.contentTypes.preparation': 'طريقة التحضير',
+      'generalContent.contentTypes.atmosphere': 'أجواء عامة',
+      'generalContent.contentTypes.behindScenes': 'كواليس العمل',
+      'generalContent.contentTypes.customerMessages': 'رسائل من العملاء',
+      'generalContent.contentTypes.educational': 'محتوى تعليمي أو توعوي',
+      'generalContent.contentTypes.events': 'مناسبات أو فعاليات',
+      'generalContent.contentTypes.announcement': 'إعلان أو تنبيه',
+      'generalContent.contentTypes.random': 'عشوائي',
+      'generalContent.description.label': 'الوصف (اختياري)',
+      'generalContent.description.placeholder': 'صف محتواك...',
+      'generalContent.mediaFile': 'ملف الوسائط',
+      'generalContent.mediaPreview': 'معاينة الوسائط',
+      'generalContent.clickToUpload': 'انقر لرفع صورة أو فيديو',
+      'generalContent.addMore': 'إضافة المزيد من المحتوى',
+      'generalContent.uploadAndGenerate': 'رفع وتوليد المحتوى',
+      'generalContent.uploading': 'جارٍ الرفع والتوليد...',
+      'generalContent.item': 'العنصر {number}',
 
     }
   };
