@@ -35,7 +35,6 @@ export const useCaptionData = () => {
         .from('images')
         .select('*')
         .eq('user_id', user?.id)
-        .not('caption', 'is', null)
         .order('created_at', { ascending: false });
 
       if (imagesError) throw imagesError;
@@ -85,6 +84,7 @@ export const useCaptionData = () => {
           caption: image.caption,
           description: image.description,
           content_type: image.content_type,
+          media_type: image.media_type,
           created_at: image.created_at,
           status,
           type: 'image' as const,

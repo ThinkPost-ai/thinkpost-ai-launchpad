@@ -8,7 +8,8 @@ import {
   Wand2,
   Loader2,
   X,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [currentEditId, setCurrentEditId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
@@ -178,6 +180,34 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     }
   };
 
+  const handleDelete = async (captionData: any) => {
+    setDeleting(captionData.id);
+    try {
+      const table = captionData.type === 'product' ? 'products' : 'images';
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', captionData.id);
+
+      if (error) throw error;
+
+      setCaptions(prev => prev.filter(caption => caption.id !== captionData.id));
+
+      toast({
+        title: t('toast.success'),
+        description: t('captions.deleteSuccess')
+      });
+    } catch (error) {
+      toast({
+        title: t('toast.error'),
+        description: t('captions.deleteError'),
+        variant: "destructive"
+      });
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -196,11 +226,20 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
         <Card key={`${caption.type}-${caption.id}`} className="p-4">
           {/* Image Section */}
           <div className="w-full mb-4">
-            <img
-              src={getImageUrl(caption.image_path)}
-              alt={caption.name || caption.original_filename || 'Content'}
-              className="w-full h-64 object-cover rounded-lg"
-            />
+            {caption.media_type === 'video' ? (
+              <video
+                src={getImageUrl(caption.image_path)}
+                className="w-full h-64 object-cover rounded-lg"
+                controls
+                muted
+              />
+            ) : (
+              <img
+                src={getImageUrl(caption.image_path)}
+                alt={caption.name || caption.original_filename || 'Content'}
+                className="w-full h-64 object-cover rounded-lg"
+              />
+            )}
             <div className="mt-2">
               <h3 className="font-medium text-sm text-foreground">
                 {caption.name || caption.original_filename}
@@ -261,7 +300,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
           {/* Action Buttons */}
           {currentEditId !== caption.id && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Button 
                 variant="outline"
                 onClick={() => startEditing(caption)}
@@ -298,6 +337,40 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                     <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={() => regenerateCaption(caption.id, caption.type)}>
                       {t('captions.approve')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    disabled={deleting === caption.id}
+                    className="flex items-center justify-center gap-2 py-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    {deleting === caption.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    <span className="text-sm">{t('captions.delete')}</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('captions.confirmDelete')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('captions.confirmDeleteDescription')}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => handleDelete(caption)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {t('captions.delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

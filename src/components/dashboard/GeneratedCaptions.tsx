@@ -152,6 +152,10 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     ));
   };
 
+  const handleCaptionDelete = (id: string, type: 'image' | 'product') => {
+    setCaptions(prev => prev.filter(caption => caption.id !== id));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -208,6 +212,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                       caption={caption}
                       onCaptionUpdate={handleCaptionUpdate}
                       onRegenerateCaption={regenerateCaption}
+                      onDeleteCaption={handleCaptionDelete}
                       generatingCaption={generatingCaption}
                       userCredits={userCredits}
                     />

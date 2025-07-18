@@ -15,6 +15,7 @@ interface Image {
   original_filename: string;
   caption?: string;
   created_at: string;
+  media_type?: string; // For video vs image detection ('photo' | 'video')
 }
 
 const ImageGallery = () => {
@@ -239,11 +240,19 @@ const ImageGallery = () => {
                       setMealName('');
                     }}
                   >
-                    <img
-                      src={getImageUrl(image.file_path)}
-                      alt={image.original_filename}
-                      className="w-full h-48 object-cover"
-                    />
+                    {image.media_type === 'video' ? (
+                      <video
+                        src={getImageUrl(image.file_path)}
+                        className="w-full h-48 object-cover"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={getImageUrl(image.file_path)}
+                        alt={image.original_filename}
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all" />
                     {image.caption && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
@@ -276,11 +285,20 @@ const ImageGallery = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <img
-                      src={getImageUrl(selectedImage.file_path)}
-                      alt={selectedImage.original_filename}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                    {selectedImage.media_type === 'video' ? (
+                      <video
+                        src={getImageUrl(selectedImage.file_path)}
+                        className="w-full h-48 object-cover rounded-lg"
+                        controls
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={getImageUrl(selectedImage.file_path)}
+                        alt={selectedImage.original_filename}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    )}
                     
                     <div className="space-y-2">
                       <label className="text-sm font-medium">اسم الوجبة (اختياري)</label>

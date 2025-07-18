@@ -9,16 +9,30 @@ import {
   Wand2,
   Loader2,
   X,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CaptionData } from './types';
+import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CaptionTableRowProps {
   caption: CaptionData;
   onCaptionUpdate: (id: string, newCaption: string) => void;
   onRegenerateCaption: (itemId: string, itemType: 'image' | 'product') => void;
+  onDeleteCaption: (itemId: string, itemType: 'image' | 'product') => void;
   generatingCaption: string | null;
   userCredits: number;
 }
@@ -27,12 +41,15 @@ const CaptionTableRow = ({
   caption, 
   onCaptionUpdate, 
   onRegenerateCaption,
+  onDeleteCaption,
   generatingCaption,
   userCredits
 }: CaptionTableRowProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
@@ -63,17 +80,45 @@ const CaptionTableRow = ({
       onCaptionUpdate(caption.id, editingCaption);
 
       toast({
-        title: "Success",
-        description: "Caption updated successfully"
+        title: t('toast.success'),
+        description: t('captions.updateSuccess')
       });
 
       cancelEditing();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update caption",
+        title: t('toast.error'),
+        description: t('captions.updateError'),
         variant: "destructive"
       });
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const table = caption.type === 'product' ? 'products' : 'images';
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', caption.id);
+
+      if (error) throw error;
+
+      onDeleteCaption(caption.id, caption.type);
+
+      toast({
+        title: t('toast.success'),
+        description: t('captions.deleteSuccess')
+      });
+    } catch (error) {
+      toast({
+        title: t('toast.error'),
+        description: t('captions.deleteError'),
+        variant: "destructive"
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -81,11 +126,19 @@ const CaptionTableRow = ({
     <TableRow>
       <TableCell className="text-center">
         <div className="flex items-center gap-3 justify-center">
-          <img
-            src={getImageUrl(caption.image_path)}
-            alt={caption.name || caption.original_filename || 'Content'}
-            className="h-12 w-12 object-cover rounded-md"
-          />
+          {caption.media_type === 'video' ? (
+            <video
+              src={getImageUrl(caption.image_path)}
+              className="h-12 w-12 object-cover rounded-md"
+              muted
+            />
+          ) : (
+            <img
+              src={getImageUrl(caption.image_path)}
+              alt={caption.name || caption.original_filename || 'Content'}
+              className="h-12 w-12 object-cover rounded-md"
+            />
+          )}
           <div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium text-deep-blue dark:text-white">
@@ -137,7 +190,7 @@ const CaptionTableRow = ({
               </p>
             ) : (
               <span className="text-muted-foreground italic">
-                No caption generated yet
+                {t('captions.noCaption')}
               </span>
             )}
           </div>
@@ -158,7 +211,7 @@ const CaptionTableRow = ({
             variant="outline"
             onClick={() => onRegenerateCaption(caption.id, caption.type)}
             disabled={generatingCaption === caption.id || userCredits <= 0}
-            title={userCredits <= 0 ? "No caption credits remaining" : "Regenerate caption"}
+            title={userCredits <= 0 ? t('captions.noCredits') : t('captions.regenerateContent')}
           >
             {generatingCaption === caption.id ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -166,6 +219,39 @@ const CaptionTableRow = ({
               <Wand2 className="h-3 w-3" />
             )}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="outline"
+                disabled={deleting}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                {deleting ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('captions.confirmDelete')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('captions.confirmDeleteDescription')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {t('captions.delete')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </TableCell>
     </TableRow>

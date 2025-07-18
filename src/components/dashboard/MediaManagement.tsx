@@ -31,6 +31,7 @@ interface MediaItem {
   caption?: string;
   created_at: string;
   type: 'image' | 'product';
+  media_type?: string; // For video vs image detection ('photo' | 'video')
 }
 
 const MediaManagement = () => {
@@ -93,7 +94,8 @@ const MediaManagement = () => {
         original_filename: image.original_filename,
         caption: image.caption,
         created_at: image.created_at,
-        type: 'image' as const
+        type: 'image' as const,
+        media_type: image.media_type // Assuming media_type is stored in the image table
       }));
 
       const transformedProducts = (products || []).map(product => ({
@@ -351,15 +353,27 @@ const MediaManagement = () => {
                     </div>
                   )}
                   
-                  <img
-                    src={getImageUrl(item.file_path)}
-                    alt={item.name || item.original_filename || 'Media'}
-                    className={
-                      viewMode === 'grid'
-                        ? 'h-full w-full object-cover transition-transform group-hover:scale-105'
-                        : 'h-16 w-16 object-cover rounded-md'
-                    }
-                  />
+                  {item.media_type === 'video' ? (
+                    <video
+                      src={getImageUrl(item.file_path)}
+                      className={
+                        viewMode === 'grid'
+                          ? 'h-full w-full object-cover transition-transform group-hover:scale-105'
+                          : 'h-16 w-16 object-cover rounded-md'
+                      }
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={getImageUrl(item.file_path)}
+                      alt={item.name || item.original_filename || 'Media'}
+                      className={
+                        viewMode === 'grid'
+                          ? 'h-full w-full object-cover transition-transform group-hover:scale-105'
+                          : 'h-16 w-16 object-cover rounded-md'
+                      }
+                    />
+                  )}
                   {viewMode === 'grid' ? (
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <div className="text-white text-center p-2">

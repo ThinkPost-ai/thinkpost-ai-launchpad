@@ -143,6 +143,7 @@ const getTranslations = () => {
       
       // Navigation
       'navigation.backToDashboard': 'Back to Dashboard',
+      'navigation.backToPreviousStep': 'Back to Previous Step',
       
       // Hero
       'hero.badge': 'AI-Powered Content Generation',
@@ -417,7 +418,7 @@ const getTranslations = () => {
       // Product Image Upload
       'productImage.productImage': 'Product Image',
       'productImage.productPreview': 'Product preview',
-      'productImage.clickToUpload': 'Click to upload image',
+      'productImage.clickToUpload': 'Click to upload image or video',
       
       // Product Actions
       'productActions.addAnother': 'Add Another Product',
@@ -522,6 +523,11 @@ const getTranslations = () => {
       'captions.noCreditsDescription': 'You have 0 caption credits remaining. You\'ve reached your monthly limit.',
       'captions.addMore': 'Add More Content',
       'captions.schedule': 'Move to Post Scheduling',
+      'captions.delete': 'Delete',
+      'captions.confirmDelete': 'Delete Content?',
+      'captions.confirmDeleteDescription': 'This action cannot be undone. This will permanently delete this content and its caption.',
+      'captions.deleteSuccess': 'Content deleted successfully',
+      'captions.deleteError': 'Failed to delete content',
 
       // Table Headers
       'table.content': 'Content',
@@ -876,6 +882,7 @@ const getTranslations = () => {
       
       // Navigation
       'navigation.backToDashboard': 'العودة للوحة التحكم',
+      'navigation.backToPreviousStep': 'العودة للخطوة السابقة',
       
       // Hero
       'hero.badge': 'إنتاج محتوى بالذكاء الاصطناعي',
@@ -1150,7 +1157,7 @@ const getTranslations = () => {
       // Product Image Upload
       'productImage.productImage': 'صورة المنتج',
       'productImage.productPreview': 'معاينة المنتج',
-      'productImage.clickToUpload': 'انقر لرفع الصورة',
+      'productImage.clickToUpload': 'انقر لرفع صورة أو فيديو',
       
       // Product Actions
       'productActions.addAnother': 'إضافة منتج آخر',
@@ -1255,6 +1262,11 @@ const getTranslations = () => {
       'captions.noCreditsDescription': 'لا يوجد لديك رصيد كافي لتوليد المحتوى. لقد وصلت للحد الشهري.',
       'captions.addMore': 'إضافة المزيد من المحتوى',
       'captions.schedule': 'الانتقال لجدولة المنشورات',
+      'captions.delete': 'حذف',
+      'captions.confirmDelete': 'حذف المحتوى؟',
+      'captions.confirmDeleteDescription': 'هذه العملية غير قابلة للتراجع. سيتم حذف المحتوى والتسميات التوضيحية بشكل دائم.',
+      'captions.deleteSuccess': 'تم حذف المحتوى بنجاح',
+      'captions.deleteError': 'فشل حذف المحتوى',
 
       // Table Headers
       'table.content': 'المنتج',

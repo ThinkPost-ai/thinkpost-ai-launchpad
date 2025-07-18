@@ -11,6 +11,7 @@ export interface CaptionData {
   type: 'image' | 'product';
   is_new?: boolean;
   content_type?: string; // For general content categorization
+  media_type?: string; // For video vs image detection ('photo' | 'video')
   social_stats?: {
     instagram_views?: number;
     instagram_likes?: number;

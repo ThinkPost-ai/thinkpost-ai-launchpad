@@ -67,8 +67,8 @@ const SchedulePage = () => {
       <DashboardHeader restaurant={restaurant} />
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* Back to Dashboard Button */}
-        <div className="mb-6">
+        {/* Back Navigation Buttons */}
+        <div className="mb-6 flex gap-4">
           <Button
             variant="ghost"
             onClick={() => navigate('/user-dashboard')}
@@ -76,6 +76,14 @@ const SchedulePage = () => {
           >
             <ArrowLeft className="h-4 w-4" />
             {t('navigation.backToDashboard')}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/review-content')}
+            className="flex items-center gap-2 text-deep-blue dark:text-white hover:bg-deep-blue/10 dark:hover:bg-white/10"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('navigation.backToPreviousStep')}
           </Button>
         </div>
 

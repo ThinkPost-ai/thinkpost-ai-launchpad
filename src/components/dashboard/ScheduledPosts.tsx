@@ -83,6 +83,7 @@ interface ScheduledPost {
   image_url?: string;
   video_path?: string;
   approved_at?: string | null;
+  media_type?: string; // For video vs image detection ('photo' | 'video')
   tiktok_settings?: {
     enabled: boolean;
     privacyLevel: string;
@@ -148,7 +149,7 @@ const ScheduledPosts = () => {
             tiktok_your_brand,
             tiktok_branded_content
           ),
-          images(file_path)
+          images(file_path, media_type)
         `)
         .eq('user_id', user?.id)
         .order('scheduled_date', { ascending: true });
@@ -169,6 +170,7 @@ const ScheduledPosts = () => {
         image_url: post.image_url,
         video_path: post.video_path,
         approved_at: post.approved_at,
+        media_type: post.media_type || post.images?.media_type || getMediaTypeFromPath(post.products?.image_path || post.images?.file_path || ''), // Include media_type from database or detect from path
         // Include TikTok settings if available
         tiktok_settings: post.products ? {
           enabled: post.products.tiktok_enabled,
@@ -904,11 +906,19 @@ const ScheduledPosts = () => {
                            <div key={post.id} className="p-4 border rounded-lg">
                              <div className="flex items-start gap-4 mb-3">
                                {post.image_path && (
-                                 <img
-                                   src={getImageUrl(post.image_path)}
-                                   alt="Scheduled post"
-                                   className="h-16 w-16 object-cover rounded-md flex-shrink-0"
-                                 />
+                                 post.media_type === 'video' ? (
+                                   <video
+                                     src={getImageUrl(post.image_path)}
+                                     className="h-16 w-16 object-cover rounded-md flex-shrink-0"
+                                     muted
+                                   />
+                                 ) : (
+                                   <img
+                                     src={getImageUrl(post.image_path)}
+                                     alt="Scheduled post"
+                                     className="h-16 w-16 object-cover rounded-md flex-shrink-0"
+                                   />
+                                 )
                                )}
                                <div className="flex-1 min-w-0">
                                  <p className="text-sm text-right mb-2" dir="rtl">

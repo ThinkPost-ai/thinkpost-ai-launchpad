@@ -119,47 +119,11 @@ export const useProductManagement = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      try {
-        // Process image for TikTok compatibility
-        const processedResult = await processImageForTikTok(file);
-        const processedFile = processedResult.file;
-        const imageUrl = URL.createObjectURL(processedFile);
-        
-        setProducts(prevProducts => {
-          const updatedProducts = prevProducts.map((product, i) => {
-            if (i === index) {
-              return { 
-                ...product, 
-                image: processedFile,
-                imagePreview: imageUrl
-              };
-            }
-            return product;
-          });
-          return updatedProducts;
-        });
-
-        // Show processing feedback if image was optimized
-        if (processedResult.wasProcessed) {
-          const descriptionKey = processedResult.originalSize.width > processedResult.processedSize.width 
-            ? 'upload.imageOptimizedAndResized' 
-            : 'upload.imageOptimizedDescription';
-          
-          toast({
-            title: t('upload.imageOptimized'),
-            description: t(descriptionKey),
-            duration: 3000,
-          });
-        }
-      } catch (error) {
-        console.error('Error processing image:', error);
-        toast({
-          title: t('upload.processingError'),
-          description: "Could not process image. Using original file.",
-          variant: "destructive"
-        });
-        
-        // Fall back to original file if processing fails
+      // Check if it's a video file - don't process videos, just use them directly
+      const isVideo = file.type.startsWith('video/');
+      
+      if (isVideo) {
+        // For videos, just create preview and use original file
         const imageUrl = URL.createObjectURL(file);
         setProducts(prevProducts => {
           const updatedProducts = prevProducts.map((product, i) => {
@@ -174,6 +138,63 @@ export const useProductManagement = () => {
           });
           return updatedProducts;
         });
+      } else {
+        // For images, process them for TikTok compatibility
+        try {
+          const processedResult = await processImageForTikTok(file);
+          const processedFile = processedResult.file;
+          const imageUrl = URL.createObjectURL(processedFile);
+          
+          setProducts(prevProducts => {
+            const updatedProducts = prevProducts.map((product, i) => {
+              if (i === index) {
+                return { 
+                  ...product, 
+                  image: processedFile,
+                  imagePreview: imageUrl
+                };
+              }
+              return product;
+            });
+            return updatedProducts;
+          });
+
+          // Show processing feedback if image was optimized
+          if (processedResult.wasProcessed) {
+            const descriptionKey = processedResult.originalSize.width > processedResult.processedSize.width 
+              ? 'upload.imageOptimizedAndResized' 
+              : 'upload.imageOptimizedDescription';
+            
+            toast({
+              title: t('upload.imageOptimized'),
+              description: t(descriptionKey),
+              duration: 3000,
+            });
+          }
+        } catch (error) {
+          console.error('Error processing image:', error);
+          toast({
+            title: t('upload.processingError'),
+            description: "Could not process image. Using original file.",
+            variant: "destructive"
+          });
+          
+          // Fall back to original file if processing fails
+          const imageUrl = URL.createObjectURL(file);
+          setProducts(prevProducts => {
+            const updatedProducts = prevProducts.map((product, i) => {
+              if (i === index) {
+                return { 
+                  ...product, 
+                  image: file,
+                  imagePreview: imageUrl
+                };
+              }
+              return product;
+            });
+            return updatedProducts;
+          });
+        }
       }
     }
   }, [toast, t]);
@@ -281,6 +302,9 @@ export const useProductManagement = () => {
         title: "Success!",
         description: `${savedProducts.length} product(s) saved successfully`
       });
+
+      // Navigate to review content page
+      navigate('/review-content');
 
       // Reset products to initial state
       setProducts([{

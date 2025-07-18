@@ -234,6 +234,7 @@ const ProductCard = ({
                   imagePreview={product.imagePreview}
                   onImageSelect={onImageSelect}
                   onRemoveImage={onRemoveImage}
+                  file={product.image}
                 />
               </div>
 
