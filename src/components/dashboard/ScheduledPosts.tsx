@@ -206,23 +206,6 @@ const ScheduledPosts = () => {
   };
 
   const fetchMediaItems = async (): Promise<MediaItem[]> => {
-    // First, fetch all posted content to exclude from scheduling
-    const { data: postedPosts, error: postedError } = await supabase
-      .from('scheduled_posts')
-      .select('product_id, image_id')
-      .eq('user_id', user?.id)
-      .eq('status', 'posted');
-
-    if (postedError) throw postedError;
-
-    // Create sets of posted IDs for quick lookup
-    const postedProductIds = new Set(
-      postedPosts?.filter(p => p.product_id).map(p => p.product_id) || []
-    );
-    const postedImageIds = new Set(
-      postedPosts?.filter(p => p.image_id).map(p => p.image_id) || []
-    );
-
     // Fetch products with captions
     const { data: products, error: productsError } = await supabase
       .from('products')
@@ -241,21 +224,15 @@ const ScheduledPosts = () => {
 
     if (imagesError) throw imagesError;
 
-    // Filter out products that have already been posted
-    const availableProducts = (products || []).filter(p => !postedProductIds.has(p.id));
-    
-    // Filter out images that have already been posted
-    const availableImages = (images || []).filter(i => !postedImageIds.has(i.id));
-
     const mediaItems: MediaItem[] = [
-      ...availableProducts.map(p => ({
+      ...(products || []).map(p => ({
         id: p.id,
         file_path: p.image_path,
         caption: p.caption,
         type: 'product' as const,
         name: p.name
       })),
-      ...availableImages.map(i => ({
+      ...(images || []).map(i => ({
         id: i.id,
         file_path: i.file_path,
         caption: i.caption,
@@ -263,9 +240,6 @@ const ScheduledPosts = () => {
         name: i.original_filename
       }))
     ];
-
-    console.log(`Scheduling: Found ${products?.length || 0} total products, ${availableProducts.length} available for scheduling`);
-    console.log(`Scheduling: Found ${images?.length || 0} total images, ${availableImages.length} available for scheduling`);
 
     return mediaItems.filter(item => item.caption && item.file_path);
   };
@@ -384,24 +358,9 @@ const ScheduledPosts = () => {
       const mediaItems = await fetchMediaItems();
 
       if (mediaItems.length === 0) {
-        // Check if user has any content at all vs. all content already posted
-        const { data: allProducts } = await supabase
-          .from('products')
-          .select('id')
-          .eq('user_id', user?.id)
-          .not('caption', 'is', null);
-        
-        const { data: allImages } = await supabase
-          .from('images')
-          .select('id')
-          .eq('user_id', user?.id)
-          .not('caption', 'is', null);
-
-        const hasAnyContent = (allProducts?.length || 0) + (allImages?.length || 0) > 0;
-
         toast({
           title: t('toast.error'),
-          description: hasAnyContent ? t('schedule.noUnpostedContent') : t('schedule.needContent'),
+          description: t('schedule.needContent'),
           variant: "destructive"
         });
         return;
@@ -432,7 +391,7 @@ const ScheduledPosts = () => {
 
       toast({
         title: t('toast.success'),
-        description: `${schedule.length} ${t('schedule.tikTokScheduled')} (${mediaItems.length} unposted products/images)`,
+        description: `${schedule.length} ${t('schedule.tikTokScheduled')}`,
       });
 
       await fetchScheduledPosts();
