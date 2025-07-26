@@ -115,10 +115,8 @@ const ProductCreation = () => {
 
           <ProductCreationActions
             onAddProduct={addProduct}
-            onSaveProductsOnly={saveProductsOnly}
-            onSaveProductsWithCaptions={saveProductsWithCaptions}
-            saving={saving}
-            generatingCaptions={generatingCaptions}
+            onSaveProducts={saveProductsWithCaptions}
+            saving={saving || generatingCaptions}
             isFormValid={isFormValid}
           />
         </div>

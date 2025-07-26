@@ -4,19 +4,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductCreationActionsProps {
   onAddProduct: () => void;
-  onSaveProductsOnly: () => void;
-  onSaveProductsWithCaptions: () => void;
+  onSaveProducts: () => void;
   saving: boolean;
-  generatingCaptions: boolean;
   isFormValid: boolean;
 }
 
 const ProductCreationActions = ({
   onAddProduct,
-  onSaveProductsOnly,
-  onSaveProductsWithCaptions,
+  onSaveProducts,
   saving,
-  generatingCaptions,
   isFormValid
 }: ProductCreationActionsProps) => {
   const { t } = useLanguage();
@@ -32,37 +28,20 @@ const ProductCreationActions = ({
         {t('productActions.addAnother')}
       </Button>
 
-      <div className="flex gap-4">
-        <Button
-          onClick={onSaveProductsOnly}
-          disabled={saving || generatingCaptions || !isFormValid}
-          variant="outline"
-          className="flex-1"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('productActions.saving')}
-            </>
-          ) : (
-            t('productActions.save')
-          )}
-        </Button>
-        <Button
-          onClick={onSaveProductsWithCaptions}
-          disabled={saving || generatingCaptions || !isFormValid}
-          className="bg-gradient-primary hover:opacity-90 flex-1"
-        >
-          {generatingCaptions ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('productActions.uploadingGenerating')}
-            </>
-          ) : (
-            t('productActions.saveAndGenerate')
-          )}
-        </Button>
-      </div>
+      <Button
+        onClick={onSaveProducts}
+        disabled={saving || !isFormValid}
+        className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+      >
+        {saving ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {t('productActions.saving')}
+          </>
+        ) : (
+          t('productActions.save')
+        )}
+      </Button>
     </div>
   );
 };

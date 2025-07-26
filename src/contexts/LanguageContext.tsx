@@ -405,6 +405,11 @@ const getTranslations = () => {
       'upload.complianceMessageBranded': 'By posting, you agree to TikTok\'s {brandedContentPolicy}',
       'upload.complianceMessageBrand': 'By posting, you agree to TikTok\'s {musicUsageConfirmation}',
       'upload.connected': 'Connected',
+      'upload.contentSettings': 'Content Settings',
+      'upload.generateCaption': 'Generate Caption',
+      'upload.generateCaptionDescription': 'Automatically generate AI-powered caption for this product',
+      'upload.enhanceImage': 'Enhance Image',
+      'upload.enhanceImageDescription': 'Improve image quality and optimize for social media',
       
       // Product Form
       'productForm.productName': 'Product Name',
@@ -1145,6 +1150,11 @@ const getTranslations = () => {
       'upload.complianceMessageBranded': 'بالنشر، فإنك توافق على {brandedContentPolicy} الخاصة بـ TikTok',
       'upload.complianceMessageBrand': 'بالنشر، فإنك توافق على {musicUsageConfirmation} الخاصة بـ TikTok',
       'upload.connected': 'متصل',
+      'upload.contentSettings': 'إعدادات المحتوى',
+      'upload.generateCaption': 'توليد المحتوى',
+      'upload.generateCaptionDescription': 'توليد محتوى تلقائياً بالذكاء الاصطناعي لهذا المنتج',
+      'upload.enhanceImage': 'تحسين الصورة',
+      'upload.enhanceImageDescription': 'تحسين جودة الصورة وتحسينها لشبكات التواصل الاجتماعي',
       
       // Product Form
       'productForm.productName': 'اسم المنتج',

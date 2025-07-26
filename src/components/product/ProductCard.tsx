@@ -35,6 +35,8 @@ interface Product {
   imagePreview: string | null;
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
+  generateCaption: boolean;
+  enhanceImage: boolean;
   tiktokSettings: {
     privacyLevel: 'public' | 'friends' | 'only_me';
     allowComments: boolean;
@@ -247,8 +249,52 @@ const ProductCard = ({
             </div>
           </div>
 
-          {/* Right Section - Social Media Apps */}
+          {/* Right Section - Content Settings */}
           <div className="space-y-4">
+            {/* Content Generation Toggles */}
+            <div>
+              <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-4">
+                {t('upload.contentSettings')}
+              </h3>
+              <div className="space-y-3 mb-6">
+                {/* Generate Caption Toggle */}
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                  <div>
+                    <Label className="text-base font-medium">
+                      {t('upload.generateCaption')}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('upload.generateCaptionDescription')}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={product.generateCaption}
+                    onCheckedChange={(checked) => 
+                      onUpdateProduct(index, 'generateCaption', checked)
+                    }
+                  />
+                </div>
+
+                {/* Enhance Image Toggle */}
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                  <div>
+                    <Label className="text-base font-medium">
+                      {t('upload.enhanceImage')}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('upload.enhanceImageDescription')}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={product.enhanceImage}
+                    onCheckedChange={(checked) => 
+                      onUpdateProduct(index, 'enhanceImage', checked)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
               <h3 className="text-lg font-semibold text-deep-blue dark:text-white mb-4 flex items-center gap-2">
                 {t('upload.socialMediaApps')}

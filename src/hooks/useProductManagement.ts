@@ -26,6 +26,8 @@ interface Product {
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
   tiktokSettings: TikTokSettings;
+  generateCaption: boolean;
+  enhanceImage: boolean;
   is_new?: boolean;
 }
 
@@ -46,6 +48,8 @@ export const useProductManagement = () => {
       imagePreview: null,
       tiktokEnabled: false,
       instagramEnabled: false,
+      generateCaption: true,
+      enhanceImage: false,
       tiktokSettings: {
         privacyLevel: 'public',
         allowComments: true,
@@ -68,6 +72,8 @@ export const useProductManagement = () => {
       imagePreview: null,
       tiktokEnabled: false,
       instagramEnabled: false,
+      generateCaption: true,
+      enhanceImage: false,
       tiktokSettings: {
         privacyLevel: 'public',
         allowComments: true,
@@ -315,6 +321,8 @@ export const useProductManagement = () => {
         imagePreview: null,
         tiktokEnabled: false,
         instagramEnabled: false,
+        generateCaption: true,
+        enhanceImage: false,
         tiktokSettings: {
           privacyLevel: 'public',
           allowComments: true,
@@ -397,7 +405,15 @@ export const useProductManagement = () => {
 
       const savedProducts = await Promise.all(productPromises);
 
-      const captionPromises = savedProducts.map(async (product) => {
+      const captionPromises = savedProducts.map(async (product, index) => {
+        // Check if caption generation is enabled for this product
+        const shouldGenerateCaption = products[index].generateCaption;
+        
+        if (!shouldGenerateCaption) {
+          console.log(`Skipping caption generation for product: ${product.name} (generateCaption is OFF)`);
+          return product;
+        }
+
         try {
           console.log(`Generating caption for product: ${product.name}`, {
             productId: product.id,
@@ -481,11 +497,17 @@ export const useProductManagement = () => {
         }
       });
 
-      await Promise.all(captionPromises);
+      const processedProducts = await Promise.all(captionPromises);
+      
+      // Count products with captions generated
+      const productsWithCaptions = processedProducts.filter(product => product.caption).length;
+      const productsEnabled = products.filter(product => product.generateCaption).length;
 
       toast({
         title: t('toast.success'),
-        description: `${products.length} ${t('product.savedWithCaptions')}`
+        description: productsWithCaptions > 0 
+          ? `${products.length} products saved, ${productsWithCaptions} captions generated`
+          : `${products.length} products saved`
       });
 
       // Redirect to review content page
