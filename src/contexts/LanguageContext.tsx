@@ -1049,7 +1049,7 @@ const getTranslations = () => {
       
       // Quick Actions
       'dashboard.quickActions.title': 'ابدأ هنا',
-      'dashboard.quickActions.addProducts': 'ابدأ وأضف منتجات',
+      'dashboard.quickActions.addProducts': 'ابدأ برفع الصور أو الفيديوهات',
       'dashboard.quickActions.viewCaptions': 'عرض المحتويات التي تم توليدها',
       'dashboard.quickActions.schedulePost': 'جدولة منشور',
       'dashboard.quickActions.workflowDescription': 'الطريقة باختصار: إضافة منتجات ← توليد محتوى ← جدولة منشورات',
