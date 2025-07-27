@@ -503,11 +503,89 @@ export const useProductManagement = () => {
       const productsWithCaptions = processedProducts.filter(product => product.caption).length;
       const productsEnabled = products.filter(product => product.generateCaption).length;
 
+      // Start image enhancement for products with enhanceImage enabled
+      const enhancementCount = products.filter(product => product.enhanceImage).length;
+      
+      if (enhancementCount > 0) {
+        console.log(`${enhancementCount} products marked for enhancement`);
+        
+        // Store enhancement intent in localStorage for UI tracking
+        const enhancingProducts = savedProducts
+          .filter((_, index) => products[index].enhanceImage)
+          .map(product => product.id);
+        
+        if (enhancingProducts.length > 0) {
+          const existingEnhancing = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+          const allEnhancing = [...existingEnhancing, ...enhancingProducts];
+          localStorage.setItem('enhancingProducts', JSON.stringify(allEnhancing));
+          console.log('Stored enhancing products in localStorage:', enhancingProducts);
+        }
+
+        // Try to process enhancement - gracefully handle missing columns
+        const enhancementPromises = savedProducts.map(async (product, index) => {
+          if (!products[index].enhanceImage) {
+            return;
+          }
+
+          try {
+            console.log(`Starting image enhancement for product: ${product.name}`);
+            
+            const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${product.image_path}`;
+            
+            // Try to update product status to processing (gracefully handle missing columns)
+            try {
+              await supabase
+                .from('products')
+                .update({ 
+                  image_enhancement_status: 'processing',
+                  enhanced_image_path: null 
+                } as any)
+                .eq('id', product.id);
+              console.log(`Updated status to processing for ${product.name}`);
+            } catch (updateError: any) {
+              if (updateError.message?.includes('enhanced_image_path') || updateError.message?.includes('image_enhancement_status')) {
+                console.log(`Enhancement columns not available yet for ${product.name} - processing anyway`);
+              } else {
+                throw updateError;
+              }
+            }
+            
+            // Call image enhancement function
+            supabase.functions.invoke('enhance-image', {
+              body: {
+                productId: product.id,
+                imageUrl: imageUrl,
+                productName: product.name,
+                brandName: null
+              }
+            }).then(({ data, error }) => {
+              if (error) {
+                console.error(`Image enhancement failed for ${product.name}:`, error);
+              } else {
+                console.log(`Image enhancement started for ${product.name}`);
+              }
+            });
+          } catch (error) {
+            console.error(`Failed to start image enhancement for ${product.name}:`, error);
+          }
+        });
+        
+        // Don't wait for enhancement promises to complete
+        Promise.all(enhancementPromises).catch(error => {
+          console.log('Some enhancements may have failed:', error);
+        });
+      }
+
+      // Don't wait for image enhancement - let it process in background
+      // Promise.all(enhancementPromises); // Commented out until migration is applied
+
       toast({
         title: t('toast.success'),
-        description: productsWithCaptions > 0 
-          ? `${products.length} products saved, ${productsWithCaptions} captions generated`
-          : `${products.length} products saved`
+        description: enhancementCount > 0 
+          ? `${products.length} products saved, ${productsWithCaptions} captions generated, ${enhancementCount} images enhancing...`
+          : productsWithCaptions > 0 
+            ? `${products.length} products saved, ${productsWithCaptions} captions generated`
+            : `${products.length} products saved`
       });
 
       // Redirect to review content page

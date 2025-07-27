@@ -1,6 +1,8 @@
 export interface CaptionData {
   id: string;
   image_path: string;
+  enhanced_image_path?: string;
+  image_enhancement_status?: 'none' | 'processing' | 'completed' | 'failed';
   original_filename?: string;
   name?: string;
   price?: number;

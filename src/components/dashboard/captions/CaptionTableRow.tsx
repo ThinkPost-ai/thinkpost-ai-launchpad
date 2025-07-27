@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,8 @@ import {
   Loader2,
   X,
   Check,
-  Trash2
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,10 +51,62 @@ const CaptionTableRow = ({
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [enhancementStatus, setEnhancementStatus] = useState(caption.image_enhancement_status || 'none');
+  const [enhancedImagePath, setEnhancedImagePath] = useState(caption.enhanced_image_path || null);
+  const [isMarkedForEnhancement, setIsMarkedForEnhancement] = useState(() => {
+    const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+    return enhancingProducts.includes(caption.id);
+  });
+  
+  const shouldShowEnhancing = enhancementStatus === 'processing' || 
+    (isMarkedForEnhancement && enhancementStatus === 'none' && caption.type === 'product');
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
+
+  // Poll for enhancement status updates for processing images
+  useEffect(() => {
+    if (shouldShowEnhancing && caption.type === 'product') {
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', caption.id)
+            .single();
+
+          if (error) {
+            console.error('Error polling enhancement status:', error);
+            return;
+          }
+
+          // Check if enhancement columns exist and update accordingly
+          const status = (data as any).image_enhancement_status || 'none';
+          const path = (data as any).enhanced_image_path || null;
+          
+          if (status !== 'processing' && status !== 'none') {
+            setEnhancementStatus(status);
+            setEnhancedImagePath(path);
+            
+            // Remove from localStorage when enhancement completes
+            const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+            const updatedList = enhancingProducts.filter((id: string) => id !== caption.id);
+            localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+            setIsMarkedForEnhancement(false);
+            
+            clearInterval(pollInterval);
+          } else if (status === 'processing') {
+            setEnhancementStatus(status);
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+        }
+      }, 3000); // Poll every 3 seconds
+
+      return () => clearInterval(pollInterval);
+    }
+  }, [shouldShowEnhancing, caption.id, caption.type]);
 
   const startEditing = () => {
     setEditingCaption(caption.caption || '');
@@ -126,19 +179,40 @@ const CaptionTableRow = ({
     <TableRow>
       <TableCell className="text-center">
         <div className="flex items-center gap-3 justify-center">
-          {caption.media_type === 'video' ? (
-            <video
-              src={getImageUrl(caption.image_path)}
-              className="h-12 w-12 object-cover rounded-md"
-              muted
-            />
-          ) : (
-            <img
-              src={getImageUrl(caption.image_path)}
-              alt={caption.name || caption.original_filename || 'Content'}
-              className="h-12 w-12 object-cover rounded-md"
-            />
-          )}
+          <div className="relative">
+            {caption.media_type === 'video' ? (
+              <video
+                src={enhancedImagePath ? getImageUrl(enhancedImagePath) : getImageUrl(caption.image_path)}
+                className="h-12 w-12 object-cover rounded-md"
+                muted
+              />
+            ) : (
+              <img
+                src={enhancedImagePath ? getImageUrl(enhancedImagePath) : getImageUrl(caption.image_path)}
+                alt={caption.name || caption.original_filename || 'Content'}
+                className="h-12 w-12 object-cover rounded-md"
+              />
+            )}
+            
+            {/* Enhancement status indicators */}
+            {shouldShowEnhancing && (
+              <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
+                <Loader2 className="h-4 w-4 text-white animate-spin" />
+              </div>
+            )}
+            
+            {enhancementStatus === 'completed' && enhancedImagePath && (
+              <div className="absolute -top-1 -right-1">
+                <Sparkles className="h-3 w-3 text-yellow-500" />
+              </div>
+            )}
+            
+            {enhancementStatus === 'failed' && (
+              <div className="absolute -top-1 -right-1">
+                <X className="h-3 w-3 text-red-500" />
+              </div>
+            )}
+          </div>
           <div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium text-deep-blue dark:text-white">
@@ -147,6 +221,21 @@ const CaptionTableRow = ({
               {caption.is_new && caption.type === 'product' && (
                 <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs px-2 py-1">
                   New
+                </Badge>
+              )}
+              {shouldShowEnhancing && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
+                  Enhancing...
+                </Badge>
+              )}
+              {enhancementStatus === 'completed' && enhancedImagePath && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1">
+                  Enhanced
+                </Badge>
+              )}
+              {enhancementStatus === 'failed' && (
+                <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs px-2 py-1">
+                  Enhancement Failed
                 </Badge>
               )}
             </div>
