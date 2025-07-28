@@ -568,12 +568,16 @@ const ScheduledPosts = () => {
       // Check for direct video or image URLs first
       if (post.video_url) {
         finalMediaUrl = post.video_url;
+        console.log('Using video_url for posting:', post.video_url);
       } else if (post.image_url) {
         finalMediaUrl = post.image_url;
+        console.log('Using image_url for posting:', post.image_url);
       } else if (post.video_path) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.video_path}`;
+        console.log('Using video_path for posting:', post.video_path);
       } else if (post.image_path) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`;
+        console.log('Using image_path for posting (should be enhanced if available):', post.image_path);
       }
 
       if (!finalMediaUrl) {

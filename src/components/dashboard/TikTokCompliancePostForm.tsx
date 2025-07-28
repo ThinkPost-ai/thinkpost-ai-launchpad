@@ -110,6 +110,30 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
   useEffect(() => {
     fetchCreatorInfo();
     determineMediaType();
+    
+    // Debug: Log the complete post object
+    console.log('🔍 Complete post object in TikTokCompliancePostForm:', post);
+    
+    // Test if enhanced image columns exist
+    const testEnhancementColumns = async () => {
+      try {
+        console.log('Testing if enhancement columns exist...');
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, enhanced_image_path, image_enhancement_status')
+          .limit(1);
+        
+        if (error) {
+          console.log('❌ Enhancement columns do not exist or error:', error);
+        } else {
+          console.log('✅ Enhancement columns exist, sample data:', data);
+        }
+      } catch (error) {
+        console.log('❌ Error testing enhancement columns:', error);
+      }
+    };
+    
+    testEnhancementColumns();
   }, []);
 
   // Initialize form with stored TikTok settings
@@ -165,15 +189,66 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
     }
   };
 
-  const determineMediaType = () => {
+  const determineMediaType = async () => {
     if (!post.image_path) return;
     
-    const isVideo = post.image_path.toLowerCase().endsWith('.mp4') || 
-                   post.image_path.toLowerCase().endsWith('.mov') || 
-                   post.image_path.toLowerCase().endsWith('.avi');
+    console.log('=== TikTok Compliance Form Debug ===');
+    console.log('Post data:', {
+      id: post.id,
+      product_id: post.product_id,
+      image_id: post.image_id,
+      image_path: post.image_path
+    });
+    
+    // Get enhanced image path if available
+    let finalImagePath = post.image_path;
+    
+    // Check if this is a product and if it has an enhanced image
+    if (post.product_id) {
+      try {
+        console.log('Checking for enhanced image for product:', post.product_id);
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('enhanced_image_path, image_enhancement_status')
+          .eq('id', post.product_id)
+          .single();
+
+        console.log('Product enhancement data:', {
+          data: productData,
+          error: productError
+        });
+
+        if (!productError && productData) {
+          const enhancedPath = (productData as any).enhanced_image_path;
+          const enhancementStatus = (productData as any).image_enhancement_status;
+          
+          console.log('Enhancement status:', enhancementStatus);
+          console.log('Enhanced path:', enhancedPath);
+          
+          // Use enhanced image if available and completed
+          if (enhancedPath && enhancementStatus === 'completed') {
+            finalImagePath = enhancedPath;
+            console.log('✅ Using enhanced image for preview:', enhancedPath);
+          } else {
+            console.log('❌ Using original image - enhanced not available or not completed');
+          }
+        }
+      } catch (error) {
+        console.log('❌ Could not fetch enhanced image info for preview, using original:', error);
+      }
+    } else {
+      console.log('❌ No product_id found, using original image');
+    }
+    
+    console.log('Final image path for preview:', finalImagePath);
+    console.log('=====================================');
+    
+    const isVideo = finalImagePath.toLowerCase().endsWith('.mp4') || 
+                   finalImagePath.toLowerCase().endsWith('.mov') || 
+                   finalImagePath.toLowerCase().endsWith('.avi');
     
     setMediaType(isVideo ? 'video' : 'photo');
-    setMediaUrl(`https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`);
+    setMediaUrl(`https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${finalImagePath}`);
   };
 
   // Privacy level formatting
@@ -322,7 +397,57 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         description: "Uploading your content to TikTok...",
       });
       
-      const finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`;
+      console.log('=== TikTok Posting Debug ===');
+      console.log('Post data for posting:', {
+        id: post.id,
+        product_id: post.product_id,
+        image_id: post.image_id,
+        image_path: post.image_path
+      });
+      
+      // Get enhanced image path if available
+      let finalImagePath = post.image_path;
+      
+      // Check if this is a product and if it has an enhanced image
+      if (post.product_id) {
+        try {
+          console.log('Checking for enhanced image for posting, product:', post.product_id);
+          const { data: productData, error: productError } = await supabase
+            .from('products')
+            .select('enhanced_image_path, image_enhancement_status')
+            .eq('id', post.product_id)
+            .single();
+
+          console.log('Product enhancement data for posting:', {
+            data: productData,
+            error: productError
+          });
+
+          if (!productError && productData) {
+            const enhancedPath = (productData as any).enhanced_image_path;
+            const enhancementStatus = (productData as any).image_enhancement_status;
+            
+            console.log('Enhancement status for posting:', enhancementStatus);
+            console.log('Enhanced path for posting:', enhancedPath);
+            
+            // Use enhanced image if available and completed
+            if (enhancedPath && enhancementStatus === 'completed') {
+              finalImagePath = enhancedPath;
+              console.log('✅ Using enhanced image for TikTok posting:', enhancedPath);
+            } else {
+              console.log('❌ Using original image for posting - enhanced not available or not completed');
+            }
+          }
+        } catch (error) {
+          console.log('❌ Could not fetch enhanced image info for posting, using original:', error);
+        }
+      } else {
+        console.log('❌ No product_id found for posting, using original image');
+      }
+      
+      const finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${finalImagePath}`;
+      console.log('Final media URL for TikTok posting:', finalMediaUrl);
+      console.log('===========================');
       
       // Prepare the request body
       const requestBody: any = {
