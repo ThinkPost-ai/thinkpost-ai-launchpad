@@ -72,23 +72,20 @@ serve(async (req) => {
 
     // Create enhancement prompt
     const prompt = `
-Enhance this image for marketing purposes. 
+    Enhance this image for marketing purposes.
 
 INSTRUCTIONS:
-- Keep the composition focused on the ${productName || 'product'}, emphasizing luxury, calm, and modern café/restaurant vibes.
-- Improve lighting to create a warm, golden-hour glow. Sharpen the product details to make them pop.
-- Slightly blur the background to create depth of field and focus attention on the main product.
-- Keep any text written on any product in the image, especially Arabic text.
-- Be creative and add some elements to the image to make it more interesting.
-- Adjust color balance for richness and clarity while keeping the natural tones.
-- Remove any visual distractions and enhance overall image quality to make it look like a professional lifestyle or promotional photo.
-- Do not change any details of any products in the image like text and brand name or logo.
-- Do not change the logo of the brand if it is visible in the image.
-- Preserve any Arabic text or branding elements exactly as they appear.
+- The image features a ${productName || 'product'} — **do NOT change or alter any product details, including text, logos, brand names, or branding elements. Preserve all exactly as they appear, especially any Arabic text.**
+- Maintain the original composition and proportions of the product — no distortions or replacements.
+- Improve lighting to create a warm, golden-hour glow while preserving the product’s authentic colors.
+- Sharpen the product details subtly to make them stand out more crisply without exaggeration or unrealistic effects.
+- Slightly blur the background to create depth of field, focusing attention on the product, but do not add or remove objects in the background.
+- Remove any visual distractions around the product gently, without changing the product or its environment.
+- Adjust color balance and contrast for richness and clarity while keeping all tones natural and true to the original.
+- Add subtle creative elements only if they do NOT obscure or alter the product or its branding. These elements should enhance the image’s mood without distracting from the product itself.
+- The final image should look professional, clean, and appetizing for social media marketing, reflecting luxury and calm modern café/restaurant vibes.
 
 ${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
-
-Make this image look professional and appetizing for social media marketing.
 `;
 
     console.log('Using GPT-4o with DALL-E 3 function calling...');
