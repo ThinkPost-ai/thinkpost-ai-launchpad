@@ -254,8 +254,18 @@ serve(async (req) => {
       const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
       const filePath = urlParts.slice(bucketIndex + 1).join('/');
       
+      // Debug: Log the URL conversion process
+      console.log('🔧 URL Conversion Debug:');
+      console.log('  Original videoUrl:', videoUrl);
+      console.log('  Extracted filePath:', filePath);
+      console.log('  Enhanced image check:', filePath.includes('enhanced_'));
+      
       // Use verified domain with anonymous key for TikTok access
       const proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+      
+      console.log('  Final proxyImageUrl:', proxyImageUrl);
+      console.log('  Proxy URL enhanced check:', proxyImageUrl.includes('enhanced_'));
+      console.log('🔧 End URL Conversion Debug');
 
       // Build request body using TikTok's photo content posting API format
       requestBody = {
@@ -312,8 +322,18 @@ serve(async (req) => {
         const bucketIndex = urlParts.findIndex(part => part === 'restaurant-images');
         const filePath = urlParts.slice(bucketIndex + 1).join('/');
         
+        // Debug: Log the video URL conversion process
+        console.log('🔧 Video URL Conversion Debug:');
+        console.log('  Original videoUrl:', videoUrl);
+        console.log('  Extracted filePath:', filePath);
+        console.log('  Enhanced image check:', filePath.includes('enhanced_'));
+        
         // Use verified domain with anonymous key for TikTok access
         proxyVideoUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
+        
+        console.log('  Final proxyVideoUrl:', proxyVideoUrl);
+        console.log('  Proxy URL enhanced check:', proxyVideoUrl.includes('enhanced_'));
+        console.log('🔧 End Video URL Conversion Debug');
       }
       
       requestBody = {

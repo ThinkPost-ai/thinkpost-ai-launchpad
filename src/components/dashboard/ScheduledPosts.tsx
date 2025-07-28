@@ -533,6 +533,36 @@ const ScheduledPosts = () => {
       console.log('Post product_id:', post.product_id);
       console.log('Post image_id:', post.image_id);
       
+      // Additional check: If this is a product, verify enhanced image data directly from database
+      if (post.product_id) {
+        try {
+          console.log('🔍 Checking database directly for enhanced image...');
+          const { data: productCheck, error: productError } = await supabase
+            .from('products')
+            .select('id, image_path, enhanced_image_path, image_enhancement_status')
+            .eq('id', post.product_id)
+            .single();
+
+          if (!productError && productCheck) {
+            console.log('📊 Direct database check results:', {
+              original_image_path: productCheck.image_path,
+              enhanced_image_path: (productCheck as any).enhanced_image_path,
+              enhancement_status: (productCheck as any).image_enhancement_status
+            });
+            
+            if ((productCheck as any).enhanced_image_path && (productCheck as any).image_enhancement_status === 'completed') {
+              console.log('✅ Enhanced image exists but post.image_path is wrong!');
+              console.log('  Should be:', (productCheck as any).enhanced_image_path);
+              console.log('  Actually is:', post.image_path);
+            } else {
+              console.log('❌ No enhanced image found in database');
+            }
+          }
+        } catch (error) {
+          console.log('❌ Error checking database:', error);
+        }
+      }
+
       toast({
         title: "Posting to TikTok",
         description: "Uploading your content to TikTok...",
@@ -587,6 +617,45 @@ const ScheduledPosts = () => {
       // Get the media URL - check for video first, then image, then fallback to product image
       let finalMediaUrl = '';
       
+      // ENHANCED IMAGE FIX: Don't rely on post.image_path, fetch enhanced image directly
+      let actualImagePath = '';
+      
+      if (post.product_id) {
+        // For products, fetch enhanced image directly from database
+        try {
+          console.log('🔄 Fetching current enhanced image status for product:', post.product_id);
+          const { data: productData, error: productError } = await supabase
+            .from('products')
+            .select('image_path, enhanced_image_path, image_enhancement_status')
+            .eq('id', post.product_id)
+            .single();
+
+          if (!productError && productData) {
+            const enhancedPath = (productData as any).enhanced_image_path;
+            const enhancementStatus = (productData as any).image_enhancement_status;
+            
+            if (enhancedPath && enhancementStatus === 'completed') {
+              actualImagePath = enhancedPath;
+              console.log('✅ Using enhanced image for posting:', enhancedPath);
+            } else {
+              actualImagePath = productData.image_path;
+              console.log('❌ Using original image for posting:', productData.image_path);
+              console.log('   Enhancement status:', enhancementStatus);
+            }
+          } else {
+            actualImagePath = post.image_path || '';
+            console.log('❌ Could not fetch product data, using post.image_path:', actualImagePath);
+          }
+        } catch (error) {
+          actualImagePath = post.image_path || '';
+          console.log('❌ Error fetching enhanced image, using post.image_path:', actualImagePath, error);
+        }
+      } else {
+        // For regular images, use the existing path
+        actualImagePath = post.image_path || '';
+        console.log('📷 Using image path for non-product:', actualImagePath);
+      }
+      
       // Check for direct video or image URLs first
       if (post.video_url) {
         finalMediaUrl = post.video_url;
@@ -597,9 +666,13 @@ const ScheduledPosts = () => {
       } else if (post.video_path) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.video_path}`;
         console.log('Using video_path for posting:', post.video_path);
-      } else if (post.image_path) {
+      } else if (actualImagePath) {
+        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${actualImagePath}`;
+        console.log('Using actualImagePath for posting (enhanced if available):', actualImagePath);
+      } else {
+        // Fallback to original post.image_path
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.image_path}`;
-        console.log('Using image_path for posting (should be enhanced if available):', post.image_path);
+        console.log('Using fallback post.image_path for posting:', post.image_path);
       }
 
       if (!finalMediaUrl) {
