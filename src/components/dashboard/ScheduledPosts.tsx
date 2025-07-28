@@ -141,7 +141,9 @@ const ScheduledPosts = () => {
           *,
           products(
             name, 
-            image_path, 
+            image_path,
+            enhanced_image_path,
+            image_enhancement_status,
             tiktok_enabled,
             tiktok_privacy_level,
             tiktok_allow_comments,
@@ -156,31 +158,43 @@ const ScheduledPosts = () => {
 
       if (error) throw error;
 
-      const transformedPosts = data.map(post => ({
-        id: post.id,
-        product_id: post.product_id,
-        image_id: post.image_id,
-        caption: post.caption,
-        scheduled_date: post.scheduled_date,
-        platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
-        status: post.status as 'scheduled' | 'posted' | 'failed',
-        image_path: post.products?.image_path || post.images?.file_path,
-        product_name: post.products?.name,
-        video_url: post.video_url,
-        image_url: post.image_url,
-        video_path: post.video_path,
-        approved_at: post.approved_at,
-        media_type: post.media_type || post.images?.media_type || getMediaTypeFromPath(post.products?.image_path || post.images?.file_path || ''), // Include media_type from database or detect from path
-        // Include TikTok settings if available
-        tiktok_settings: post.products ? {
-          enabled: post.products.tiktok_enabled,
-          privacyLevel: post.products.tiktok_privacy_level,
-          allowComments: post.products.tiktok_allow_comments,
-          commercialContent: post.products.tiktok_commercial_content,
-          yourBrand: post.products.tiktok_your_brand,
-          brandedContent: post.products.tiktok_branded_content
-        } : null
-      }));
+      const transformedPosts = data.map(post => {
+        // Determine which image path to use (enhanced or original)
+        let imagePath = post.products?.image_path || post.images?.file_path;
+        const enhancedPath = (post.products as any)?.enhanced_image_path;
+        const enhancementStatus = (post.products as any)?.image_enhancement_status;
+        
+        // Use enhanced image if available and completed
+        if (enhancedPath && enhancementStatus === 'completed') {
+          imagePath = enhancedPath;
+        }
+
+        return {
+          id: post.id,
+          product_id: post.product_id,
+          image_id: post.image_id,
+          caption: post.caption,
+          scheduled_date: post.scheduled_date,
+          platform: post.platform as 'instagram' | 'tiktok' | 'facebook',
+          status: post.status as 'scheduled' | 'posted' | 'failed',
+          image_path: imagePath,
+          product_name: post.products?.name,
+          video_url: post.video_url,
+          image_url: post.image_url,
+          video_path: post.video_path,
+          approved_at: post.approved_at,
+          media_type: post.media_type || post.images?.media_type || getMediaTypeFromPath(imagePath || ''),
+          // Include TikTok settings if available
+          tiktok_settings: post.products ? {
+            enabled: post.products.tiktok_enabled,
+            privacyLevel: post.products.tiktok_privacy_level,
+            allowComments: post.products.tiktok_allow_comments,
+            commercialContent: post.products.tiktok_commercial_content,
+            yourBrand: post.products.tiktok_your_brand,
+            brandedContent: post.products.tiktok_branded_content
+          } : null
+        };
+      });
 
       setScheduledPosts(transformedPosts);
       
@@ -226,7 +240,7 @@ const ScheduledPosts = () => {
     // Fetch products with captions
     const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('id, name, image_path, caption')
+      .select('id, name, image_path, caption, enhanced_image_path, image_enhancement_status')
       .eq('user_id', user?.id)
       .not('caption', 'is', null);
 
@@ -248,13 +262,24 @@ const ScheduledPosts = () => {
     const availableImages = (images || []).filter(i => !postedImageIds.has(i.id));
 
     const mediaItems: MediaItem[] = [
-      ...availableProducts.map(p => ({
-        id: p.id,
-        file_path: p.image_path,
-        caption: p.caption,
-        type: 'product' as const,
-        name: p.name
-      })),
+      ...availableProducts.map(p => {
+        // Use enhanced image if available and completed
+        let filePath = p.image_path;
+        const enhancedPath = (p as any).enhanced_image_path;
+        const enhancementStatus = (p as any).image_enhancement_status;
+        
+        if (enhancedPath && enhancementStatus === 'completed') {
+          filePath = enhancedPath;
+        }
+
+        return {
+          id: p.id,
+          file_path: filePath,
+          caption: p.caption,
+          type: 'product' as const,
+          name: p.name
+        };
+      }),
       ...availableImages.map(i => ({
         id: i.id,
         file_path: i.file_path,

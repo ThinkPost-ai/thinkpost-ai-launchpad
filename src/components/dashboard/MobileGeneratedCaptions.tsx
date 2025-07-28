@@ -50,6 +50,14 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
 
+  // Function to get the appropriate image path (enhanced or original)
+  const getDisplayImagePath = (caption: any) => {
+    if (caption.enhanced_image_path && caption.image_enhancement_status === 'completed') {
+      return caption.enhanced_image_path;
+    }
+    return caption.image_path;
+  };
+
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
     // Check credits before attempting to generate
     if (userCredits <= 0) {
@@ -228,14 +236,14 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
           <div className="w-full mb-4">
             {caption.media_type === 'video' ? (
               <video
-                src={getImageUrl(caption.image_path)}
+                src={getImageUrl(getDisplayImagePath(caption))}
                 className="w-full h-64 object-cover rounded-lg"
                 controls
                 muted
               />
             ) : (
               <img
-                src={getImageUrl(caption.image_path)}
+                src={getImageUrl(getDisplayImagePath(caption))}
                 alt={caption.name || caption.original_filename || 'Content'}
                 className="w-full h-64 object-cover rounded-lg"
               />

@@ -1,9 +1,12 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, ImageIcon, Video } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { X, ImageIcon, Video, Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductImageUploadProps {
   index: number;
@@ -11,6 +14,8 @@ interface ProductImageUploadProps {
   onImageSelect: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   file?: File | null;
+  productId?: string; // Product ID to check for enhanced images
+  enhanceImage?: boolean; // Whether enhancement is enabled
 }
 
 const ProductImageUpload = ({ 
@@ -18,11 +23,90 @@ const ProductImageUpload = ({
   imagePreview, 
   onImageSelect, 
   onRemoveImage,
-  file 
+  file,
+  productId,
+  enhanceImage = false
 }: ProductImageUploadProps) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const [enhancedImagePath, setEnhancedImagePath] = useState<string | null>(null);
+  const [enhancementStatus, setEnhancementStatus] = useState<'none' | 'processing' | 'completed' | 'failed'>('none');
 
   const isVideo = file?.type.startsWith('video/');
+
+  // Function to get the appropriate image URL
+  const getImageUrl = (filePath: string) => {
+    return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
+  };
+
+  // Function to determine which image to display (enhanced or original)
+  const getDisplayImage = () => {
+    if (enhancedImagePath && enhancementStatus === 'completed') {
+      return getImageUrl(enhancedImagePath);
+    }
+    return imagePreview;
+  };
+
+  // Check for enhanced image when productId is available
+  useEffect(() => {
+    if (productId && user) {
+      checkEnhancedImage();
+    }
+  }, [productId, user]);
+
+  // Poll for enhancement status when processing
+  useEffect(() => {
+    if (enhancementStatus === 'processing' && productId) {
+      const pollInterval = setInterval(() => {
+        checkEnhancedImage();
+      }, 3000); // Poll every 3 seconds
+
+      return () => clearInterval(pollInterval);
+    }
+  }, [enhancementStatus, productId]);
+
+  const checkEnhancedImage = async () => {
+    if (!productId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('enhanced_image_path, image_enhancement_status')
+        .eq('id', productId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Ignore "not found" errors
+        console.error('Error checking enhanced image:', error);
+        return;
+      }
+
+      if (data) {
+        const status = (data as any).image_enhancement_status || 'none';
+        const enhancedPath = (data as any).enhanced_image_path;
+        
+        setEnhancementStatus(status);
+        setEnhancedImagePath(enhancedPath);
+      }
+    } catch (error) {
+      console.error('Failed to check enhanced image:', error);
+    }
+  };
+
+  // Check for enhancement when enhance toggle is enabled
+  useEffect(() => {
+    if (enhanceImage && productId && enhancementStatus === 'none') {
+      // Check if enhancement is already marked for processing in localStorage
+      const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+      if (enhancingProducts.includes(productId)) {
+        setEnhancementStatus('processing');
+      }
+    }
+  }, [enhanceImage, productId, enhancementStatus]);
+
+  const displayImage = getDisplayImage();
+  const isEnhanced = enhancedImagePath && enhancementStatus === 'completed';
+  const isProcessing = enhancementStatus === 'processing';
+  const hasFailed = enhancementStatus === 'failed';
 
   return (
     <div>
@@ -30,21 +114,54 @@ const ProductImageUpload = ({
         {t('productImage.productImage')} <span className="text-red-500">{t('productForm.required')}</span>
       </Label>
       <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-        {imagePreview ? (
+        {displayImage ? (
           <div className="relative">
             {isVideo ? (
               <video
-                src={imagePreview}
+                src={displayImage}
                 className="w-full h-48 object-cover rounded-lg"
                 controls
               />
             ) : (
               <img
-                src={imagePreview}
+                src={displayImage}
                 alt={t('productImage.productPreview')}
                 className="w-full h-48 object-cover rounded-lg"
               />
             )}
+            
+            {/* Enhancement status overlay */}
+            {isProcessing && (
+              <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                <div className="bg-white rounded-lg px-3 py-2 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  <span className="text-sm font-medium text-blue-600">Enhancing...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Enhancement status badges */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {isEnhanced && (
+                <Badge className="bg-yellow-500 text-white text-xs">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Enhanced
+                </Badge>
+              )}
+              {isProcessing && (
+                <Badge className="bg-blue-500 text-white text-xs">
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Processing
+                </Badge>
+              )}
+              {hasFailed && (
+                <Badge className="bg-red-500 text-white text-xs">
+                  <X className="h-3 w-3 mr-1" />
+                  Enhancement Failed
+                </Badge>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => onRemoveImage(index)}
@@ -75,6 +192,14 @@ const ProductImageUpload = ({
           </div>
         )}
       </div>
+      
+      {/* Enhancement info */}
+      {isEnhanced && (
+        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+          <Sparkles className="h-3 w-3" />
+          Using enhanced version for posting
+        </p>
+      )}
     </div>
   );
 };

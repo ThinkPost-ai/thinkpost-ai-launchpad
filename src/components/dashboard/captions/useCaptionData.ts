@@ -41,7 +41,7 @@ export const useCaptionData = () => {
 
       const { data: products, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select('*, enhanced_image_path, image_enhancement_status')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
@@ -122,6 +122,8 @@ export const useCaptionData = () => {
         return {
           id: product.id,
           image_path: product.image_path,
+          enhanced_image_path: (product as any).enhanced_image_path || undefined,
+          image_enhancement_status: (product as any).image_enhancement_status || 'none',
           name: product.name,
           price: product.price,
           description: product.description,

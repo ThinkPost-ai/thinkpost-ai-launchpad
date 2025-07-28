@@ -65,6 +65,19 @@ const CaptionGridCard = ({
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
 
+  // Function to get the appropriate image path (enhanced or original)
+  const getDisplayImagePath = () => {
+    // First check if we have enhanced image from the caption data
+    if (caption.enhanced_image_path && caption.image_enhancement_status === 'completed') {
+      return caption.enhanced_image_path;
+    }
+    // Fall back to local enhanced image state (for real-time updates)
+    if (enhancedImagePath && enhancementStatus === 'completed') {
+      return enhancedImagePath;
+    }
+    return caption.image_path;
+  };
+
   // Poll for enhancement status updates for processing images
   useEffect(() => {
     if (shouldShowEnhancing && caption.type === 'product') {
@@ -182,7 +195,7 @@ const CaptionGridCard = ({
           {caption.media_type === 'video' ? (
             <>
               <video
-                src={enhancedImagePath ? getImageUrl(enhancedImagePath) : getImageUrl(caption.image_path)}
+                src={getImageUrl(getDisplayImagePath())}
                 className="w-full h-full object-cover"
                 muted
                 preload="metadata"
@@ -193,7 +206,7 @@ const CaptionGridCard = ({
             </>
           ) : (
             <img
-              src={enhancedImagePath ? getImageUrl(enhancedImagePath) : getImageUrl(caption.image_path)}
+              src={getImageUrl(getDisplayImagePath())}
               alt={caption.name || caption.original_filename || 'Content'}
               className="w-full h-full object-cover"
             />

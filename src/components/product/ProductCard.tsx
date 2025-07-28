@@ -28,6 +28,7 @@ import {
 import { useState, useEffect } from 'react';
 
 interface Product {
+  id?: string;
   name: string;
   price: string;
   description: string;
@@ -237,6 +238,8 @@ const ProductCard = ({
                   onImageSelect={onImageSelect}
                   onRemoveImage={onRemoveImage}
                   file={product.image}
+                  productId={product.id}
+                  enhanceImage={product.enhanceImage}
                 />
               </div>
 

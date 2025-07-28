@@ -28,7 +28,7 @@ serve(async (req) => {
       .from('scheduled_posts')
       .select(`
         *,
-        products(image_path),
+        products(image_path, enhanced_image_path, image_enhancement_status),
         images(file_path)
       `)
       .eq('status', 'scheduled')
@@ -67,8 +67,16 @@ serve(async (req) => {
       try {
         console.log(`[AUTO-POST] Processing post ${post.id} scheduled for ${post.scheduled_date}`);
 
-        // Get the media path
-        const mediaPath = post.products?.image_path || post.images?.file_path;
+        // Get the media path - prioritize enhanced image if available
+        let mediaPath = post.products?.image_path || post.images?.file_path;
+        const enhancedPath = (post.products as any)?.enhanced_image_path;
+        const enhancementStatus = (post.products as any)?.image_enhancement_status;
+        
+        // Use enhanced image if available and completed
+        if (enhancedPath && enhancementStatus === 'completed') {
+          mediaPath = enhancedPath;
+        }
+        
         if (!mediaPath) {
           console.error(`[AUTO-POST] No media found for post ${post.id}`);
           await supabase
