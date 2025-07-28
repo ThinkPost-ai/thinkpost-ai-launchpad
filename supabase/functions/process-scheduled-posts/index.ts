@@ -67,14 +67,29 @@ serve(async (req) => {
       try {
         console.log(`[AUTO-POST] Processing post ${post.id} scheduled for ${post.scheduled_date}`);
 
-        // Get the media path - prioritize enhanced image if available
-        let mediaPath = post.products?.image_path || post.images?.file_path;
-        const enhancedPath = (post.products as any)?.enhanced_image_path;
-        const enhancementStatus = (post.products as any)?.image_enhancement_status;
+        // Get the media path - prioritize processed_image_path (contains enhanced image if available)
+        let mediaPath = '';
         
-        // Use enhanced image if available and completed
-        if (enhancedPath && enhancementStatus === 'completed') {
-          mediaPath = enhancedPath;
+        // First priority: processed_image_path (stored during scheduling with enhanced image if available)
+        if (post.processed_image_path) {
+          mediaPath = post.processed_image_path;
+          console.log(`[AUTO-POST] Using processed_image_path: ${mediaPath}`);
+        } else if (post.video_path) {
+          mediaPath = post.video_path;
+          console.log(`[AUTO-POST] Using video_path: ${mediaPath}`);
+        } else {
+          // Fallback: try to get enhanced image from product data
+          mediaPath = post.products?.image_path || post.images?.file_path;
+          const enhancedPath = (post.products as any)?.enhanced_image_path;
+          const enhancementStatus = (post.products as any)?.image_enhancement_status;
+          
+          // Use enhanced image if available and completed
+          if (enhancedPath && enhancementStatus === 'completed') {
+            mediaPath = enhancedPath;
+            console.log(`[AUTO-POST] Using enhanced image from product data: ${mediaPath}`);
+          } else {
+            console.log(`[AUTO-POST] Using original image: ${mediaPath}`);
+          }
         }
         
         if (!mediaPath) {

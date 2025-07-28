@@ -453,7 +453,8 @@ const ScheduledPosts = () => {
       const postsToCreate = schedule.map((date, index) => {
         const mediaItem = mediaItems[index % mediaItems.length];
 
-        return {
+        // Store the actual image path (enhanced if available) for reliable posting
+        const postData: any = {
           user_id: user!.id,
           product_id: mediaItem.type === 'product' ? mediaItem.id : null,
           image_id: mediaItem.type === 'image' ? mediaItem.id : null,
@@ -463,6 +464,26 @@ const ScheduledPosts = () => {
           status: 'scheduled' as const,
           media_type: getMediaTypeFromPath(mediaItem.file_path)
         };
+
+        // Store the enhanced image path if available
+        if (mediaItem.file_path) {
+          if (mediaItem.file_path.endsWith('.mp4') || mediaItem.file_path.endsWith('.mov') || 
+              mediaItem.file_path.endsWith('.avi') || mediaItem.file_path.endsWith('.webm')) {
+            postData.video_path = mediaItem.file_path;
+          } else {
+            // For images, store in processed_image_path to indicate this is the final path to use
+            postData.processed_image_path = mediaItem.file_path;
+          }
+        }
+
+        console.log(`📅 Scheduling post for ${mediaItem.name}:`, {
+          type: mediaItem.type,
+          id: mediaItem.id,
+          file_path: mediaItem.file_path,
+          is_enhanced: mediaItem.file_path.includes('enhanced-')
+        });
+
+        return postData;
       });
 
       const { error } = await supabase
@@ -666,6 +687,10 @@ const ScheduledPosts = () => {
       } else if (post.video_path) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.video_path}`;
         console.log('Using video_path for posting:', post.video_path);
+      } else if (post.processed_image_path) {
+        // Priority: Use processed_image_path (contains enhanced image if available)
+        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.processed_image_path}`;
+        console.log('✅ Using processed_image_path for posting (enhanced if available):', post.processed_image_path);
       } else if (actualImagePath) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${actualImagePath}`;
         console.log('Using actualImagePath for posting (enhanced if available):', actualImagePath);
