@@ -3,22 +3,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { 
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { MessageSquare, Loader2, Calendar } from 'lucide-react';
+import { MessageSquare, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCaptionData } from './captions/useCaptionData';
 import { GeneratedCaptionsProps } from './captions/types';
-import CaptionTableRow from './captions/CaptionTableRow';
 import EmptyCaptionsState from './captions/EmptyCaptionsState';
 import MobileGeneratedCaptions from './MobileGeneratedCaptions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import CaptionGridCard from './captions/CaptionGridCard';
 
 const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
@@ -144,8 +137,6 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     }
   };
 
-
-
   const handleCaptionUpdate = (id: string, newCaption: string) => {
     setCaptions(prev => prev.map(caption =>
       caption.id === id ? { ...caption, caption: newCaption } : caption
@@ -196,29 +187,18 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
           {captions.length === 0 ? (
             <EmptyCaptionsState />
           ) : (
-            <div className="rounded-md border mx-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center">{t('table.content')}</TableHead>
-                    <TableHead className="text-center">{t('table.caption')}</TableHead>
-                    <TableHead className="text-center">{t('table.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {captions.map((caption) => (
-                    <CaptionTableRow
-                      key={`${caption.type}-${caption.id}`}
-                      caption={caption}
-                      onCaptionUpdate={handleCaptionUpdate}
-                      onRegenerateCaption={regenerateCaption}
-                      onDeleteCaption={handleCaptionDelete}
-                      generatingCaption={generatingCaption}
-                      userCredits={userCredits}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {captions.map((caption) => (
+                <CaptionGridCard
+                  key={`${caption.type}-${caption.id}`}
+                  caption={caption}
+                  onCaptionUpdate={handleCaptionUpdate}
+                  onRegenerateCaption={regenerateCaption}
+                  onDeleteCaption={handleCaptionDelete}
+                  generatingCaption={generatingCaption}
+                  userCredits={userCredits}
+                />
+              ))}
             </div>
           )}
         </CardContent>
