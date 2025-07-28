@@ -284,8 +284,25 @@ const ScheduledPosts = () => {
         const enhancedPath = (p as any).enhanced_image_path;
         const enhancementStatus = (p as any).image_enhancement_status;
         
+        console.log(`🔍 [SCHEDULING DEBUG] Product ${p.name}:`, {
+          id: p.id,
+          original_path: p.image_path,
+          enhanced_path: enhancedPath,
+          enhancement_status: enhancementStatus,
+          has_enhanced: !!enhancedPath,
+          status_completed: enhancementStatus === 'completed'
+        });
+        
         if (enhancedPath && enhancementStatus === 'completed') {
           filePath = enhancedPath;
+          console.log(`✅ [SCHEDULING] Using enhanced image for ${p.name}: ${filePath}`);
+        } else {
+          console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath}`);
+          if (enhancedPath) {
+            console.log(`   Reason: Status is '${enhancementStatus}', not 'completed'`);
+          } else {
+            console.log(`   Reason: No enhanced image path found`);
+          }
         }
 
         return {
