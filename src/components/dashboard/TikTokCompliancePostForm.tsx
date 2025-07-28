@@ -53,6 +53,8 @@ interface TikTokCreatorInfo {
 
 interface ScheduledPost {
   id: string;
+  product_id?: string;
+  image_id?: string;
   caption: string;
   image_path?: string;
   product_name?: string;

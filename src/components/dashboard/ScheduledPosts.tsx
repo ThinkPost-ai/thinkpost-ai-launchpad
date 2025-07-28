@@ -159,6 +159,14 @@ const ScheduledPosts = () => {
       if (error) throw error;
 
       const transformedPosts = data.map(post => {
+        console.log('🔍 Processing scheduled post:', {
+          id: post.id,
+          product_id: post.product_id,
+          original_image_path: post.products?.image_path || post.images?.file_path,
+          enhanced_image_path: (post.products as any)?.enhanced_image_path,
+          enhancement_status: (post.products as any)?.image_enhancement_status
+        });
+        
         // Determine which image path to use (enhanced or original)
         let imagePath = post.products?.image_path || post.images?.file_path;
         const enhancedPath = (post.products as any)?.enhanced_image_path;
@@ -167,6 +175,14 @@ const ScheduledPosts = () => {
         // Use enhanced image if available and completed
         if (enhancedPath && enhancementStatus === 'completed') {
           imagePath = enhancedPath;
+          console.log('✅ Using enhanced image for post', post.id, ':', enhancedPath);
+        } else {
+          console.log('❌ Using original image for post', post.id, ':', imagePath);
+          if (enhancedPath) {
+            console.log('   Enhancement status:', enhancementStatus);
+          } else {
+            console.log('   No enhanced image found');
+          }
         }
 
         return {
@@ -510,6 +526,12 @@ const ScheduledPosts = () => {
   const postToTikTokDirectly = async (post: ScheduledPost) => {
     try {
       setPostingNow(post.id);
+      
+      console.log('🚀 === Direct TikTok Posting Debug ===');
+      console.log('Complete post object for direct posting:', post);
+      console.log('Post image_path:', post.image_path);
+      console.log('Post product_id:', post.product_id);
+      console.log('Post image_id:', post.image_id);
       
       toast({
         title: "Posting to TikTok",

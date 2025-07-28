@@ -98,6 +98,31 @@ serve(async (req) => {
 
     console.log(`Attempting to post media for scheduledPostId: ${scheduledPostId}`);
     console.log(`Media URL: ${videoUrl}`);
+    
+    // Debug: Log the complete request body to see what we're receiving
+    console.log('🔍 TikTok Post Function - Complete Request Body:', {
+      scheduledPostId: reqScheduledPostId,
+      videoUrl,
+      caption,
+      title,
+      description,
+      privacyLevel,
+      allowComment,
+      allowDuet,
+      allowStitch,
+      commercialContent,
+      yourBrand,
+      brandedContent
+    });
+    
+    // Debug: Check if this URL contains enhanced image path
+    if (videoUrl && videoUrl.includes('enhanced_')) {
+      console.log('✅ TikTok Function received ENHANCED image URL!');
+    } else if (videoUrl && videoUrl.includes('restaurant-images/')) {
+      console.log('❌ TikTok Function received ORIGINAL image URL');
+    } else {
+      console.log('⚠️ TikTok Function received unknown URL format:', videoUrl);
+    }
 
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
