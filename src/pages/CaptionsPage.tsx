@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import GeneratedCaptions from '@/components/dashboard/GeneratedCaptions';
+import EnhancementReview from '@/components/enhancement/EnhancementReview';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -14,6 +15,8 @@ const CaptionsPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [checkingRestaurant, setCheckingRestaurant] = useState(true);
+  const [showEnhancementReview, setShowEnhancementReview] = useState(false);
+  const [pendingEnhancements, setPendingEnhancements] = useState([]);
   const { restaurant, isLoading, handleCreditsUpdate } = useDashboardData();
 
   useEffect(() => {
@@ -24,6 +27,7 @@ const CaptionsPage = () => {
 
     if (user && !loading) {
       checkRestaurantExists();
+      checkPendingEnhancements();
     }
   }, [user, loading, navigate]);
 
@@ -52,6 +56,35 @@ const CaptionsPage = () => {
       console.error('Error in checkRestaurantExists:', error);
       navigate('/brand-setup');
     }
+  };
+
+  const checkPendingEnhancements = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('enhancement_queue')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'processing', 'completed']);
+
+      if (error) {
+        console.error('Error checking enhancements:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPendingEnhancements(data);
+        setShowEnhancementReview(true);
+      }
+    } catch (error) {
+      console.error('Error in checkPendingEnhancements:', error);
+    }
+  };
+
+  const handleEnhancementComplete = () => {
+    setShowEnhancementReview(false);
+    setPendingEnhancements([]);
   };
 
   if (loading || isLoading || checkingRestaurant) {
@@ -84,6 +117,13 @@ const CaptionsPage = () => {
             {t('upload.backToDashboard')}
           </Button>
         </div>
+
+        {/* Enhancement Review Section */}
+        {showEnhancementReview && (
+          <div className="mb-8">
+            <EnhancementReview onEnhancementComplete={handleEnhancementComplete} />
+          </div>
+        )}
 
         {/* Generated Captions Content */}
         <GeneratedCaptions onCreditsUpdate={handleCreditsUpdate} />
