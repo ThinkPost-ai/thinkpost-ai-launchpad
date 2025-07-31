@@ -407,66 +407,47 @@ const TikTokCompliancePostForm = ({ post, onPostSuccess, onCancel }: TikTokCompl
         image_path: post.image_path
       });
       
-      // Get the user's selected image (enhanced or original)
-      const getSelectedImagePath = async () => {
+      // Get enhanced image path if available
+      let finalImagePath = post.image_path;
+      
+      // Check if this is a product and if it has an enhanced image
+      if (post.product_id) {
         try {
-          if (post.product_id) {
-            const { data: productData, error } = await supabase
-              .from('products')
-              .select('image_path, enhanced_image_path, user_selected_version, image_enhancement_status')
-              .eq('id', post.product_id)
-              .single();
+          console.log('Checking for enhanced image for posting, product:', post.product_id);
+          const { data: productData, error: productError } = await supabase
+            .from('products')
+            .select('enhanced_image_path, image_enhancement_status')
+            .eq('id', post.product_id)
+            .single();
 
-            if (error) {
-              console.error('Error fetching product data:', error);
-              return post.image_path; // fallback
-            }
+          console.log('Product enhancement data for posting:', {
+            data: productData,
+            error: productError
+          });
 
-            // Use user's selected version if available
-            if (productData?.user_selected_version === 'enhanced' && 
-                productData?.enhanced_image_path && 
-                productData?.image_enhancement_status === 'completed') {
-              console.log('✅ Using enhanced image for posting:', productData.enhanced_image_path);
-              return productData.enhanced_image_path;
+          if (!productError && productData) {
+            const enhancedPath = (productData as any).enhanced_image_path;
+            const enhancementStatus = (productData as any).image_enhancement_status;
+            
+            console.log('Enhancement status for posting:', enhancementStatus);
+            console.log('Enhanced path for posting:', enhancedPath);
+            
+            // Use enhanced image if available and completed
+            if (enhancedPath && enhancementStatus === 'completed') {
+              finalImagePath = enhancedPath;
+              console.log('✅ Using enhanced image for TikTok posting:', enhancedPath);
             } else {
-              console.log('❌ Using original image for posting:', productData?.image_path);
-              return productData?.image_path || post.image_path;
-            }
-          } else if (post.image_id) {
-            const { data: imageData, error } = await supabase
-              .from('images')
-              .select('file_path, enhanced_image_path, user_selected_version, image_enhancement_status')
-              .eq('id', post.image_id)
-              .single();
-
-            if (error) {
-              console.error('Error fetching image data:', error);
-              return post.image_path; // fallback
-            }
-
-            // Use user's selected version if available
-            if (imageData?.user_selected_version === 'enhanced' && 
-                imageData?.enhanced_image_path && 
-                imageData?.image_enhancement_status === 'completed') {
-              console.log('✅ Using enhanced image for posting:', imageData.enhanced_image_path);
-              return imageData.enhanced_image_path;
-            } else {
-              console.log('❌ Using original image for posting:', imageData?.file_path);
-              return imageData?.file_path || post.image_path;
+              console.log('❌ Using original image for posting - enhanced not available or not completed');
             }
           }
-          
-          return post.image_path; // fallback to post data
         } catch (error) {
-          console.error('Error getting selected image path:', error);
-          return post.image_path; // fallback
+          console.log('❌ Could not fetch enhanced image info for posting, using original:', error);
         }
-      };
-
-      // Get the user's selected image
-      const selectedImagePath = await getSelectedImagePath();
-      const finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${selectedImagePath}`;
+      } else {
+        console.log('❌ No product_id found for posting, using original image');
+      }
       
+      const finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${finalImagePath}`;
       console.log('Final media URL for TikTok posting:', finalMediaUrl);
       console.log('===========================');
       

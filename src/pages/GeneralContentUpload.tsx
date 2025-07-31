@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Plus, Upload, X, Image as ImageIcon, Video, Loader2, Instagram, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Upload, X, Image as ImageIcon, Video, Loader2, Instagram, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
@@ -30,7 +30,6 @@ interface GeneralContentItem {
   description: string;
   tiktokEnabled: boolean;
   instagramEnabled: boolean;
-  enhanceImage: boolean; // New field for image enhancement
 }
 
 const GeneralContentUpload = () => {
@@ -49,7 +48,6 @@ const GeneralContentUpload = () => {
     description: '',
     tiktokEnabled: false,
     instagramEnabled: false,
-    enhanceImage: false, // Default to false
   }]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -151,7 +149,6 @@ const GeneralContentUpload = () => {
       description: '',
       tiktokEnabled: false,
       instagramEnabled: false,
-      enhanceImage: false, // Default to false
     }]);
   };
 
@@ -292,7 +289,6 @@ const GeneralContentUpload = () => {
     setUploading(true);
     try {
       const uploadedItems = [];
-      const enhancementRequests = [];
 
       // First, upload all files and save to database
       for (const item of items) {
@@ -317,37 +313,12 @@ const GeneralContentUpload = () => {
             media_type: isVideo ? 'video' : 'photo',
             tiktok_enabled: item.tiktokEnabled,
             instagram_enabled: item.instagramEnabled,
-            enhancement_requested: item.enhanceImage && !isVideo // Only enhance images
           })
           .select()
           .single();
 
         if (imageError) throw imageError;
         uploadedItems.push(imageData);
-
-        // Queue enhancement for images only
-        if (item.enhanceImage && !isVideo) {
-          const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
-          enhancementRequests.push({
-            user_id: user!.id,
-            content_type: 'image',
-            content_id: imageData.id,
-            original_image_url: imageUrl,
-            status: 'pending'
-          });
-        }
-      }
-
-      // Insert enhancement requests
-      if (enhancementRequests.length > 0) {
-        const { error: queueError } = await supabase
-          .from('enhancement_queue')
-          .insert(enhancementRequests);
-
-        if (queueError) {
-          console.error('Failed to queue enhancements:', queueError);
-          // Continue anyway - user can manually trigger enhancement later
-        }
       }
 
       // Generate captions for uploaded items
@@ -443,7 +414,7 @@ const GeneralContentUpload = () => {
 
         toast({
           title: t('toast.success'),
-          description: `${uploadedItems.length} items uploaded successfully${enhancementRequests.length > 0 ? '. Enhancement will begin shortly.' : ''}`,
+          description: `${uploadedItems.length} ${t('generalContent.uploadSuccess')}`,
         });
 
         // Navigate to captions review page
@@ -731,32 +702,6 @@ const GeneralContentUpload = () => {
                               )}
                             </Tooltip>
                           </TooltipProvider>
-                        </div>
-
-                        {/* AI Enhancement Toggle */}
-                        <div>
-                          <div className={`flex items-center justify-between p-4 border rounded-lg ${!item.file?.type.startsWith('video/') ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60 cursor-not-allowed'}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${!item.file?.type.startsWith('video/') ? 'bg-gradient-to-br from-yellow-500 to-orange-500' : 'bg-gray-400'}`}>
-                                <Sparkles className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <Label className="text-base font-medium">AI Enhancement</Label>
-                                <p className="text-sm text-muted-foreground">
-                                  {!item.file?.type.startsWith('video/') ? 'Enhance image with AI for better social media performance' : 'Enhancement not available for videos'}
-                                </p>
-                              </div>
-                            </div>
-                            <Switch
-                              checked={item.enhanceImage && !item.file?.type.startsWith('video/')}
-                              onCheckedChange={(checked) => {
-                                if (!item.file?.type.startsWith('video/')) {
-                                  updateItem(item.id, { enhanceImage: checked });
-                                }
-                              }}
-                              disabled={item.file?.type.startsWith('video/')}
-                            />
-                          </div>
                         </div>
                       </div>
                     </div>

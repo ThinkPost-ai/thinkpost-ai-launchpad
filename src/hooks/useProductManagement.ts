@@ -273,7 +273,6 @@ export const useProductManagement = () => {
 
     try {
       const savedProducts = [];
-      const enhancementRequests = [];
 
       for (const product of products) {
         if (!product.image) continue;
@@ -281,7 +280,7 @@ export const useProductManagement = () => {
         // Upload image
         const imagePath = await uploadImage(product.image);
 
-        // Save product with TikTok settings and enhancement request flag
+        // Save product with TikTok settings
         const { data, error } = await supabase
           .from('products')
           .insert({
@@ -296,7 +295,6 @@ export const useProductManagement = () => {
             tiktok_commercial_content: product.tiktokSettings.commercialContent,
             tiktok_your_brand: product.tiktokSettings.yourBrand,
             tiktok_branded_content: product.tiktokSettings.brandedContent,
-            enhancement_requested: product.enhanceImage,
             is_new: true
           })
           .select()
@@ -304,35 +302,11 @@ export const useProductManagement = () => {
 
         if (error) throw error;
         savedProducts.push(data);
-
-        // Queue enhancement if requested
-        if (product.enhanceImage) {
-          const imageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${imagePath}`;
-          enhancementRequests.push({
-            user_id: user.id,
-            content_type: 'product',
-            content_id: data.id,
-            original_image_url: imageUrl,
-            status: 'pending'
-          });
-        }
-      }
-
-      // Insert enhancement requests
-      if (enhancementRequests.length > 0) {
-        const { error: queueError } = await supabase
-          .from('enhancement_queue')
-          .insert(enhancementRequests);
-
-        if (queueError) {
-          console.error('Failed to queue enhancements:', queueError);
-          // Continue anyway - user can manually trigger enhancement later
-        }
       }
 
       toast({
         title: "Success!",
-        description: `${savedProducts.length} product(s) saved successfully${enhancementRequests.length > 0 ? '. Enhancement will begin shortly.' : ''}`
+        description: `${savedProducts.length} product(s) saved successfully`
       });
 
       // Navigate to review content page
