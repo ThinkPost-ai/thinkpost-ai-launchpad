@@ -1,261 +1,143 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-serve(async (req) => {
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+};
+serve(async (req)=>{
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
-
   try {
-    console.log('Function started, parsing request body...');
-    
-    let requestBody;
-    try {
-      requestBody = await req.json();
-    } catch (parseError) {
-      console.error('Failed to parse request body:', parseError);
-      throw new Error('Invalid JSON in request body');
-    }
-    
+    const requestBody = await req.json();
     const { productId, imageUrl, productName, brandName } = requestBody;
-
-    console.log('Starting image enhancement for product:', productId);
-    console.log('Image URL:', imageUrl);
-    console.log('Product name:', productName);
-    console.log('Brand name:', brandName);
-
-    // Initialize Supabase client
-    console.log('Initializing Supabase client...');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get OpenAI API key from secrets
-    console.log('Getting OpenAI API key...');
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not found in environment variables');
+    if (!supabaseUrl || !supabaseKey || !openaiApiKey) {
+      throw new Error('Missing required environment variables');
     }
-    console.log('OpenAI API key found, length:', openaiApiKey.length);
-
-    // Download the original image
-    console.log(`Downloading image from: ${imageUrl}`);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Fetch original image and convert to base64
     const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to download original image: ${imageResponse.status} ${imageResponse.statusText}`);
-    }
-
+    if (!imageResponse.ok) throw new Error('Failed to fetch image');
     const imageBuffer = await imageResponse.arrayBuffer();
-    console.log(`Downloaded image size: ${imageBuffer.byteLength} bytes`);
-    
-    // Convert to base64 more efficiently to avoid stack overflow with large images
     const uint8Array = new Uint8Array(imageBuffer);
     let binary = '';
-    const chunkSize = 1024; // Process in chunks to avoid stack overflow
-    
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
+    const chunkSize = 1024;
+    for(let i = 0; i < uint8Array.length; i += chunkSize){
+      binary += String.fromCharCode(...uint8Array.slice(i, i + chunkSize));
     }
-    
     const base64Image = btoa(binary);
-
-    // Create enhancement prompt
+    // Construct the enhancement prompt
     const prompt = `
     Enhance this image for marketing purposes.
 
-INSTRUCTIONS:
-- The image features a ${productName || 'product'} — **do NOT change or alter any product details, including text, logos, brand names, or branding elements. Preserve all exactly as they appear, especially any Arabic text.**
-- Maintain the original composition and proportions of the product — no distortions or replacements.
-- Improve lighting to create a warm, golden-hour glow while preserving the product’s authentic colors.
-- Sharpen the product details subtly to make them stand out more crisply without exaggeration or unrealistic effects.
-- Slightly blur the background to create depth of field, focusing attention on the product, but do not add or remove objects in the background.
-- Remove any visual distractions around the product gently, without changing the product or its environment.
-- Adjust color balance and contrast for richness and clarity while keeping all tones natural and true to the original.
-- Add subtle creative elements only if they do NOT obscure or alter the product or its branding. These elements should enhance the image’s mood without distracting from the product itself.
-- The final image should look professional, clean, and appetizing for social media marketing, reflecting luxury and calm modern café/restaurant vibes.
+    CRITICAL PRODUCT INTEGRITY RULES:
+    - This image contains a ${productName || 'product'} that **must remain completely unaltered**.
+    - **Do NOT modify, edit, move, retouch, or recreate any part of the product**, including:
+      - Logos
+      - Text (especially any Arabic text)
+      - Labels
+      - Colors
+      - Shapes
+      - Branding elements
+    - **No part of the product should be changed in any way.**
 
-${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
-`;
+    Notes (only outside the product):
+    - Enhance lighting for a soft golden-hour glow that flatters the scene, **without affecting the product's original color**.
+    - Subtly sharpen only the product edges for clarity, **without adding artificial effects**.
+    - Gently blur the background to create depth, but **do not alter background content or introduce new elements**.
+    - Remove visual distractions only if **they do not touch or overlap with the product**.
+    - Adjust color balance and contrast for overall richness, but keep tones **natural and true to the original scene**.
+    - Add subtle creative lighting or atmosphere ONLY if they **do not cover, touch, or obscure any part of the product**.
 
-    console.log('Using GPT-4o with DALL-E 3 function calling...');
+    Final result must look clean, professional, and premium — suitable for high-end food/café social media marketing.
 
-    // Step 1: Use GPT-4o to analyze the image and generate DALL-E prompt
-    const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    ${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
+    `;
+    // Call GPT-4.1 with tool-based image generation
+    const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
+        model: "gpt-4.1",
+        input: [
           {
             role: "user",
             content: [
               {
-                type: "text",
-                text: `Analyze this ${productName || 'product'} image and describe it in detail for DALL-E 3 enhancement. Focus on maintaining exact text, branding, and product details while improving lighting, composition, and marketing appeal. Brand: ${brandName || 'unknown'}.`
+                type: "input_text",
+                text: prompt
               },
               {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
+                type: "input_image",
+                image_url: `data:image/jpeg;base64,${base64Image}`
               }
             ]
           }
         ],
-        functions: [
+        tools: [
           {
-            name: "generate_enhanced_image",
-            description: "Generate an enhanced marketing image using DALL-E 3",
-            parameters: {
-              type: "object",
-              properties: {
-                prompt: {
-                  type: "string",
-                  description: "Detailed DALL-E 3 prompt for image enhancement"
-                }
-              },
-              required: ["prompt"]
-            }
+            type: "image_generation"
           }
-        ],
-        function_call: { name: "generate_enhanced_image" },
-        max_tokens: 1000
+        ]
       })
     });
-
-    if (!visionResponse.ok) {
-      const errorText = await visionResponse.text();
-      console.error('GPT-4o Vision error:', errorText);
-      throw new Error(`GPT-4o Vision error: ${visionResponse.status} - ${errorText}`);
+    if (!openaiResponse.ok) {
+      const errorText = await openaiResponse.text();
+      console.error("GPT-4.1 error:", errorText);
+      throw new Error(`GPT-4.1 error: ${openaiResponse.status} - ${errorText}`);
     }
-
-    const visionResult = await visionResponse.json();
-    const functionCall = visionResult.choices[0].message.function_call;
-    
-    if (!functionCall || !functionCall.arguments) {
-      throw new Error('No function call returned from GPT-4o');
+    const responseData = await openaiResponse.json();
+    const imageCall = responseData.output?.find((o)=>o.type === "image_generation_call");
+    if (!imageCall || !imageCall.result) {
+      throw new Error("No image data returned from GPT-4.1");
     }
-
-    const { prompt: enhancementPrompt } = JSON.parse(functionCall.arguments);
-    console.log('Generated enhancement prompt:', enhancementPrompt.substring(0, 200) + '...');
-
-    // Step 2: Use DALL-E 3 to generate the enhanced image
-    const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: enhancementPrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "hd",
-        response_format: "b64_json"
-      })
-    });
-
-    if (!dalleResponse.ok) {
-      const errorText = await dalleResponse.text();
-      console.error('DALL-E 3 error:', errorText);
-      throw new Error(`DALL-E 3 error: ${dalleResponse.status} - ${errorText}`);
-    }
-
-    const dalleResult = await dalleResponse.json();
-    const enhancedImageBase64 = dalleResult.data[0].b64_json;
-
-    console.log('Enhanced image generated, uploading to storage...');
-
-    // Upload enhanced image to Supabase storage
-    const enhancedImageBuffer = Uint8Array.from(atob(enhancedImageBase64), c => c.charCodeAt(0));
+    const generatedImageBase64 = imageCall.result;
+    // Convert base64 to Uint8Array for uploading
+    const enhancedImageBuffer = Uint8Array.from(atob(generatedImageBase64), (c)=>c.charCodeAt(0));
     const enhancedFileName = `enhanced-${productId}-${Date.now()}.png`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('restaurant-images')
-      .upload(enhancedFileName, enhancedImageBuffer, {
-        contentType: 'image/png',
-        upsert: false
-      });
-
+    const { error: uploadError } = await supabase.storage.from("restaurant-images").upload(enhancedFileName, enhancedImageBuffer, {
+      contentType: "image/png",
+      upsert: false
+    });
     if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      throw new Error('Failed to upload enhanced image');
+      console.error("Upload failed:", uploadError);
+      throw new Error("Failed to upload enhanced image");
     }
-
-    const enhancedImageUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
-
-    // Update product with enhanced image path
-    const { error: updateError } = await supabase
-      .from('products')
-      .update({ 
-        enhanced_image_path: enhancedFileName,
-        image_enhancement_status: 'completed'
-      })
-      .eq('id', productId);
-
-    if (updateError) {
-      console.error('Database update error:', updateError);
-      throw new Error('Failed to update product with enhanced image');
-    }
-
-    console.log('Image enhancement completed successfully');
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        enhancedImageUrl,
-        enhancedImagePath: enhancedFileName
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
+    await supabase.from("products").update({
+      enhanced_image_path: enhancedFileName,
+      image_enhancement_status: "completed"
+    }).eq("id", productId);
+    return new Response(JSON.stringify({
+      success: true,
+      enhancedImageUrl,
+      enhancedImagePath: enhancedFileName
+    }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
       }
-    );
-
+    });
   } catch (error) {
-    console.error('Image enhancement error:', error);
-    
-    // If we have a productId, mark the enhancement as failed
-    if (error.productId) {
-      try {
-        const supabase = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        );
-        
-        await supabase
-          .from('products')
-          .update({ image_enhancement_status: 'failed' })
-          .eq('id', error.productId);
-      } catch (dbError) {
-        console.error('Failed to update enhancement status:', dbError);
+    console.error("Enhancement failed:", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
       }
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Image enhancement failed'
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    });
   }
-}); 
+});
