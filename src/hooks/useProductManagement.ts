@@ -382,6 +382,10 @@ export const useProductManagement = () => {
       // Test authentication and RLS before proceeding
       console.log('Testing authentication and RLS...');
       
+      // Debug auth context using the database function
+      const { data: authDebug, error: authDebugError } = await supabase.rpc('debug_auth_context');
+      console.log('Auth context debug:', { data: authDebug, error: authDebugError });
+      
       // Check if user profile exists (required for RLS)
       const { data: profileCheck, error: profileError } = await supabase
         .from('profiles')
