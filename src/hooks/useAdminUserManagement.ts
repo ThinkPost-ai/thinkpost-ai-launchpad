@@ -7,9 +7,6 @@ export interface AdminUser {
   full_name: string | null;
   email: string | null;
   caption_credits: number;
-  remaining_credits: number;
-  restaurant_name: string | null;
-  category: string | null;
   tiktok_connected: boolean | null;
   instagram_connected: boolean | null;
   total_uploads: number;
@@ -17,6 +14,9 @@ export interface AdminUser {
   created_at: string;
   updated_at: string;
   auth_provider: string | null;
+  restaurant_name: string | null;
+  category: string | null;
+  role: string;
 }
 
 export interface UserStats {
@@ -68,16 +68,16 @@ export const useAdminUserManagement = () => {
           full_name: user.full_name,
           email: user.email,
           caption_credits: user.caption_credits,
-          remaining_credits: user.remaining_credits,
-          restaurant_name: user.restaurant_name || null,
-          category: user.category || null,
           tiktok_connected: user.tiktok_connected,
           instagram_connected: user.instagram_connected,
           total_uploads: uploads.length,
           captions_generated: captions.length,
           created_at: user.created_at, // Now using real created_at from auth.users
           updated_at: user.updated_at,
-          auth_provider: user.auth_provider
+          auth_provider: user.auth_provider,
+          restaurant_name: user.restaurant_name || null,
+          category: user.category || null,
+          role: user.role || 'user'
         };
       });
 
@@ -95,7 +95,7 @@ export const useAdminUserManagement = () => {
       ).length;
 
       const avgCredits = processedUsers.length > 0 
-        ? processedUsers.reduce((sum, user) => sum + user.caption_credits + user.remaining_credits, 0) / processedUsers.length
+        ? processedUsers.reduce((sum, user) => sum + user.caption_credits, 0) / processedUsers.length
         : 0;
 
       setStats({

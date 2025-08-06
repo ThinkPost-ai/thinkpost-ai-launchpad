@@ -90,7 +90,7 @@ const UserManagement = () => {
 
   const handleEditCredits = (user: AdminUser) => {
     setSelectedUser(user);
-    setNewCreditsAmount((user.caption_credits + user.remaining_credits).toString());
+    setNewCreditsAmount((user.caption_credits).toString());
     setEditCreditsDialogOpen(true);
   };
 
@@ -130,7 +130,7 @@ const UserManagement = () => {
         user.email || 'N/A',
         user.restaurant_name || 'N/A',
         user.category || 'N/A',
-        user.caption_credits + user.remaining_credits,
+        user.caption_credits,
         user.total_uploads,
         user.captions_generated,
         user.tiktok_connected ? 'Yes' : 'No',
@@ -306,10 +306,7 @@ const UserManagement = () => {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {user.caption_credits + user.remaining_credits}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.caption_credits} base + {user.remaining_credits} bonus
+                          {user.caption_credits}
                         </div>
                       </TableCell>
                       <TableCell>
