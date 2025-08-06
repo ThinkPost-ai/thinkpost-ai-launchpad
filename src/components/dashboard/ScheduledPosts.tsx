@@ -479,7 +479,16 @@ const ScheduledPosts = () => {
           scheduled_date: date.toISOString(),
           platform: 'tiktok',
           status: 'scheduled' as const,
-          media_type: getMediaTypeFromPath(mediaItem.file_path)
+          media_type: getMediaTypeFromPath(mediaItem.file_path),
+          // Add TikTok settings with defaults
+          tiktok_privacy_level: 'PUBLIC_TO_EVERYONE',
+          tiktok_allow_comments: true,
+          tiktok_commercial_content: false,
+          tiktok_your_brand: false,
+          tiktok_branded_content: false,
+          tiktok_disable_duet: false,
+          tiktok_disable_stitch: false,
+          approved_at: new Date().toISOString() // Auto-approve for immediate processing
         };
 
         // Store the enhanced image path if available
@@ -497,7 +506,12 @@ const ScheduledPosts = () => {
           type: mediaItem.type,
           id: mediaItem.id,
           file_path: mediaItem.file_path,
-          is_enhanced: mediaItem.file_path.includes('enhanced-')
+          is_enhanced: mediaItem.file_path.includes('enhanced-'),
+          tiktok_settings: {
+            privacy_level: postData.tiktok_privacy_level,
+            allow_comments: postData.tiktok_allow_comments,
+            commercial_content: postData.tiktok_commercial_content
+          }
         });
 
         return postData;
