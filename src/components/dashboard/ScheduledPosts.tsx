@@ -271,6 +271,10 @@ const ScheduledPosts = () => {
 
     if (imagesError) throw imagesError;
 
+    // Load user's selected image versions from localStorage
+    const saved = localStorage.getItem('selectedImageVersions');
+    const selectedVersions = saved ? JSON.parse(saved) : {};
+
     // Filter out products that have already been posted
     const availableProducts = (products || []).filter(p => !postedProductIds.has(p.id));
     
@@ -279,29 +283,34 @@ const ScheduledPosts = () => {
 
     const mediaItems: MediaItem[] = [
       ...availableProducts.map(p => {
-        // Use enhanced image if available and completed
+        // Respect user's selected version from review-content page
         let filePath = p.image_path;
         const enhancedPath = (p as any).enhanced_image_path;
         const enhancementStatus = (p as any).image_enhancement_status;
+        const userSelectedVersion = selectedVersions[p.id] || 'original';
         
         console.log(`🔍 [SCHEDULING DEBUG] Product ${p.name}:`, {
           id: p.id,
           original_path: p.image_path,
           enhanced_path: enhancedPath,
           enhancement_status: enhancementStatus,
+          user_selected_version: userSelectedVersion,
           has_enhanced: !!enhancedPath,
           status_completed: enhancementStatus === 'completed'
         });
         
-        if (enhancedPath && enhancementStatus === 'completed') {
+        // Use enhanced image only if user selected it AND it's available and completed
+        if (userSelectedVersion === 'enhanced' && enhancedPath && enhancementStatus === 'completed') {
           filePath = enhancedPath;
-          console.log(`✅ [SCHEDULING] Using enhanced image for ${p.name}: ${filePath}`);
+          console.log(`✅ [SCHEDULING] Using user-selected enhanced image for ${p.name}: ${filePath}`);
         } else {
-          console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath}`);
-          if (enhancedPath) {
-            console.log(`   Reason: Status is '${enhancementStatus}', not 'completed'`);
+          console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath} (user selected: ${userSelectedVersion})`);
+          if (enhancedPath && enhancementStatus !== 'completed') {
+            console.log(`   Reason: Enhancement status is '${enhancementStatus}', not 'completed'`);
+          } else if (!enhancedPath && userSelectedVersion === 'enhanced') {
+            console.log(`   Reason: User selected enhanced but no enhanced image path found`);
           } else {
-            console.log(`   Reason: No enhanced image path found`);
+            console.log(`   Reason: User selected original version`);
           }
         }
 
@@ -313,13 +322,24 @@ const ScheduledPosts = () => {
           name: p.name
         };
       }),
-      ...availableImages.map(i => ({
-        id: i.id,
-        file_path: i.file_path,
-        caption: i.caption,
-        type: 'image' as const,
-        name: i.original_filename
-      }))
+      ...availableImages.map(i => {
+        // For regular images, check if user made a version selection (though most images won't have enhanced versions)
+        const userSelectedVersion = selectedVersions[i.id] || 'original';
+        
+        console.log(`🔍 [SCHEDULING DEBUG] Image ${i.original_filename || i.id}:`, {
+          id: i.id,
+          file_path: i.file_path,
+          user_selected_version: userSelectedVersion
+        });
+
+        return {
+          id: i.id,
+          file_path: i.file_path, // Images typically don't have enhanced versions, so use original
+          caption: i.caption,
+          type: 'image' as const,
+          name: i.original_filename
+        };
+      })
     ];
 
     console.log(`Scheduling: Found ${products?.length || 0} total products, ${availableProducts.length} available for scheduling`);

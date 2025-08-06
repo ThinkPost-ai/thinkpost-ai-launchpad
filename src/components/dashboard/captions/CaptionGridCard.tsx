@@ -56,7 +56,12 @@ const CaptionGridCard = ({
   const [deleting, setDeleting] = useState(false);
   const [enhancementStatus, setEnhancementStatus] = useState(caption.image_enhancement_status || 'none');
   const [enhancedImagePath, setEnhancedImagePath] = useState(caption.enhanced_image_path || null);
-  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(() => {
+    // Load saved selection from localStorage
+    const saved = localStorage.getItem('selectedImageVersions');
+    const savedVersions = saved ? JSON.parse(saved) : {};
+    return savedVersions[caption.id] || 'original';
+  });
   const [isMarkedForEnhancement, setIsMarkedForEnhancement] = useState(() => {
     const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
     return enhancingProducts.includes(caption.id);
@@ -91,13 +96,25 @@ const CaptionGridCard = ({
   // Navigation handlers
   const handlePreviousVersion = () => {
     if (selectedVersion === 'enhanced') {
-      setSelectedVersion('original');
+      const newVersion = 'original';
+      setSelectedVersion(newVersion);
+      // Store in localStorage for persistence across navigation
+      const saved = localStorage.getItem('selectedImageVersions');
+      const savedVersions = saved ? JSON.parse(saved) : {};
+      savedVersions[caption.id] = newVersion;
+      localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
     }
   };
 
   const handleNextVersion = () => {
     if (selectedVersion === 'original' && canShowEnhanced) {
-      setSelectedVersion('enhanced');
+      const newVersion = 'enhanced';
+      setSelectedVersion(newVersion);
+      // Store in localStorage for persistence across navigation
+      const saved = localStorage.getItem('selectedImageVersions');
+      const savedVersions = saved ? JSON.parse(saved) : {};
+      savedVersions[caption.id] = newVersion;
+      localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
     }
   };
 
@@ -196,7 +213,13 @@ const CaptionGridCard = ({
             setIsMarkedForEnhancement(false);
             
             // Auto-switch to enhanced version
-            setSelectedVersion('enhanced');
+            const newVersion = 'enhanced';
+            setSelectedVersion(newVersion);
+            // Store in localStorage for persistence across navigation
+            const saved = localStorage.getItem('selectedImageVersions');
+            const savedVersions = saved ? JSON.parse(saved) : {};
+            savedVersions[caption.id] = newVersion;
+            localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
             
             clearInterval(pollInterval);
             

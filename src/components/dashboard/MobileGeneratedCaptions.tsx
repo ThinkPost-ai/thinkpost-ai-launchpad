@@ -81,7 +81,11 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [enhancingItems, setEnhancingItems] = useState<Set<string>>(new Set());
   const [enhancementStatuses, setEnhancementStatuses] = useState<{[key: string]: string}>({});
   const [enhancedPaths, setEnhancedPaths] = useState<{[key: string]: string}>({});
-  const [selectedVersions, setSelectedVersions] = useState<{[key: string]: 'original' | 'enhanced'}>({});
+  const [selectedVersions, setSelectedVersions] = useState<{[key: string]: 'original' | 'enhanced'}>(() => {
+    // Load saved selections from localStorage
+    const saved = localStorage.getItem('selectedImageVersions');
+    return saved ? JSON.parse(saved) : {};
+  });
   
   // Full-screen image preview states
   const [previewImage, setPreviewImage] = useState<{
@@ -115,7 +119,12 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
   // Navigation handlers for image versions
   const handleVersionChange = (captionId: string, version: 'original' | 'enhanced') => {
-    setSelectedVersions(prev => ({ ...prev, [captionId]: version }));
+    setSelectedVersions(prev => {
+      const updated = { ...prev, [captionId]: version };
+      // Store in localStorage for persistence across navigation
+      localStorage.setItem('selectedImageVersions', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // Full-screen image preview handler
