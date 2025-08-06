@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { useImageCompression } from '@/hooks/useImageCompression';
 import { 
   Edit, 
   Wand2,
@@ -52,7 +51,6 @@ const CaptionGridCard = ({
 }: CaptionGridCardProps) => {
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { compressEnhancedImage, compressionStatus } = useImageCompression();
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -107,18 +105,6 @@ const CaptionGridCard = ({
             if (data) {
               setEnhancementStatus(data.image_enhancement_status as 'none' | 'processing' | 'completed' | 'failed');
               setEnhancedImagePath(data.enhanced_image_path);
-              
-              // If status is temp_ready, trigger compression
-              if (data.image_enhancement_status === 'temp_ready' && data.enhanced_image_path) {
-                console.log('Enhanced image ready for compression:', data.enhanced_image_path);
-                try {
-                  await compressEnhancedImage(caption.id, caption.type, data.enhanced_image_path);
-                  setEnhancementStatus('completed');
-                } catch (error) {
-                  console.error('Image compression failed:', error);
-                  setEnhancementStatus('failed');
-                }
-              }
             }
           }
         } catch (error) {
@@ -128,7 +114,7 @@ const CaptionGridCard = ({
 
       return () => clearInterval(pollEnhancement);
     }
-  }, [enhancementStatus, caption.id, caption.type, compressEnhancedImage]);
+  }, [enhancementStatus, caption.id]);
 
   // Function to get the appropriate image path (enhanced or original)
   const getDisplayImagePath = () => {
@@ -279,17 +265,8 @@ const CaptionGridCard = ({
           const status = data?.image_enhancement_status || 'none';
           const path = data?.enhanced_image_path || null;
           
-          // If status is temp_ready, trigger compression
-          if (status === 'temp_ready' && path) {
-            console.log('Enhanced image ready for compression:', path);
-            try {
-              await compressEnhancedImage(caption.id, caption.type, path);
-              setEnhancementStatus('completed');
-            } catch (error) {
-              console.error('Image compression failed:', error);
-              setEnhancementStatus('failed');
-            }
-          } else if (status === 'completed') {
+          // Enhancement completed
+          if (status === 'completed') {
             console.log('Enhancement completed for:', caption.id);
             setEnhancementStatus(status);
             setEnhancedImagePath(path);
