@@ -131,26 +131,38 @@ serve(async (req)=>{
 
     ${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
     `;
-    // Call GPT-4.1 with image editing API
-    const formData = new FormData();
-    
-    // Convert base64 to blob for the image parameter
-    const imageBytes = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
-    const imageBlob = new Blob([imageBytes], { type: 'image/jpeg' });
-    
-    formData.append('model', 'gpt-image-1');
-    formData.append('prompt', prompt);
-    formData.append('image', imageBlob, 'image.jpg');
-    formData.append('output_format', 'jpeg');
-    formData.append('quality', 'high');
-    formData.append('size', '1024x1024');
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/images/edits", {
+    // Call GPT-4.1 with tool-based image generation
+    console.log('🤖 Sending image to GPT-4.1 for enhancement...');
+    const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
       },
-      body: formData
+      body: JSON.stringify({
+        model: "gpt-4.1",
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: prompt
+              },
+              {
+                type: "input_image",
+                image_url: `data:image/jpeg;base64,${base64Image}`
+              }
+            ]
+          }
+        ],
+        tools: [
+          {
+            type: "image_generation"
+          }
+        ]
+      })
     });
 
     if (!openaiResponse.ok) {
@@ -160,10 +172,13 @@ serve(async (req)=>{
     }
 
     const responseData = await openaiResponse.json();
-    if (!responseData.data || !responseData.data[0] || !responseData.data[0].b64_json) {
-      throw new Error("No image data returned from OpenAI");
+    const imageCall = responseData.output?.find((o) => o.type === "image_generation_call");
+    if (!imageCall || !imageCall.result) {
+      throw new Error("No image data returned from GPT-4.1");
     }
-    const generatedImageBase64 = responseData.data[0].b64_json;
+    const generatedImageBase64 = imageCall.result;
+    
+    console.log('✅ GPT-4.1 image enhancement completed successfully');
     
     // Compress the enhanced image with TinyPNG
     console.log('🖼️ Starting TinyPNG compression...');
