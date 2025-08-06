@@ -118,13 +118,30 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   };
 
   // Navigation handlers for image versions
-  const handleVersionChange = (captionId: string, version: 'original' | 'enhanced') => {
+  const handleVersionChange = async (captionId: string, version: 'original' | 'enhanced') => {
     setSelectedVersions(prev => {
       const updated = { ...prev, [captionId]: version };
       // Store in localStorage for persistence across navigation
       localStorage.setItem('selectedImageVersions', JSON.stringify(updated));
       return updated;
     });
+    
+    // Update database for persistent selection
+    const caption = captions.find(c => c.id === captionId);
+    if (caption?.type === 'product') {
+      try {
+        const { error } = await supabase
+          .from('products')
+          .update({ selected_version: version })
+          .eq('id', captionId);
+        
+        if (error) {
+          console.error('Failed to update selected version:', error);
+        }
+      } catch (error) {
+        console.error('Error updating selected version:', error);
+      }
+    }
   };
 
   // Full-screen image preview handler

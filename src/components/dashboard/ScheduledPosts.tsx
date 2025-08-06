@@ -253,10 +253,10 @@ const ScheduledPosts = () => {
       postedPosts?.filter(p => p.image_id).map(p => p.image_id) || []
     );
 
-    // Fetch products with captions
+    // Fetch products with captions and their selected version from database
     const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('id, name, image_path, caption, enhanced_image_path, image_enhancement_status')
+      .select('id, name, image_path, caption, enhanced_image_path, image_enhancement_status, selected_version')
       .eq('user_id', user?.id)
       .not('caption', 'is', null);
 
@@ -283,18 +283,24 @@ const ScheduledPosts = () => {
 
     const mediaItems: MediaItem[] = [
       ...availableProducts.map(p => {
-        // Respect user's selected version from review-content page
+        // Prioritize database selected_version over localStorage
         let filePath = p.image_path;
         const enhancedPath = (p as any).enhanced_image_path;
         const enhancementStatus = (p as any).image_enhancement_status;
-        const userSelectedVersion = selectedVersions[p.id] || 'original';
+        const dbSelectedVersion = (p as any).selected_version; // From database
+        const localSelectedVersion = selectedVersions[p.id]; // From localStorage
+        
+        // Use database value first, fallback to localStorage, then default to 'original'
+        const userSelectedVersion = dbSelectedVersion || localSelectedVersion || 'original';
         
         console.log(`🔍 [SCHEDULING DEBUG] Product ${p.name}:`, {
           id: p.id,
           original_path: p.image_path,
           enhanced_path: enhancedPath,
           enhancement_status: enhancementStatus,
-          user_selected_version: userSelectedVersion,
+          db_selected_version: dbSelectedVersion,
+          local_selected_version: localSelectedVersion,
+          final_selected_version: userSelectedVersion,
           has_enhanced: !!enhancedPath,
           status_completed: enhancementStatus === 'completed'
         });

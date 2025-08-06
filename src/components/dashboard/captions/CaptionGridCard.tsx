@@ -94,27 +94,61 @@ const CaptionGridCard = ({
   };
 
   // Navigation handlers
-  const handlePreviousVersion = () => {
+  const handlePreviousVersion = async () => {
     if (selectedVersion === 'enhanced') {
       const newVersion = 'original';
       setSelectedVersion(newVersion);
-      // Store in localStorage for persistence across navigation
+      
+      // Store in localStorage for immediate UI responsiveness
       const saved = localStorage.getItem('selectedImageVersions');
       const savedVersions = saved ? JSON.parse(saved) : {};
       savedVersions[caption.id] = newVersion;
       localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
+      
+      // Update database for persistent selection
+      if (caption.type === 'product') {
+        try {
+          const { error } = await supabase
+            .from('products')
+            .update({ selected_version: newVersion })
+            .eq('id', caption.id);
+          
+          if (error) {
+            console.error('Failed to update selected version:', error);
+          }
+        } catch (error) {
+          console.error('Error updating selected version:', error);
+        }
+      }
     }
   };
 
-  const handleNextVersion = () => {
+  const handleNextVersion = async () => {
     if (selectedVersion === 'original' && canShowEnhanced) {
       const newVersion = 'enhanced';
       setSelectedVersion(newVersion);
-      // Store in localStorage for persistence across navigation
+      
+      // Store in localStorage for immediate UI responsiveness
       const saved = localStorage.getItem('selectedImageVersions');
       const savedVersions = saved ? JSON.parse(saved) : {};
       savedVersions[caption.id] = newVersion;
       localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
+      
+      // Update database for persistent selection
+      if (caption.type === 'product') {
+        try {
+          const { error } = await supabase
+            .from('products')
+            .update({ selected_version: newVersion })
+            .eq('id', caption.id);
+          
+          if (error) {
+            console.error('Failed to update selected version:', error);
+          }
+        } catch (error) {
+          console.error('Error updating selected version:', error);
+        }
+      }
     }
   };
 
