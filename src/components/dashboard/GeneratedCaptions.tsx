@@ -12,6 +12,7 @@ import EmptyCaptionsState from './captions/EmptyCaptionsState';
 import MobileGeneratedCaptions from './MobileGeneratedCaptions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CaptionGridCard from './captions/CaptionGridCard';
+import { useImageCompression } from '@/hooks/useImageCompression';
 
 const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
