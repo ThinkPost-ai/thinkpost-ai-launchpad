@@ -392,13 +392,21 @@ export const useProductManagement = () => {
           is_new: true // Mark new products
         };
 
+        console.log('Inserting product data:', productData);
+
         const { data: insertedProduct, error: dbError } = await supabase
           .from('products')
           .insert(productData)
           .select()
           .single();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error('Database error inserting product:', dbError);
+          console.error('Product data that failed:', productData);
+          console.error('Current user:', user);
+          console.error('Session user:', session.user);
+          throw dbError;
+        }
 
         return insertedProduct;
       });
