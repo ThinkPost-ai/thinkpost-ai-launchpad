@@ -11,7 +11,10 @@ import {
   Check,
   Trash2,
   Sparkles,
-  PlayCircle
+  PlayCircle,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +56,7 @@ const CaptionGridCard = ({
   const [deleting, setDeleting] = useState(false);
   const [enhancementStatus, setEnhancementStatus] = useState(caption.image_enhancement_status || 'none');
   const [enhancedImagePath, setEnhancedImagePath] = useState(caption.enhanced_image_path || null);
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
   const [isMarkedForEnhancement, setIsMarkedForEnhancement] = useState(() => {
     const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
     return enhancingProducts.includes(caption.id);
@@ -61,21 +65,31 @@ const CaptionGridCard = ({
   const shouldShowEnhancing = enhancementStatus === 'processing' || 
     (isMarkedForEnhancement && enhancementStatus === 'none' && caption.type === 'product');
 
+  const canShowEnhanced = enhancementStatus === 'completed' && enhancedImagePath;
+
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
   };
 
   // Function to get the appropriate image path (enhanced or original)
   const getDisplayImagePath = () => {
-    // First check if we have enhanced image from the caption data
-    if (caption.enhanced_image_path && caption.image_enhancement_status === 'completed') {
-      return caption.enhanced_image_path;
-    }
-    // Fall back to local enhanced image state (for real-time updates)
-    if (enhancedImagePath && enhancementStatus === 'completed') {
-      return enhancedImagePath;
+    if (selectedVersion === 'enhanced' && canShowEnhanced) {
+      return enhancedImagePath || caption.enhanced_image_path;
     }
     return caption.image_path;
+  };
+
+  // Navigation handlers
+  const handlePreviousVersion = () => {
+    if (selectedVersion === 'enhanced') {
+      setSelectedVersion('original');
+    }
+  };
+
+  const handleNextVersion = () => {
+    if (selectedVersion === 'original' && canShowEnhanced) {
+      setSelectedVersion('enhanced');
+    }
   };
 
   // Poll for enhancement status updates for processing images
@@ -191,7 +205,7 @@ const CaptionGridCard = ({
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="p-0">
-        <div className="relative aspect-square w-full">
+        <div className="relative aspect-square w-full group">
           {caption.media_type === 'video' ? (
             <>
               <video
@@ -212,18 +226,36 @@ const CaptionGridCard = ({
             />
           )}
           
+          {/* Image version navigation arrows - only show for products with enhanced versions */}
+          {canShowEnhanced && (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handlePreviousVersion}
+                disabled={selectedVersion === 'original'}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-2 h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleNextVersion}
+                disabled={selectedVersion === 'enhanced'}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-2 h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
           {/* Enhancement status indicators */}
           {shouldShowEnhancing && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <div className="bg-white rounded-full p-2">
                 <Loader2 className="h-6 w-6 text-vibrant-purple animate-spin" />
               </div>
-            </div>
-          )}
-          
-          {enhancementStatus === 'completed' && enhancedImagePath && (
-            <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-1">
-              <Sparkles className="h-4 w-4 text-white" />
             </div>
           )}
           
@@ -240,22 +272,45 @@ const CaptionGridCard = ({
                 New
               </Badge>
             )}
+            
+            {/* Version indicator badge */}
+            {canShowEnhanced && (
+              <Badge variant={selectedVersion === 'enhanced' ? 'default' : 'secondary'} className="text-xs">
+                {selectedVersion === 'enhanced' ? (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Enhanced
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-3 h-3 mr-1" />
+                    Original
+                  </>
+                )}
+              </Badge>
+            )}
+            
             {shouldShowEnhancing && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
                 Enhancing...
               </Badge>
             )}
-            {enhancementStatus === 'completed' && enhancedImagePath && (
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
-                Enhanced
-              </Badge>
-            )}
+            
             {enhancementStatus === 'failed' && (
               <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
                 Enhancement Failed
               </Badge>
             )}
           </div>
+
+          {/* Navigation hint */}
+          {canShowEnhanced && (
+            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="secondary" className="text-xs">
+                {selectedVersion === 'original' ? 'Next: Enhanced' : 'Prev: Original'}
+              </Badge>
+            </div>
+          )}
         </div>
       </CardHeader>
 
