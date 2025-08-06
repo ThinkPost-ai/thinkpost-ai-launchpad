@@ -379,6 +379,38 @@ export const useProductManagement = () => {
     setGeneratingCaptions(true);
 
     try {
+      // Test authentication and RLS before proceeding
+      console.log('Testing authentication and RLS...');
+      
+      // Check if user profile exists (required for RLS)
+      const { data: profileCheck, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      console.log('Profile check result:', { data: profileCheck, error: profileError });
+      
+      if (profileError || !profileCheck) {
+        console.error('User profile missing or inaccessible:', profileError);
+        throw new Error(`User profile issue: ${profileError?.message || 'Profile not found'}`);
+      }
+      
+      // First, try to query existing products to test RLS
+      const { data: testQuery, error: testError } = await supabase
+        .from('products')
+        .select('id')
+        .limit(1);
+      
+      console.log('Test query result:', { data: testQuery, error: testError });
+      
+      if (testError) {
+        console.error('Test query failed:', testError);
+        throw new Error(`Authentication test failed: ${testError.message}`);
+      }
+      
+      console.log('Authentication test passed, proceeding with product creation...');
+
       const productPromises = products.map(async (product) => {
         const imagePath = await uploadImage(product.image!);
 
@@ -389,10 +421,23 @@ export const useProductManagement = () => {
           description: product.description || null,
           image_path: imagePath,
           caption: null,
-          is_new: true // Mark new products
+          is_new: true, // Mark new products
+          // Add TikTok settings like in saveProductsOnly
+          tiktok_enabled: product.tiktokEnabled,
+          tiktok_privacy_level: product.tiktokSettings.privacyLevel,
+          tiktok_allow_comments: product.tiktokSettings.allowComments,
+          tiktok_commercial_content: product.tiktokSettings.commercialContent,
+          tiktok_your_brand: product.tiktokSettings.yourBrand,
+          tiktok_branded_content: product.tiktokSettings.brandedContent
         };
 
         console.log('Inserting product data:', productData);
+        console.log('Current auth state:', {
+          userId: user.id,
+          sessionUserId: session.user?.id,
+          authUid: session.user?.id,
+          match: user.id === session.user?.id
+        });
 
         const { data: insertedProduct, error: dbError } = await supabase
           .from('products')
