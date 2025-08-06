@@ -117,20 +117,25 @@ serve(async (req)=>{
     ${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
     `;
     // Call GPT-4.1 with image editing API
+    const formData = new FormData();
+    
+    // Convert base64 to blob for the image parameter
+    const imageBytes = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+    const imageBlob = new Blob([imageBytes], { type: 'image/jpeg' });
+    
+    formData.append('model', 'gpt-image-1');
+    formData.append('prompt', prompt);
+    formData.append('image', imageBlob, 'image.jpg');
+    formData.append('output_format', 'jpeg');
+    formData.append('quality', 'high');
+    formData.append('size', '1024x1024');
+
     const openaiResponse = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: prompt,
-        image: base64Image,
-        output_format: "jpeg",
-        quality: "high",
-        size: "1024x1024"
-      })
+      body: formData
     });
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
