@@ -30,19 +30,45 @@ export const useTikTokConnection = () => {
         .from('profiles')
         .select('tiktok_open_id, tiktok_username, tiktok_avatar_url, tiktok_connected')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching TikTok profile:', error);
         return;
       }
 
-      setTikTokProfile({
-        tiktok_open_id: data.tiktok_open_id,
-        tiktok_username: data.tiktok_username,
-        tiktok_avatar_url: data.tiktok_avatar_url,
-        tiktok_connected: data.tiktok_connected || false,
-      });
+      // If no profile exists, create one
+      if (!data) {
+        console.log('No profile found for user, creating one...');
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            auth_provider: 'email'
+          })
+          .select('tiktok_open_id, tiktok_username, tiktok_avatar_url, tiktok_connected')
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          return;
+        }
+
+        setTikTokProfile({
+          tiktok_open_id: newProfile.tiktok_open_id,
+          tiktok_username: newProfile.tiktok_username,
+          tiktok_avatar_url: newProfile.tiktok_avatar_url,
+          tiktok_connected: newProfile.tiktok_connected || false,
+        });
+      } else {
+        setTikTokProfile({
+          tiktok_open_id: data.tiktok_open_id,
+          tiktok_username: data.tiktok_username,
+          tiktok_avatar_url: data.tiktok_avatar_url,
+          tiktok_connected: data.tiktok_connected || false,
+        });
+      }
     } catch (error) {
       console.error('Error fetching TikTok profile:', error);
     } finally {
