@@ -14,9 +14,7 @@ export const useCaptionData = () => {
   const fetchUserCredits = async () => {
     try {
       // Use the new get_total_credits function for consistency with backend
-      const { data: totalCredits, error } = await supabase.rpc('get_total_credits', {
-        user_id: user?.id
-      });
+      const { data: totalCredits, error } = await supabase.rpc('get_total_credits');
 
       if (error) {
         console.error('Error fetching user credits:', error);

@@ -68,9 +68,7 @@ export const useDashboardData = () => {
       }
 
       // Use the new get_total_credits function for consistency with backend
-      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits', {
-        user_id: user.id
-      });
+      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits');
 
       if (creditsError) {
         console.error('Credits fetch error:', creditsError);
@@ -115,9 +113,7 @@ export const useDashboardData = () => {
     
     try {
       // Use the new get_total_credits function for consistency with backend
-      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits', {
-        user_id: user.id
-      });
+      const { data: totalCredits, error: creditsError } = await supabase.rpc('get_total_credits');
 
       if (creditsError) {
         console.error('Credits update fetch error:', creditsError);
