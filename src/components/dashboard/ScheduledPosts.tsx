@@ -543,6 +543,25 @@ const ScheduledPosts = () => {
 
       if (error) throw error;
 
+      // Trigger the scheduled posts processing immediately for any posts due now
+      try {
+        console.log('🔄 Triggering scheduled posts processing...');
+        const { data: triggerResult, error: triggerError } = await supabase.functions.invoke('process-scheduled-posts', {
+          body: {},
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+        
+        if (triggerError) {
+          console.error('Failed to trigger scheduled posts processing:', triggerError);
+        } else {
+          console.log('✅ Scheduled posts processing triggered successfully:', triggerResult);
+        }
+      } catch (triggerError) {
+        console.error('Error triggering scheduled posts processing:', triggerError);
+      }
+
       toast({
         title: t('toast.success'),
         description: `${schedule.length} ${t('schedule.tikTokScheduled')} (${mediaItems.length} unposted products/images)`,
