@@ -226,7 +226,7 @@ const CaptionGridCard = ({
             />
           )}
           
-          {/* Image version navigation arrows - only show for products with enhanced versions */}
+          {/* Image version navigation arrows - mobile optimized */}
           {canShowEnhanced && (
             <>
               <Button
@@ -234,18 +234,18 @@ const CaptionGridCard = ({
                 size="sm"
                 onClick={handlePreviousVersion}
                 disabled={selectedVersion === 'original'}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-2 h-8 w-8"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-3 sm:p-2 h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleNextVersion}
                 disabled={selectedVersion === 'enhanced'}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-2 h-8 w-8"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-3 sm:p-2 h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
             </>
           )}
