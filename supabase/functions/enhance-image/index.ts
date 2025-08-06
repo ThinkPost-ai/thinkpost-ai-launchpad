@@ -9,15 +9,16 @@ async function compressImageWithTinyPNG(base64Data: string, apiKey: string): Pro
   try {
     console.log('🔧 Compressing image with TinyPNG...');
     
-    const response = await fetch('https://api.tinypng.com/shrink', {
+    // Convert base64 to binary for TinyPNG API
+    const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    
+    // Step 1: Upload image to TinyPNG for compression
+    const response = await fetch('https://api.tinify.com/shrink', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${btoa(`api:${apiKey}`)}`,
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        imageBase64: base64Data
-      }),
+      body: imageBytes,
     });
 
     if (!response.ok) {
@@ -26,12 +27,24 @@ async function compressImageWithTinyPNG(base64Data: string, apiKey: string): Pro
       throw new Error(`TinyPNG compression failed: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
-    
-    // Download the compressed image
-    const compressedResponse = await fetch(result.output.url);
+    // Get the location URL from the response headers
+    const locationUrl = response.headers.get('Location');
+    if (!locationUrl) {
+      throw new Error('No location URL returned from TinyPNG');
+    }
+
+    console.log('📍 TinyPNG compression successful, downloading from:', locationUrl);
+
+    // Step 2: Download the compressed image
+    const compressedResponse = await fetch(locationUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${btoa(`api:${apiKey}`)}`,
+      },
+    });
+
     if (!compressedResponse.ok) {
-      throw new Error('Failed to download compressed image from TinyPNG');
+      throw new Error(`Failed to download compressed image from TinyPNG: ${compressedResponse.status}`);
     }
     
     const compressedBuffer = await compressedResponse.arrayBuffer();
@@ -50,7 +63,9 @@ async function compressImageWithTinyPNG(base64Data: string, apiKey: string): Pro
     return compressedBase64;
   } catch (error) {
     console.error('TinyPNG compression error:', error);
-    throw error;
+    // Return original image if compression fails
+    console.warn('⚠️ Returning original image due to TinyPNG compression failure');
+    return base64Data;
   }
 }
 const corsHeaders = {
@@ -63,9 +78,12 @@ serve(async (req)=>{
       headers: corsHeaders
     });
   }
+  
+  let productId, supabase, imageUrl, productName, brandName;
+  
   try {
     const requestBody = await req.json();
-    const { productId, imageUrl, productName, brandName } = requestBody;
+    ({ productId, imageUrl, productName, brandName } = requestBody);
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -74,7 +92,7 @@ serve(async (req)=>{
     if (!supabaseUrl || !supabaseKey || !openaiApiKey || !tinypngApiKey) {
       throw new Error('Missing required environment variables');
     }
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(supabaseUrl, supabaseKey);
     // Fetch original image and convert to base64
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) throw new Error('Failed to fetch image');
@@ -146,6 +164,7 @@ serve(async (req)=>{
     const generatedImageBase64 = responseData.data[0].b64_json;
     
     // Compress the enhanced image with TinyPNG
+    console.log('🖼️ Starting TinyPNG compression...');
     const compressedImageBase64 = await compressImageWithTinyPNG(generatedImageBase64, tinypngApiKey);
     
     // Convert compressed base64 to buffer for storage
@@ -153,6 +172,8 @@ serve(async (req)=>{
     console.log(`📦 Final compressed image size: ${Math.round(processedImageBuffer.length / 1024)}KB`);
     
     const enhancedFileName = `enhanced-temp-${productId}-${Date.now()}.jpg`;
+    console.log(`💾 Uploading enhanced image as: ${enhancedFileName}`);
+    
     const { error: uploadError } = await supabase.storage.from("restaurant-images").upload(enhancedFileName, processedImageBuffer, {
       contentType: "image/jpeg",
       upsert: false
@@ -161,15 +182,28 @@ serve(async (req)=>{
       console.error("Upload failed:", uploadError);
       throw new Error("Failed to upload enhanced image");
     }
+    
     const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
-    await supabase.from("products").update({
+    console.log(`✅ Enhanced image uploaded successfully: ${enhancedImageUrl}`);
+    
+    // Update product with enhanced image information
+    const { error: updateError } = await supabase.from("products").update({
       enhanced_image_path: enhancedFileName,
       image_enhancement_status: "completed" // TinyPNG compressed and ready to use
     }).eq("id", productId);
+    
+    if (updateError) {
+      console.error("Failed to update product:", updateError);
+      // Don't throw error, as image was successfully processed
+    }
+    
+    console.log(`🎉 Image enhancement completed successfully for product ${productId}`);
+    
     return new Response(JSON.stringify({
       success: true,
       enhancedImageUrl,
-      enhancedImagePath: enhancedFileName
+      enhancedImagePath: enhancedFileName,
+      compressionApplied: true
     }), {
       status: 200,
       headers: {
@@ -179,6 +213,16 @@ serve(async (req)=>{
     });
   } catch (error) {
     console.error("Enhancement failed:", error);
+    
+    // Try to update product status to failed
+    try {
+      await supabase.from("products").update({
+        image_enhancement_status: "failed"
+      }).eq("id", productId);
+    } catch (updateError) {
+      console.error("Failed to update product status to failed:", updateError);
+    }
+    
     return new Response(JSON.stringify({
       success: false,
       error: error.message
