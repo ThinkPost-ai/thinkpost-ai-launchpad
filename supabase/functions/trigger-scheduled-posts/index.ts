@@ -14,18 +14,15 @@ serve(async (req) => {
   try {
     console.log('🕐 Triggering scheduled posts processing...');
     
-    // Create a supabase client with service role
+    // Create a supabase client with service role (no auth required)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Call the process-scheduled-posts function
+    // Call the process-scheduled-posts function directly with service role
     const { data, error } = await supabase.functions.invoke('process-scheduled-posts', {
-      body: {},
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-      }
+      body: {}
     });
 
     if (error) {

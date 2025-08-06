@@ -1,21 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Edit, 
-  Wand2,
+  Trash2, 
+  Wand2, 
+  X, 
+  Check, 
   Loader2,
-  X,
-  Check,
-  Trash2
+  Sparkles 
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useCaptionData } from './captions/useCaptionData';
-import { GeneratedCaptionsProps } from './captions/types';
-import EmptyCaptionsState from './captions/EmptyCaptionsState';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +27,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useNavigate } from 'react-router-dom';
+
+interface GeneratedCaptionsProps {
+  onCreditsUpdate?: () => void;
+}
+
+const EmptyCaptionsState = () => {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  return (
+    <div className="text-center py-12 space-y-6">
+      <Wand2 className="h-16 w-16 text-muted-foreground mx-auto" />
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">{t('captions.noContent')}</h3>
+        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+          {t('captions.noContentDescription')}
+        </p>
+      </div>
+      <Button 
+        onClick={() => navigate('/upload')}
+        className="bg-gradient-primary hover:opacity-90"
+      >
+        {t('captions.uploadFirst')}
+      </Button>
+    </div>
+  );
+};
 
 const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
@@ -38,13 +64,19 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     setCaptions, 
     loading, 
     userCredits, 
-    setUserCredits 
+    setUserCredits,
+    fetchCaptions 
   } = useCaptionData();
   
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [currentEditId, setCurrentEditId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  
+  // Enhancement tracking states
+  const [enhancingItems, setEnhancingItems] = useState<Set<string>>(new Set());
+  const [enhancementStatuses, setEnhancementStatuses] = useState<{[key: string]: string}>({});
+  const [enhancedPaths, setEnhancedPaths] = useState<{[key: string]: string}>({});
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
@@ -52,11 +84,134 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
   // Function to get the appropriate image path (enhanced or original)
   const getDisplayImagePath = (caption: any) => {
-    if (caption.enhanced_image_path && caption.image_enhancement_status === 'completed') {
-      return caption.enhanced_image_path;
+    const enhancedPath = enhancedPaths[caption.id] || caption.enhanced_image_path;
+    const status = enhancementStatuses[caption.id] || caption.image_enhancement_status;
+    
+    if (enhancedPath && status === 'completed') {
+      return enhancedPath;
     }
     return caption.image_path;
   };
+
+  // Check if item is currently enhancing
+  const isItemEnhancing = (captionId: string) => {
+    return enhancingItems.has(captionId) || enhancementStatuses[captionId] === 'processing';
+  };
+
+  // Initialize enhancement states from localStorage and database
+  useEffect(() => {
+    const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+    if (enhancingProducts.length > 0) {
+      setEnhancingItems(new Set(enhancingProducts));
+    }
+
+    // Initialize enhancement statuses from captions data
+    const initialStatuses: {[key: string]: string} = {};
+    const initialPaths: {[key: string]: string} = {};
+    
+    captions.forEach(caption => {
+      if (caption.image_enhancement_status) {
+        initialStatuses[caption.id] = caption.image_enhancement_status;
+      }
+      if (caption.enhanced_image_path) {
+        initialPaths[caption.id] = caption.enhanced_image_path;
+      }
+    });
+    
+    setEnhancementStatuses(initialStatuses);
+    setEnhancedPaths(initialPaths);
+  }, [captions]);
+
+  // Polling mechanism for enhancement status
+  useEffect(() => {
+    const enhancingIds = Array.from(enhancingItems).filter(id => 
+      captions.some(caption => caption.id === id)
+    );
+
+    if (enhancingIds.length === 0) return;
+
+    console.log('Starting polling for enhancing items:', enhancingIds);
+
+    const pollInterval = setInterval(async () => {
+      for (const itemId of enhancingIds) {
+        try {
+          const caption = captions.find(c => c.id === itemId);
+          if (!caption) continue;
+
+          const table = caption.type === 'product' ? 'products' : 'images';
+          const { data, error } = await supabase
+            .from(table)
+            .select('enhanced_image_path, image_enhancement_status')
+            .eq('id', itemId)
+            .single();
+
+          if (error) {
+            console.error('Polling error for', itemId, ':', error);
+            continue;
+          }
+
+          const status = (data as any)?.image_enhancement_status || 'none';
+          const path = (data as any)?.enhanced_image_path;
+
+          console.log(`Polling ${itemId}: status=${status}, path=${path}`);
+
+          setEnhancementStatuses(prev => ({ ...prev, [itemId]: status }));
+          if (path) {
+            setEnhancedPaths(prev => ({ ...prev, [itemId]: path }));
+          }
+
+          if (status === 'completed') {
+            console.log('Enhancement completed for:', itemId);
+            setEnhancingItems(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(itemId);
+              return newSet;
+            });
+
+            // Remove from localStorage
+            const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+            const updatedList = enhancingProducts.filter((id: string) => id !== itemId);
+            localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+
+            // Refresh captions data to get the updated image paths
+            setTimeout(async () => {
+              await fetchCaptions(); // Refresh the captions data
+            }, 1000);
+
+            toast({
+              title: 'Enhancement Complete! ✨',
+              description: `Your ${caption.type} image has been enhanced and will update shortly.`,
+            });
+          } else if (status === 'failed') {
+            console.log('Enhancement failed for:', itemId);
+            setEnhancingItems(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(itemId);
+              return newSet;
+            });
+
+            // Remove from localStorage
+            const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+            const updatedList = enhancingProducts.filter((id: string) => id !== itemId);
+            localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+
+            toast({
+              title: 'Enhancement Failed',
+              description: `Enhancement failed for your ${caption.type}.`,
+              variant: 'destructive'
+            });
+          }
+        } catch (error) {
+          console.error('Polling error for', itemId, ':', error);
+        }
+      }
+    }, 3000); // Poll every 3 seconds
+
+    return () => {
+      console.log('Clearing polling interval');
+      clearInterval(pollInterval);
+    };
+  }, [enhancingItems, captions, toast, fetchCaptions]);
 
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
     // Check credits before attempting to generate
@@ -234,27 +389,63 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
         <Card key={`${caption.type}-${caption.id}`} className="p-4">
           {/* Image Section */}
           <div className="w-full mb-4">
-            {caption.media_type === 'video' ? (
-              <video
-                src={getImageUrl(getDisplayImagePath(caption))}
-                className="w-full h-64 object-cover rounded-lg"
-                controls
-                muted
-              />
-            ) : (
-              <img
-                src={getImageUrl(getDisplayImagePath(caption))}
-                alt={caption.name || caption.original_filename || 'Content'}
-                className="w-full h-64 object-cover rounded-lg"
-              />
-            )}
+            <div className="relative">
+              {caption.media_type === 'video' ? (
+                <video
+                  src={getImageUrl(getDisplayImagePath(caption))}
+                  className="w-full h-64 object-cover rounded-lg"
+                  controls
+                  muted
+                />
+              ) : (
+                <img
+                  src={getImageUrl(getDisplayImagePath(caption))}
+                  alt={caption.name || caption.original_filename || 'Content'}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              )}
+              
+              {/* Enhancement loading overlay */}
+              {isItemEnhancing(caption.id) && (
+                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                  <div className="bg-white/90 rounded-lg p-4 flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 text-purple-600 animate-spin" />
+                    <div className="text-sm">
+                      <div className="font-medium text-gray-900">Enhancing Image...</div>
+                      <div className="text-gray-600">This may take a few minutes</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Enhancement status indicators */}
+              {enhancementStatuses[caption.id] === 'completed' && enhancedPaths[caption.id] && (
+                <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-1">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+              )}
+              
+              {enhancementStatuses[caption.id] === 'failed' && (
+                <div className="absolute top-2 right-2 bg-red-500 rounded-full p-1">
+                  <X className="h-4 w-4 text-white" />
+                </div>
+              )}
+            </div>
             <div className="mt-2">
               <h3 className="font-medium text-sm text-foreground">
                 {caption.name || caption.original_filename}
               </h3>
-              <p className="text-xs text-muted-foreground">
-                {new Date(caption.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {new Date(caption.created_at).toLocaleDateString()}
+                </p>
+                {enhancementStatuses[caption.id] === 'completed' && enhancedPaths[caption.id] && (
+                  <span className="text-xs text-yellow-600 font-medium flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    Enhanced
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

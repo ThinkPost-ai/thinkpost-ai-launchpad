@@ -108,9 +108,13 @@ const ProductImageUpload = ({
     }
   }, [enhanceImage, productId, enhancementStatus]);
 
+  // Show loading state when enhance is enabled but enhancement hasn't started
+  const shouldShowEnhancementLoading = enhanceImage && productId && enhancementStatus === 'none';
+  const shouldShowProcessingLoading = enhancementStatus === 'processing';
+
   const displayImage = getDisplayImage();
   const isEnhanced = enhancedImagePath && enhancementStatus === 'completed';
-  const isProcessing = enhancementStatus === 'processing';
+  const isProcessing = enhancementStatus === 'processing' || shouldShowEnhancementLoading;
   const hasFailed = enhancementStatus === 'failed';
 
   return (
@@ -148,7 +152,9 @@ const ProductImageUpload = ({
               <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
                 <div className="bg-white rounded-lg px-3 py-2 flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                  <span className="text-sm font-medium text-blue-600">Enhancing...</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    {shouldShowEnhancementLoading ? 'Preparing enhancement...' : 'Enhancing...'}
+                  </span>
                 </div>
               </div>
             )}
@@ -164,7 +170,7 @@ const ProductImageUpload = ({
               {isProcessing && (
                 <Badge className="bg-blue-500 text-white text-xs">
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  Processing
+                  {shouldShowEnhancementLoading ? 'Preparing...' : 'Processing'}
                 </Badge>
               )}
               {hasFailed && (
