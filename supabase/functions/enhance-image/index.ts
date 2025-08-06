@@ -16,10 +16,7 @@ async function compressImageWithTinyPNG(base64Data: string, apiKey: string): Pro
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        source: {
-          type: 'base64',
-          data: base64Data
-        }
+        imageBase64: base64Data
       }),
     });
 
