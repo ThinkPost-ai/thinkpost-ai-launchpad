@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,10 @@ import {
   X, 
   Check, 
   Loader2,
-  Sparkles 
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useCaptionData } from './captions/useCaptionData';
 import {
@@ -77,6 +81,14 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [enhancingItems, setEnhancingItems] = useState<Set<string>>(new Set());
   const [enhancementStatuses, setEnhancementStatuses] = useState<{[key: string]: string}>({});
   const [enhancedPaths, setEnhancedPaths] = useState<{[key: string]: string}>({});
+  const [selectedVersions, setSelectedVersions] = useState<{[key: string]: 'original' | 'enhanced'}>({});
+  
+  // Full-screen image preview states
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    isVideo: boolean;
+    caption: any;
+  } | null>(null);
 
   const getImageUrl = (filePath: string) => {
     return `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${filePath}`;
@@ -86,12 +98,59 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const getDisplayImagePath = (caption: any) => {
     const enhancedPath = enhancedPaths[caption.id] || caption.enhanced_image_path;
     const status = enhancementStatuses[caption.id] || caption.image_enhancement_status;
+    const selectedVersion = selectedVersions[caption.id] || 'original';
     
-    if (enhancedPath && status === 'completed') {
+    if (selectedVersion === 'enhanced' && enhancedPath && status === 'completed') {
       return enhancedPath;
     }
     return caption.image_path;
   };
+
+  // Check if item can show enhanced version
+  const canShowEnhanced = (captionId: string) => {
+    const enhancedPath = enhancedPaths[captionId] || captions.find(c => c.id === captionId)?.enhanced_image_path;
+    const status = enhancementStatuses[captionId] || captions.find(c => c.id === captionId)?.image_enhancement_status;
+    return status === 'completed' && enhancedPath;
+  };
+
+  // Navigation handlers for image versions
+  const handleVersionChange = (captionId: string, version: 'original' | 'enhanced') => {
+    setSelectedVersions(prev => ({ ...prev, [captionId]: version }));
+  };
+
+  // Full-screen image preview handler
+  const openImagePreview = (caption: any) => {
+    const imageUrl = getImageUrl(getDisplayImagePath(caption));
+    setPreviewImage({
+      url: imageUrl,
+      isVideo: caption.media_type === 'video',
+      caption: caption
+    });
+  };
+
+  const closeImagePreview = () => {
+    setPreviewImage(null);
+  };
+
+  // Handle keyboard events for modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && previewImage) {
+        closeImagePreview();
+      }
+    };
+
+    if (previewImage) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [previewImage]);
 
   // Check if item is currently enhancing
   const isItemEnhancing = (captionId: string) => {
@@ -108,6 +167,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     // Initialize enhancement statuses from captions data
     const initialStatuses: {[key: string]: string} = {};
     const initialPaths: {[key: string]: string} = {};
+    const initialVersions: {[key: string]: 'original' | 'enhanced'} = {};
     
     captions.forEach(caption => {
       if (caption.image_enhancement_status) {
@@ -115,11 +175,16 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
       }
       if (caption.enhanced_image_path) {
         initialPaths[caption.id] = caption.enhanced_image_path;
+        // Auto-select enhanced version if available and completed
+        if (caption.image_enhancement_status === 'completed') {
+          initialVersions[caption.id] = 'enhanced';
+        }
       }
     });
     
     setEnhancementStatuses(initialStatuses);
     setEnhancedPaths(initialPaths);
+    setSelectedVersions(prev => ({ ...prev, ...initialVersions }));
   }, [captions]);
 
   // Polling mechanism for enhancement status
@@ -172,6 +237,9 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
             const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
             const updatedList = enhancingProducts.filter((id: string) => id !== itemId);
             localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+
+            // Auto-switch to enhanced version when enhancement completes
+            setSelectedVersions(prev => ({ ...prev, [itemId]: 'enhanced' }));
 
             // Refresh captions data to get the updated image paths
             setTimeout(async () => {
@@ -393,16 +461,55 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
               {caption.media_type === 'video' ? (
                 <video
                   src={getImageUrl(getDisplayImagePath(caption))}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-64 object-cover rounded-lg cursor-pointer"
                   controls
                   muted
+                  onClick={() => openImagePreview(caption)}
                 />
               ) : (
                 <img
                   src={getImageUrl(getDisplayImagePath(caption))}
                   alt={caption.name || caption.original_filename || 'Content'}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-64 object-cover rounded-lg cursor-pointer"
+                  onClick={() => openImagePreview(caption)}
                 />
+              )}
+              
+              {/* Version Badge */}
+              <div className="absolute top-2 left-2">
+                <div className="flex items-center gap-1 bg-black/70 rounded-full px-2 py-1">
+                  {(selectedVersions[caption.id] || 'original') === 'enhanced' ? (
+                    <>
+                      <Sparkles className="h-3 w-3 text-yellow-400" />
+                      <span className="text-xs text-white font-medium">Enhanced</span>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="h-3 w-3 text-gray-300" />
+                      <span className="text-xs text-white font-medium">Original</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation Arrows - only show if enhanced version is available */}
+              {canShowEnhanced(caption.id) && (
+                <>
+                  <button
+                    onClick={() => handleVersionChange(caption.id, 'original')}
+                    disabled={(selectedVersions[caption.id] || 'original') === 'original'}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/70 text-white rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/80 transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleVersionChange(caption.id, 'enhanced')}
+                    disabled={(selectedVersions[caption.id] || 'original') === 'enhanced'}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/70 text-white rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/80 transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </>
               )}
               
               {/* Enhancement loading overlay */}
@@ -431,6 +538,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                 </div>
               )}
             </div>
+            
             <div className="mt-2">
               <h3 className="font-medium text-sm text-foreground">
                 {caption.name || caption.original_filename}
@@ -442,7 +550,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
                 {enhancementStatuses[caption.id] === 'completed' && enhancedPaths[caption.id] && (
                   <span className="text-xs text-yellow-600 font-medium flex items-center gap-1">
                     <Sparkles className="h-3 w-3" />
-                    Enhanced
+                    Enhanced Available
                   </span>
                 )}
               </div>
@@ -589,6 +697,110 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
           {t('captions.next')}
         </Button>
       </div>
+
+      {/* Full-Screen Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
+          onClick={closeImagePreview}
+        >
+          <div className="relative max-w-full max-h-full">
+            {/* Close button */}
+            <button
+              onClick={closeImagePreview}
+              className="absolute top-4 right-4 z-10 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            {/* Version badge */}
+            <div className="absolute top-4 left-4 z-10">
+              <div className="flex items-center gap-1 bg-black/70 rounded-full px-3 py-1">
+                {(selectedVersions[previewImage.caption.id] || 'original') === 'enhanced' ? (
+                  <>
+                    <Sparkles className="h-4 w-4 text-yellow-400" />
+                    <span className="text-sm text-white font-medium">Enhanced</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="h-4 w-4 text-gray-300" />
+                    <span className="text-sm text-white font-medium">Original</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Navigation arrows in full-screen mode */}
+            {canShowEnhanced(previewImage.caption.id) && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVersionChange(previewImage.caption.id, 'original');
+                    // Update preview image URL
+                    const newImageUrl = getImageUrl(getDisplayImagePath(previewImage.caption));
+                    setPreviewImage(prev => prev ? { ...prev, url: newImageUrl } : null);
+                  }}
+                  disabled={(selectedVersions[previewImage.caption.id] || 'original') === 'original'}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/70 text-white rounded-full p-3 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/80 transition-colors z-10"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVersionChange(previewImage.caption.id, 'enhanced');
+                    // Update preview image URL
+                    const newImageUrl = getImageUrl(getDisplayImagePath(previewImage.caption));
+                    setPreviewImage(prev => prev ? { ...prev, url: newImageUrl } : null);
+                  }}
+                  disabled={(selectedVersions[previewImage.caption.id] || 'original') === 'enhanced'}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/70 text-white rounded-full p-3 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/80 transition-colors z-10"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
+
+            {/* Full-screen image/video */}
+            <div 
+              className="max-w-full max-h-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {previewImage.isVideo ? (
+                <video
+                  src={previewImage.url}
+                  className="max-w-full max-h-full object-contain"
+                  controls
+                  autoPlay
+                />
+              ) : (
+                <img
+                  src={previewImage.url}
+                  alt={previewImage.caption.name || previewImage.caption.original_filename || 'Content'}
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Image info at bottom */}
+            <div className="absolute bottom-4 left-4 right-4 bg-black/70 rounded-lg p-3 text-white">
+              <h3 className="font-medium text-sm mb-1">
+                {previewImage.caption.name || previewImage.caption.original_filename}
+              </h3>
+              <p className="text-xs text-gray-300">
+                {new Date(previewImage.caption.created_at).toLocaleDateString()}
+              </p>
+              {enhancementStatuses[previewImage.caption.id] === 'completed' && enhancedPaths[previewImage.caption.id] && (
+                <span className="text-xs text-yellow-400 font-medium flex items-center gap-1 mt-1">
+                  <Sparkles className="h-3 w-3" />
+                  Enhanced Version Available
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
