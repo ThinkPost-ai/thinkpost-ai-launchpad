@@ -230,7 +230,7 @@ const ProductCard = ({
           <div className="space-y-4">
             <div>
               
-              {/* Image Upload */}
+              {/* Image Upload with Version Selector */}
               <div className="mb-4">
                 <ProductImageUpload
                   index={index}

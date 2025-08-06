@@ -718,10 +718,10 @@ const ScheduledPosts = () => {
       } else if (post.video_path) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.video_path}`;
         console.log('Using video_path for posting:', post.video_path);
-      } else if (post.processed_image_path) {
+      } else if ((post as any).processed_image_path) {
         // Priority: Use processed_image_path (contains enhanced image if available)
-        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${post.processed_image_path}`;
-        console.log('✅ Using processed_image_path for posting (enhanced if available):', post.processed_image_path);
+        finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${(post as any).processed_image_path}`;
+        console.log('✅ Using processed_image_path for posting (enhanced if available):', (post as any).processed_image_path);
       } else if (actualImagePath) {
         finalMediaUrl = `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${actualImagePath}`;
         console.log('Using actualImagePath for posting (enhanced if available):', actualImagePath);

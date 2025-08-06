@@ -178,7 +178,7 @@ const AccountSettings = () => {
       // Call the database function to delete user and all associated data
       console.log('Calling database function to delete user and data...');
       const { error: deleteError } = await supabase.rpc('delete_user_and_data', {
-        user_id_to_delete: user.id
+        target_user_id: user.id
       });
 
       if (deleteError) {

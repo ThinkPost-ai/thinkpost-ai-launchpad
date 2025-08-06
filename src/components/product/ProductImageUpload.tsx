@@ -7,6 +7,7 @@ import { X, ImageIcon, Video, Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { ImageVersionSelector } from './ImageVersionSelector';
 
 interface ProductImageUploadProps {
   index: number;
@@ -31,6 +32,8 @@ const ProductImageUpload = ({
   const { user } = useAuth();
   const [enhancedImagePath, setEnhancedImagePath] = useState<string | null>(null);
   const [enhancementStatus, setEnhancementStatus] = useState<'none' | 'processing' | 'completed' | 'failed'>('none');
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
+  const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
 
   const isVideo = file?.type.startsWith('video/');
 
@@ -41,7 +44,7 @@ const ProductImageUpload = ({
 
   // Function to determine which image to display (enhanced or original)
   const getDisplayImage = () => {
-    if (enhancedImagePath && enhancementStatus === 'completed') {
+    if (selectedVersion === 'enhanced' && enhancedImagePath && enhancementStatus === 'completed') {
       return getImageUrl(enhancedImagePath);
     }
     return imagePreview;
@@ -71,7 +74,7 @@ const ProductImageUpload = ({
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('enhanced_image_path, image_enhancement_status')
+        .select('enhanced_image_path, image_enhancement_status, image_path')
         .eq('id', productId)
         .single();
 
@@ -83,9 +86,11 @@ const ProductImageUpload = ({
       if (data) {
         const status = (data as any).image_enhancement_status || 'none';
         const enhancedPath = (data as any).enhanced_image_path;
+        const imagePath = (data as any).image_path;
         
         setEnhancementStatus(status);
         setEnhancedImagePath(enhancedPath);
+        setOriginalImagePath(imagePath);
       }
     } catch (error) {
       console.error('Failed to check enhanced image:', error);
@@ -114,7 +119,15 @@ const ProductImageUpload = ({
         {t('productImage.productImage')} <span className="text-red-500">{t('productForm.required')}</span>
       </Label>
       <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-        {displayImage ? (
+        {displayImage && originalImagePath ? (
+          <ImageVersionSelector
+            originalImagePath={originalImagePath}
+            enhancedImagePath={enhancedImagePath}
+            enhancementStatus={enhancementStatus}
+            selectedVersion={selectedVersion}
+            onVersionChange={setSelectedVersion}
+          />
+        ) : displayImage ? (
           <div className="relative">
             {isVideo ? (
               <video
