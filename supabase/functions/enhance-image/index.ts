@@ -13,133 +13,112 @@ async function processImageForTikTok(imageBuffer: Uint8Array): Promise<Uint8Arra
   try {
     console.log('🔧 Processing enhanced image for TikTok compatibility...');
     
-    // Use browser-compatible image processing with ImageData approach
-    // Convert the image buffer to a data URL first
-    const blob = new Blob([imageBuffer]);
-    const arrayBuffer = await blob.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    
-    // Convert to base64 data URL
-    let binary = '';
-    const chunkSize = 1024;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
-    }
-    const base64 = btoa(binary);
-    const dataUrl = `data:image/jpeg;base64,${base64}`;
+    // Create a blob from the image buffer
+    const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+    const imageUrl = URL.createObjectURL(blob);
     
     console.log(`📐 Original size: ${Math.round(imageBuffer.length / 1024)}KB`);
     
-    // Use OffscreenCanvas approach for image processing
+    // Create an Image object to get dimensions
     const img = new Image();
     
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       img.onload = () => {
-        const originalWidth = img.width;
-        const originalHeight = img.height;
-        
-        console.log(`📐 Original dimensions: ${originalWidth}x${originalHeight}`);
-        
-        // Calculate new dimensions if resizing is needed (same logic as client-side)
-        const maxWidth = 1080;
-        const maxHeight = 1920;
-        const maxFileSize = 1024 * 1024; // 1MB in bytes
-        
-        let newWidth = originalWidth;
-        let newHeight = originalHeight;
-        let wasResized = false;
-
-        // Check if resizing is needed (exact same logic as client-side)
-        if (originalWidth > maxWidth || originalHeight > maxHeight) {
-          const aspectRatio = originalWidth / originalHeight;
+        try {
+          const originalWidth = img.naturalWidth || img.width;
+          const originalHeight = img.naturalHeight || img.height;
           
-          if (originalWidth > originalHeight) {
-            // Landscape orientation
-            newWidth = Math.min(maxWidth, originalWidth);
-            newHeight = Math.round(newWidth / aspectRatio);
+          console.log(`📐 Original dimensions: ${originalWidth}x${originalHeight}`);
+          
+          // Calculate new dimensions if resizing is needed (EXACT same logic as client-side)
+          const maxWidth = 1080;
+          const maxHeight = 1920;
+          
+          let newWidth = originalWidth;
+          let newHeight = originalHeight;
+          let wasResized = false;
+
+          // Check if resizing is needed (exact same logic as client-side)
+          if (originalWidth > maxWidth || originalHeight > maxHeight) {
+            const aspectRatio = originalWidth / originalHeight;
             
-            if (newHeight > maxHeight) {
-              newHeight = maxHeight;
-              newWidth = Math.round(newHeight * aspectRatio);
-            }
-          } else {
-            // Portrait orientation
-            newHeight = Math.min(maxHeight, originalHeight);
-            newWidth = Math.round(newHeight * aspectRatio);
-            
-            if (newWidth > maxWidth) {
-              newWidth = maxWidth;
+            if (originalWidth > originalHeight) {
+              // Landscape orientation
+              newWidth = Math.min(maxWidth, originalWidth);
               newHeight = Math.round(newWidth / aspectRatio);
+              
+              if (newHeight > maxHeight) {
+                newHeight = maxHeight;
+                newWidth = Math.round(newHeight * aspectRatio);
+              }
+            } else {
+              // Portrait orientation
+              newHeight = Math.min(maxHeight, originalHeight);
+              newWidth = Math.round(newHeight * aspectRatio);
+              
+              if (newWidth > maxWidth) {
+                newWidth = maxWidth;
+                newHeight = Math.round(newWidth / aspectRatio);
+              }
             }
+            
+            wasResized = true;
+            console.log(`📏 Resized to: ${newWidth}x${newHeight}`);
           }
-          
-          wasResized = true;
-          console.log(`📏 Resized to: ${newWidth}x${newHeight}`);
-        }
 
-        // Create canvas with proper dimensions
-        const canvas = new OffscreenCanvas(newWidth, newHeight);
-        const ctx = canvas.getContext('2d')!;
+          // Create canvas with proper dimensions
+          const canvas = new OffscreenCanvas(newWidth, newHeight);
+          const ctx = canvas.getContext('2d')!;
 
-        // Draw image on canvas (this removes all metadata and ICC profiles)
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          // Draw image on canvas (this removes all metadata and ICC profiles)
+          // Use the exact same drawing as client-side
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-        // Start with high quality and reduce if file is too large
-        let quality = 0.85; // Start with lower quality for enhanced images
-        
-        const tryCompress = async (q: number): Promise<Uint8Array> => {
-          const blob = await canvas.convertToBlob({ 
+          // Convert to blob with same quality as client-side (0.92)
+          canvas.convertToBlob({ 
             type: 'image/jpeg', 
-            quality: q 
+            quality: 0.92 
+          }).then(async (processedBlob) => {
+            const processedBuffer = new Uint8Array(await processedBlob.arrayBuffer());
+            
+            console.log(`✅ Enhanced image processed for TikTok:`);
+            console.log(`   - Original: ${originalWidth}x${originalHeight} (${Math.round(imageBuffer.length / 1024)}KB)`);
+            console.log(`   - Processed: ${newWidth}x${newHeight} (${Math.round(processedBuffer.length / 1024)}KB)`);
+            console.log(`   - Resized: ${wasResized ? 'Yes' : 'No'}`);
+            console.log(`   - Format: JPEG, Quality: 92%, Metadata: Stripped`);
+            
+            // Clean up the URL
+            URL.revokeObjectURL(imageUrl);
+            
+            resolve(processedBuffer);
+          }).catch((error) => {
+            console.error('❌ Error converting to blob:', error);
+            URL.revokeObjectURL(imageUrl);
+            reject(error);
           });
           
-          const buffer = await blob.arrayBuffer();
-          const processedBuffer = new Uint8Array(buffer);
-          
-          console.log(`🔍 Quality ${q}: ${Math.round(processedBuffer.length / 1024)}KB`);
-          
-          // If file is still too large and we can reduce quality further, try again
-          if (processedBuffer.length > maxFileSize && q > 0.3) {
-            return tryCompress(q - 0.1);
-          }
-          
-          return processedBuffer;
-        };
-        
-        tryCompress(quality).then(processedBuffer => {
-          console.log(`✅ Enhanced image processed for TikTok:`);
-          console.log(`   - Original: ${originalWidth}x${originalHeight} (${Math.round(imageBuffer.length / 1024)}KB)`);
-          console.log(`   - Processed: ${newWidth}x${newHeight} (${Math.round(processedBuffer.length / 1024)}KB)`);
-          console.log(`   - Resized: ${wasResized ? 'Yes' : 'No'}`);
-          console.log(`   - Format: JPEG, Metadata: Stripped`);
-          
-          resolve(processedBuffer);
-        });
+        } catch (error) {
+          console.error('❌ Error in image processing:', error);
+          URL.revokeObjectURL(imageUrl);
+          reject(error);
+        }
       };
       
-      img.src = dataUrl;
+      img.onerror = (error) => {
+        console.error('❌ Error loading image:', error);
+        URL.revokeObjectURL(imageUrl);
+        reject(new Error('Failed to load image for processing'));
+      };
+      
+      img.src = imageUrl;
     });
     
   } catch (error) {
     console.error('❌ Error in processImageForTikTok:', error);
-    console.error('📋 Falling back to basic compression...');
+    console.error('📋 Falling back to original image...');
     
-    // Fallback: Return original but try to compress it
-    try {
-      const maxSize = 1024 * 1024; // 1MB
-      if (imageBuffer.length <= maxSize) {
-        return imageBuffer;
-      }
-      
-      // If too large, just truncate (not ideal but better than failing)
-      console.log('⚠️ Image too large, using fallback compression');
-      const ratio = maxSize / imageBuffer.length;
-      const targetLength = Math.floor(imageBuffer.length * ratio * 0.8); // 80% of max to be safe
-      return imageBuffer.slice(0, targetLength);
-    } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError);
-      return imageBuffer;
-    }
+    // Return original image if processing fails
+    return imageBuffer;
   }
 }
 const corsHeaders = {
