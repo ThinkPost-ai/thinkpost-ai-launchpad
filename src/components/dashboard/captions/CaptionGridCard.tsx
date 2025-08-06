@@ -226,7 +226,7 @@ const CaptionGridCard = ({
             />
           )}
           
-          {/* Image version navigation arrows - mobile optimized */}
+          {/* Image version navigation arrows - always visible on mobile */}
           {canShowEnhanced && (
             <>
               <Button
@@ -234,18 +234,18 @@ const CaptionGridCard = ({
                 size="sm"
                 onClick={handlePreviousVersion}
                 disabled={selectedVersion === 'original'}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-3 sm:p-2 h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-3 h-10 w-10 md:p-2 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity touch-manipulation z-10"
               >
-                <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleNextVersion}
                 disabled={selectedVersion === 'enhanced'}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-3 sm:p-2 h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-3 h-10 w-10 md:p-2 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity touch-manipulation z-10"
               >
-                <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                <ChevronRight className="h-5 w-5 md:h-4 md:w-4" />
               </Button>
             </>
           )}
