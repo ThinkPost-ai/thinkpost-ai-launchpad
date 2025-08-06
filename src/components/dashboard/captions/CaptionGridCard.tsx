@@ -61,9 +61,18 @@ const CaptionGridCard = ({
     const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
     return enhancingProducts.includes(caption.id);
   });
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  
+  console.log('CaptionGridCard render:', {
+    id: caption.id,
+    enhancementStatus,
+    enhancedImagePath,
+    isMarkedForEnhancement,
+    isEnhancing
+  });
   
   const shouldShowEnhancing = enhancementStatus === 'processing' || 
-    (isMarkedForEnhancement && enhancementStatus === 'none' && caption.type === 'product');
+    isMarkedForEnhancement || isEnhancing;
 
   const canShowEnhanced = enhancementStatus === 'completed' && enhancedImagePath;
 
@@ -92,14 +101,76 @@ const CaptionGridCard = ({
     }
   };
 
+  // Enhancement handler
+  const handleEnhanceImage = async () => {
+    if (caption.type !== 'product') return;
+    
+    console.log('Starting enhancement for product:', caption.id);
+    setIsEnhancing(true);
+    setEnhancementStatus('processing');
+    
+    // Mark as enhancing in localStorage
+    const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+    if (!enhancingProducts.includes(caption.id)) {
+      enhancingProducts.push(caption.id);
+      localStorage.setItem('enhancingProducts', JSON.stringify(enhancingProducts));
+      setIsMarkedForEnhancement(true);
+    }
+
+    try {
+      const response = await fetch(`/functions/v1/enhance-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          productId: caption.id,
+          imagePath: caption.image_path,
+        }),
+      });
+
+      const result = await response.json();
+      console.log('Enhancement response:', result);
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Enhancement failed');
+      }
+
+      toast({
+        title: 'Enhancement Started',
+        description: 'Your image is being enhanced. This may take a few moments.',
+      });
+
+    } catch (error) {
+      console.error('Enhancement error:', error);
+      setIsEnhancing(false);
+      setEnhancementStatus('failed');
+      
+      // Remove from localStorage on error
+      const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+      const updatedList = enhancingProducts.filter((id: string) => id !== caption.id);
+      localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+      setIsMarkedForEnhancement(false);
+
+      toast({
+        title: 'Enhancement Failed',
+        description: 'Failed to enhance image. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Poll for enhancement status updates for processing images
   useEffect(() => {
     if (shouldShowEnhancing && caption.type === 'product') {
+      console.log('Starting polling for product:', caption.id);
+      
       const pollInterval = setInterval(async () => {
         try {
           const { data, error } = await supabase
             .from('products')
-            .select('*')
+            .select('image_enhancement_status, enhanced_image_path')
             .eq('id', caption.id)
             .single();
 
@@ -108,15 +179,37 @@ const CaptionGridCard = ({
             return;
           }
 
-          // Check if enhancement columns exist and update accordingly
-          const status = (data as any).image_enhancement_status || 'none';
-          const path = (data as any).enhanced_image_path || null;
+          console.log('Polling result:', data);
+          const status = data?.image_enhancement_status || 'none';
+          const path = data?.enhanced_image_path || null;
           
-          if (status !== 'processing' && status !== 'none') {
+          if (status === 'completed') {
+            console.log('Enhancement completed for:', caption.id);
             setEnhancementStatus(status);
             setEnhancedImagePath(path);
+            setIsEnhancing(false);
             
             // Remove from localStorage when enhancement completes
+            const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
+            const updatedList = enhancingProducts.filter((id: string) => id !== caption.id);
+            localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
+            setIsMarkedForEnhancement(false);
+            
+            // Auto-switch to enhanced version
+            setSelectedVersion('enhanced');
+            
+            clearInterval(pollInterval);
+            
+            toast({
+              title: 'Enhancement Complete!',
+              description: 'Your image has been successfully enhanced.',
+            });
+          } else if (status === 'failed') {
+            console.log('Enhancement failed for:', caption.id);
+            setEnhancementStatus(status);
+            setIsEnhancing(false);
+            
+            // Remove from localStorage on failure
             const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
             const updatedList = enhancingProducts.filter((id: string) => id !== caption.id);
             localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
@@ -131,7 +224,10 @@ const CaptionGridCard = ({
         }
       }, 3000); // Poll every 3 seconds
 
-      return () => clearInterval(pollInterval);
+      return () => {
+        console.log('Clearing polling interval for:', caption.id);
+        clearInterval(pollInterval);
+      };
     }
   }, [shouldShowEnhancing, caption.id, caption.type]);
 
@@ -383,6 +479,18 @@ const CaptionGridCard = ({
           >
             <Edit className="h-3 w-3" />
           </Button>
+          
+          {caption.type === 'product' && enhancementStatus !== 'completed' && !shouldShowEnhancing && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleEnhanceImage}
+              className="flex-1 text-xs h-7 text-purple-600 hover:bg-purple-50"
+            >
+              <Sparkles className="h-3 w-3" />
+            </Button>
+          )}
+          
           <Button 
             size="sm" 
             variant="outline"
