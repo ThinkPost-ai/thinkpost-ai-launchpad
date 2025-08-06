@@ -116,7 +116,7 @@ serve(async (req) => {
     });
     
     // Debug: Check if this URL contains enhanced image path
-    if (videoUrl && videoUrl.includes('enhanced_')) {
+    if (videoUrl && videoUrl.includes('enhanced-')) {
       console.log('✅ TikTok Function received ENHANCED image URL!');
     } else if (videoUrl && videoUrl.includes('restaurant-images/')) {
       console.log('❌ TikTok Function received ORIGINAL image URL');
@@ -258,13 +258,13 @@ serve(async (req) => {
       console.log('🔧 URL Conversion Debug:');
       console.log('  Original videoUrl:', videoUrl);
       console.log('  Extracted filePath:', filePath);
-      console.log('  Enhanced image check:', filePath.includes('enhanced_'));
+      console.log('  Enhanced image check:', filePath.includes('enhanced-'));
       
       // Use verified domain with anonymous key for TikTok access
       const proxyImageUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
       
       console.log('  Final proxyImageUrl:', proxyImageUrl);
-      console.log('  Proxy URL enhanced check:', proxyImageUrl.includes('enhanced_'));
+      console.log('  Proxy URL enhanced check:', proxyImageUrl.includes('enhanced-'));
       console.log('🔧 End URL Conversion Debug');
 
       // Build request body using TikTok's photo content posting API format
@@ -326,13 +326,13 @@ serve(async (req) => {
         console.log('🔧 Video URL Conversion Debug:');
         console.log('  Original videoUrl:', videoUrl);
         console.log('  Extracted filePath:', filePath);
-        console.log('  Enhanced image check:', filePath.includes('enhanced_'));
+        console.log('  Enhanced image check:', filePath.includes('enhanced-'));
         
         // Use verified domain with anonymous key for TikTok access
         proxyVideoUrl = `https://media.thinkpost.co/functions/v1/media-proxy/restaurant-images/${filePath}?apikey=${Deno.env.get('SUPABASE_ANON_KEY')}`;
         
         console.log('  Final proxyVideoUrl:', proxyVideoUrl);
-        console.log('  Proxy URL enhanced check:', proxyVideoUrl.includes('enhanced_'));
+        console.log('  Proxy URL enhanced check:', proxyVideoUrl.includes('enhanced-'));
         console.log('🔧 End Video URL Conversion Debug');
       }
       
