@@ -143,7 +143,9 @@ serve(async (req)=>{
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!supabaseUrl || !supabaseKey || !openaiApiKey) {
+    const tinypngApiKey = Deno.env.get('TINYPNG_API_KEY');
+    
+    if (!supabaseUrl || !supabaseKey || !openaiApiKey || !tinypngApiKey) {
       throw new Error('Missing required environment variables');
     }
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -214,8 +216,36 @@ serve(async (req)=>{
     // Convert base64 to Uint8Array
     const enhancedImageBuffer = Uint8Array.from(atob(generatedImageBase64), (c)=>c.charCodeAt(0));
     
-    // Skip server-side compression - will be handled on client-side
-    const processedImageBuffer = enhancedImageBuffer;
+    console.log('🗜️ Compressing enhanced image with TinyPNG...');
+    console.log(`📐 Enhanced image size before compression: ${Math.round(enhancedImageBuffer.length / 1024)}KB`);
+    
+    // Compress with TinyPNG
+    const tinypngResponse = await fetch('https://api.tinypng.com/shrink', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(`api:${tinypngApiKey}`)}`,
+        'Content-Type': 'application/octet-stream'
+      },
+      body: enhancedImageBuffer
+    });
+    
+    if (!tinypngResponse.ok) {
+      const errorText = await tinypngResponse.text();
+      console.error('TinyPNG compression error:', errorText);
+      throw new Error(`TinyPNG compression failed: ${tinypngResponse.status} - ${errorText}`);
+    }
+    
+    const tinypngData = await tinypngResponse.json();
+    console.log(`✅ TinyPNG compression successful. Reduced from ${Math.round(enhancedImageBuffer.length / 1024)}KB to ${Math.round(tinypngData.output.size / 1024)}KB`);
+    
+    // Download the compressed image from TinyPNG
+    const compressedImageResponse = await fetch(tinypngData.output.url);
+    if (!compressedImageResponse.ok) {
+      throw new Error('Failed to download compressed image from TinyPNG');
+    }
+    
+    const processedImageBuffer = new Uint8Array(await compressedImageResponse.arrayBuffer());
+    console.log(`📦 Final compressed image size: ${Math.round(processedImageBuffer.length / 1024)}KB`);
     
     const enhancedFileName = `enhanced-temp-${productId}-${Date.now()}.jpg`;
     const { error: uploadError } = await supabase.storage.from("restaurant-images").upload(enhancedFileName, processedImageBuffer, {
@@ -229,7 +259,7 @@ serve(async (req)=>{
     const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
     await supabase.from("products").update({
       enhanced_image_path: enhancedFileName,
-      image_enhancement_status: "temp_ready" // Indicates temp file ready for client compression
+      image_enhancement_status: "completed" // TinyPNG compressed and ready to use
     }).eq("id", productId);
     return new Response(JSON.stringify({
       success: true,
