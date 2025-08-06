@@ -3,6 +3,7 @@
 ## Current Issue
 You're testing locally, but the `enhance-image` edge function only works on the remote Supabase instance where we deployed it.
 
+
 ## 🎯 Solution Options:
 
 ### Option 1: Test on Remote/Production (Recommended)
