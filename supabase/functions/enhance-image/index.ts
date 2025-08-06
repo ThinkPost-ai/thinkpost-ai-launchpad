@@ -230,12 +230,12 @@ serve(async (req)=>{
     // Convert base64 to Uint8Array
     const enhancedImageBuffer = Uint8Array.from(atob(generatedImageBase64), (c)=>c.charCodeAt(0));
     
-    // Process image for TikTok compatibility before uploading
-    const processedImageBuffer = await processImageForTikTok(enhancedImageBuffer);
+    // Skip server-side compression - will be handled on client-side
+    const processedImageBuffer = enhancedImageBuffer;
     
-    const enhancedFileName = `enhanced-${productId}-${Date.now()}.jpg`; // Changed to .jpg for TikTok compatibility
+    const enhancedFileName = `enhanced-temp-${productId}-${Date.now()}.jpg`;
     const { error: uploadError } = await supabase.storage.from("restaurant-images").upload(enhancedFileName, processedImageBuffer, {
-      contentType: "image/jpeg", // Changed to JPEG for TikTok compatibility
+      contentType: "image/jpeg",
       upsert: false
     });
     if (uploadError) {
@@ -245,7 +245,7 @@ serve(async (req)=>{
     const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
     await supabase.from("products").update({
       enhanced_image_path: enhancedFileName,
-      image_enhancement_status: "completed"
+      image_enhancement_status: "temp_ready" // Indicates temp file ready for client compression
     }).eq("id", productId);
     return new Response(JSON.stringify({
       success: true,

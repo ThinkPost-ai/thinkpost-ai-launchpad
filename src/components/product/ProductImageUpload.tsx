@@ -108,6 +108,7 @@ const ProductImageUpload = ({
     }
   }, [enhanceImage, productId, enhancementStatus]);
 
+
   // Show loading state when enhance is enabled but enhancement hasn't started
   const shouldShowEnhancementLoading = enhanceImage && productId && enhancementStatus === 'none';
   const shouldShowProcessingLoading = enhancementStatus === 'processing';

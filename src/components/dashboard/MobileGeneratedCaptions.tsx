@@ -307,6 +307,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     };
   }, [enhancingItems, captions, toast, fetchCaptions]);
 
+
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
     // Check credits before attempting to generate
     if (userCredits <= 0) {
