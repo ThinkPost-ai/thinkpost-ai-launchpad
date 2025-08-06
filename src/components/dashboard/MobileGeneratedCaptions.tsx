@@ -251,7 +251,51 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
             setEnhancedPaths(prev => ({ ...prev, [itemId]: path }));
           }
 
-          if (status === 'completed') {
+          if (status === 'temp_ready' && path) {
+            console.log('Enhanced image ready for compression:', itemId);
+            // Trigger client-side compression
+            try {
+              const { compressImage: compress } = await import('@/utils/imageCompression');
+              const { downloadImageAsBlob } = await import('@/utils/imageCompression');
+              
+              const imageUrl = getImageUrl(path);
+              const imageBlob = await downloadImageAsBlob(imageUrl);
+              const compressionResult = await compress(imageBlob, 1024 * 1024);
+              
+              const compressedFileName = `enhanced-${itemId}-${Date.now()}.jpg`;
+              const { error: uploadError } = await supabase.storage
+                .from('restaurant-images')
+                .upload(compressedFileName, compressionResult.blob, {
+                  contentType: 'image/jpeg',
+                  upsert: false
+                });
+
+              if (!uploadError) {
+                const table = caption.type === 'product' ? 'products' : 'images';
+                await supabase
+                  .from(table)
+                  .update({
+                    enhanced_image_path: compressedFileName,
+                    image_enhancement_status: 'completed'
+                  })
+                  .eq('id', itemId);
+                  
+                // Clean up temp file
+                if (path.includes('enhanced-temp-')) {
+                  await supabase.storage
+                    .from('restaurant-images')
+                    .remove([path]);
+                }
+              }
+            } catch (error) {
+              console.error('Compression failed:', error);
+              const table = caption.type === 'product' ? 'products' : 'images';
+              await supabase
+                .from(table)
+                .update({ image_enhancement_status: 'failed' })
+                .eq('id', itemId);
+            }
+          } else if (status === 'completed') {
             console.log('Enhancement completed for:', itemId);
             setEnhancingItems(prev => {
               const newSet = new Set(prev);

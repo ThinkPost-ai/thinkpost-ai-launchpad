@@ -445,6 +445,12 @@ export type Database = {
       }
     }
     Enums: {
+      image_enhancement_status:
+        | "none"
+        | "processing"
+        | "temp_ready"
+        | "completed"
+        | "failed"
       restaurant_category:
         | "fast_food"
         | "casual_dining"
@@ -587,6 +593,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      image_enhancement_status: [
+        "none",
+        "processing",
+        "temp_ready",
+        "completed",
+        "failed",
+      ],
       restaurant_category: [
         "fast_food",
         "casual_dining",

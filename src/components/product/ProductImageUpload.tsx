@@ -91,9 +91,56 @@ const ProductImageUpload = ({
         setEnhancementStatus(status);
         setEnhancedImagePath(enhancedPath);
         setOriginalImagePath(imagePath);
+        
+        // Handle compression when temp_ready
+        if (status === 'temp_ready' && enhancedPath) {
+          handleImageCompression(enhancedPath);
+        }
       }
     } catch (error) {
       console.error('Failed to check enhanced image:', error);
+    }
+  };
+
+  const handleImageCompression = async (enhancedPath: string) => {
+    try {
+      const { compressImage: compress } = await import('@/utils/imageCompression');
+      const { downloadImageAsBlob } = await import('@/utils/imageCompression');
+      
+      const imageUrl = getImageUrl(enhancedPath);
+      const imageBlob = await downloadImageAsBlob(imageUrl);
+      const compressionResult = await compress(imageBlob, 1024 * 1024);
+      
+      const compressedFileName = `enhanced-${productId}-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('restaurant-images')
+        .upload(compressedFileName, compressionResult.blob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+
+      if (!uploadError) {
+        await supabase
+          .from('products')
+          .update({
+            enhanced_image_path: compressedFileName,
+            image_enhancement_status: 'completed'
+          })
+          .eq('id', productId);
+          
+        setEnhancementStatus('completed');
+        setEnhancedImagePath(compressedFileName);
+        
+        // Clean up temp file
+        if (enhancedPath.includes('enhanced-temp-')) {
+          await supabase.storage
+            .from('restaurant-images')
+            .remove([enhancedPath]);
+        }
+      }
+    } catch (error) {
+      console.error('Compression failed:', error);
+      setEnhancementStatus('failed');
     }
   };
 
