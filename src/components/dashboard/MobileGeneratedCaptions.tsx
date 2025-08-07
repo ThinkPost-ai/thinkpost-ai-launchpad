@@ -84,21 +84,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [selectedVersions, setSelectedVersions] = useState<{[key: string]: 'original' | 'enhanced'}>(() => {
     // Load saved selections from localStorage
     const saved = localStorage.getItem('selectedImageVersions');
-    const savedVersions = saved ? JSON.parse(saved) : {};
-    
-    // For captions without saved versions, default to enhanced if available
-    const versions: {[key: string]: 'original' | 'enhanced'} = {};
-    captions.forEach(caption => {
-      const savedVersion = savedVersions[caption.id];
-      if (savedVersion) {
-        versions[caption.id] = savedVersion;
-      } else {
-        // Default to enhanced if available, otherwise original
-        versions[caption.id] = (caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) ? 'enhanced' : 'original';
-      }
-    });
-    
-    return versions;
+    return saved ? JSON.parse(saved) : {};
   });
   
   // Full-screen image preview states
@@ -224,22 +210,7 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     
     setEnhancementStatuses(initialStatuses);
     setEnhancedPaths(initialPaths);
-    
-    // Only auto-select enhanced versions if user hasn't manually chosen
-    const saved = localStorage.getItem('selectedImageVersions');
-    const savedVersions = saved ? JSON.parse(saved) : {};
-    
-    setSelectedVersions(prev => {
-      const finalVersions = { ...prev };
-      
-      Object.keys(initialVersions).forEach(captionId => {
-        if (!savedVersions[captionId]) {
-          finalVersions[captionId] = initialVersions[captionId];
-        }
-      });
-      
-      return finalVersions;
-    });
+    setSelectedVersions(prev => ({ ...prev, ...initialVersions }));
   }, [captions]);
 
   // Polling mechanism for enhancement status

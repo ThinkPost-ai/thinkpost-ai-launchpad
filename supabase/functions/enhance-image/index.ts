@@ -2,57 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
- * Process image for TikTok compatibility - ensures 24-bit depth for TikTok posting
- * Takes base64 image data and returns processed base64 data with guaranteed 24-bit depth
- * Avoids canvas operations that are incompatible with Deno edge runtime
- */
-async function resizeImageForTikTok(base64Data: string): Promise<string> {
-  try {
-    console.log('📐 Processing image for TikTok optimal dimensions (1080x1920) with 24-bit depth...');
-    
-    // Convert base64 to bytes
-    const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    
-    console.log(`📊 Original image size: ${Math.round(imageBytes.length / 1024)}KB`);
-    
-    // Create a high-quality JPEG blob with explicit parameters for 24-bit depth
-    // This ensures TikTok compatibility by maintaining proper color depth
-    const processedBlob = new Blob([imageBytes], { 
-      type: 'image/jpeg'
-    });
-    
-    // Convert blob back to base64 to ensure proper encoding for 24-bit JPEG
-    const arrayBuffer = await processedBlob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    // Process in chunks to handle large images efficiently
-    let binary = '';
-    const chunkSize = 1024;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
-    }
-    
-    const processedBase64 = btoa(binary);
-    
-    console.log(`📏 Image processed for TikTok with guaranteed 24-bit depth`);
-    console.log(`📊 Processed image size: ${Math.round(processedBlob.size / 1024)}KB`);
-    console.log('✅ TikTok processing completed - 24-bit JPEG ready for posting');
-    console.log('🎯 Image optimized for TikTok 1080x1920 format with proper bit depth');
-    
-    return processedBase64;
-    
-  } catch (error) {
-    console.error('TikTok processing error:', error);
-    console.warn('⚠️ Returning original enhanced image (maintains OpenAI quality)');
-    
-    // Even if processing fails, the enhanced image from OpenAI should be high quality
-    // TinyPNG compression will maintain the bit depth
-    return base64Data;
-  }
-}
-
-/**
  * Compress image using TinyPNG API
  * Takes base64 image data and returns compressed base64 data
  */
@@ -182,62 +131,41 @@ serve(async (req)=>{
 
     ${brandName ? `BRAND INFORMATION: ${brandName}` : ''}
     `;
+    // Call GPT-4.1 with image editing API
+    const formData = new FormData();
+    
+    // Convert base64 to blob for the image parameter
+    const imageBytes = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+    const imageBlob = new Blob([imageBytes], { type: 'image/jpeg' });
+    
+    formData.append('model', 'gpt-image-1');
+    formData.append('prompt', prompt);
+    formData.append('image', imageBlob, 'image.jpg');
+    formData.append('output_format', 'jpeg');
+    formData.append('quality', 'high');
+    formData.append('size', '1024x1024');
 
-    // Call GPT-4.1 with tool-based image generation
-    console.log('🤖 Sending image to GPT-4.1 for enhancement...');
-    const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
+    const openaiResponse = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-4.1",
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: prompt
-              },
-              {
-                type: "input_image",
-                image_url: `data:image/jpeg;base64,${base64Image}`
-              }
-            ]
-          }
-        ],
-        tools: [
-          {
-            type: "image_generation"
-          }
-        ]
-      })
+      body: formData
     });
-
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
       console.error("GPT-4.1 error:", errorText);
       throw new Error(`GPT-4.1 error: ${openaiResponse.status} - ${errorText}`);
     }
-
     const responseData = await openaiResponse.json();
-    const imageCall = responseData.output?.find((o) => o.type === "image_generation_call");
-    if (!imageCall || !imageCall.result) {
-      throw new Error("No image data returned from GPT-4.1");
+    if (!responseData.data || !responseData.data[0] || !responseData.data[0].b64_json) {
+      throw new Error("No image data returned from OpenAI");
     }
-    const generatedImageBase64 = imageCall.result;
+    const generatedImageBase64 = responseData.data[0].b64_json;
     
-    console.log('✅ GPT-4.1 image enhancement completed successfully');
-    
-    // Resize the enhanced image for TikTok optimal dimensions
-    console.log('📐 Resizing enhanced image for TikTok...');
-    const resizedImageBase64 = await resizeImageForTikTok(generatedImageBase64);
-    
-    // Compress the resized image with TinyPNG
+    // Compress the enhanced image with TinyPNG
     console.log('🖼️ Starting TinyPNG compression...');
-    const compressedImageBase64 = await compressImageWithTinyPNG(resizedImageBase64, tinypngApiKey);
+    const compressedImageBase64 = await compressImageWithTinyPNG(generatedImageBase64, tinypngApiKey);
     
     // Convert compressed base64 to buffer for storage
     const processedImageBuffer = Uint8Array.from(atob(compressedImageBase64), (c) => c.charCodeAt(0));

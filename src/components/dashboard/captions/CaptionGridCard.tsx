@@ -60,26 +60,8 @@ const CaptionGridCard = ({
     // Load saved selection from localStorage
     const saved = localStorage.getItem('selectedImageVersions');
     const savedVersions = saved ? JSON.parse(saved) : {};
-    const savedVersion = savedVersions[caption.id];
-    
-    // If there's a saved version, use it
-    if (savedVersion) return savedVersion;
-    
-    // Default to enhanced if available, otherwise original
-    return (caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) ? 'enhanced' : 'original';
+    return savedVersions[caption.id] || 'original';
   });
-
-  // Update selectedVersion when enhancement status changes
-  useEffect(() => {
-    const saved = localStorage.getItem('selectedImageVersions');
-    const savedVersions = saved ? JSON.parse(saved) : {};
-    const savedVersion = savedVersions[caption.id];
-    
-    // Only update if user hasn't manually selected a version
-    if (!savedVersion && caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) {
-      setSelectedVersion('enhanced');
-    }
-  }, [caption.image_enhancement_status, caption.enhanced_image_path, caption.id]);
   const [isMarkedForEnhancement, setIsMarkedForEnhancement] = useState(() => {
     const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');
     return enhancingProducts.includes(caption.id);

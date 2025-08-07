@@ -102,18 +102,6 @@ const ProductImageUpload = ({
     }
   };
 
-  // Update selectedVersion when enhancement completes (only if user hasn't manually selected)
-  useEffect(() => {
-    const saved = localStorage.getItem('selectedImageVersions');
-    const savedVersions = saved ? JSON.parse(saved) : {};
-    const savedVersion = productId ? savedVersions[productId] : null;
-    
-    // Only update if user hasn't manually selected a version and enhancement is completed
-    if (!savedVersion && enhancementStatus === 'completed' && enhancedImagePath) {
-      setSelectedVersion('enhanced');
-    }
-  }, [enhancementStatus, enhancedImagePath, productId]);
-
   const handleImageCompression = async (enhancedPath: string) => {
     try {
       const { compressImage: compress } = await import('@/utils/imageCompression');
