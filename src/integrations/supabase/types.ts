@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      operation_credits_log: {
+        Row: {
+          created_at: string
+          credits_after: number
+          credits_before: number
+          id: string
+          operation_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_after: number
+          credits_before: number
+          id?: string
+          operation_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_after?: number
+          credits_before?: number
+          id?: string
+          operation_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           caption: string | null
