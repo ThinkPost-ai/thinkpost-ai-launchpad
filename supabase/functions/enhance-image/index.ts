@@ -143,7 +143,7 @@ serve(async (req)=>{
     formData.append('image', imageBlob, 'image.jpg');
     formData.append('output_format', 'jpeg');
     formData.append('quality', 'high');
-    formData.append('size', '1024x1024');
+    formData.append('size', '1024x1536');
 
     const openaiResponse = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
