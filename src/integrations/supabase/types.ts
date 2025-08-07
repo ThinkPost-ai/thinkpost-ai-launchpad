@@ -472,6 +472,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: number
       }
+      decrement_operation_credits: {
+        Args: { user_id: string; operation_type?: string }
+        Returns: number
+      }
       delete_user_and_data: {
         Args: { user_id_to_delete: string }
         Returns: undefined

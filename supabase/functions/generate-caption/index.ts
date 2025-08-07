@@ -56,15 +56,16 @@ serve(async (req) => {
 
     console.log('User authenticated successfully:', user.id);
 
-    // Check and decrement caption credits
-    console.log('Checking caption credits for user:', user.id);
-    const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_caption_credits', {
-      user_id: user.id
+    // Check and decrement credits using unified operation credit system
+    console.log('Checking operation credits for user:', user.id);
+    const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_operation_credits', {
+      user_id: user.id,
+      operation_type: 'content_generation'
     });
 
     if (creditsError) {
       console.error('Credits check failed:', creditsError);
-      throw new Error('Failed to check caption credits');
+      throw new Error('Failed to check operation credits');
     }
 
     console.log('Credits remaining after decrement:', creditsData);
@@ -72,7 +73,7 @@ serve(async (req) => {
     if (creditsData < 0) {
       console.log('User has no remaining credits');
       return new Response(JSON.stringify({ 
-        error: 'Insufficient caption credits. You have reached your monthly limit.' 
+        error: 'Insufficient credits. You have reached your monthly limit.' 
       }), {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

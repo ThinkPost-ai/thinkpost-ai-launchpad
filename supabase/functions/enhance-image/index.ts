@@ -93,6 +93,45 @@ serve(async (req)=>{
       throw new Error('Missing required environment variables');
     }
     supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user ID from auth header to check/decrement credits
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Invalid authentication token');
+    }
+
+    const userId = user.id;
+
+    // Check and decrement credits using unified operation credit system
+    console.log('Checking operation credits for user:', userId);
+    const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_operation_credits', {
+      user_id: userId,
+      operation_type: 'content_generation'
+    });
+
+    if (creditsError) {
+      console.error('Error checking credits:', creditsError);
+      throw new Error('Failed to check credits');
+    }
+
+    console.log('Credits remaining after decrement:', creditsData);
+
+    if (creditsData < 0) {
+      console.log('User has no remaining credits');
+      return new Response(JSON.stringify({ 
+        error: 'Insufficient credits. You have reached your monthly limit.' 
+      }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     // Fetch original image and convert to base64
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) throw new Error('Failed to fetch image');
