@@ -32,7 +32,10 @@ const ProductImageUpload = ({
   const { user } = useAuth();
   const [enhancedImagePath, setEnhancedImagePath] = useState<string | null>(null);
   const [enhancementStatus, setEnhancementStatus] = useState<'none' | 'processing' | 'completed' | 'failed'>('none');
-  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(
+    // Default to enhanced if available, otherwise original
+    (enhancementStatus === 'completed' && enhancedImagePath) ? 'enhanced' : 'original'
+  );
   const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
 
   const isVideo = file?.type.startsWith('video/');

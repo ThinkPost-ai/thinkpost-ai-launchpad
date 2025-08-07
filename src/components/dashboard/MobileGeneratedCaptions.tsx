@@ -84,7 +84,21 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [selectedVersions, setSelectedVersions] = useState<{[key: string]: 'original' | 'enhanced'}>(() => {
     // Load saved selections from localStorage
     const saved = localStorage.getItem('selectedImageVersions');
-    return saved ? JSON.parse(saved) : {};
+    const savedVersions = saved ? JSON.parse(saved) : {};
+    
+    // For captions without saved versions, default to enhanced if available
+    const versions: {[key: string]: 'original' | 'enhanced'} = {};
+    captions.forEach(caption => {
+      const savedVersion = savedVersions[caption.id];
+      if (savedVersion) {
+        versions[caption.id] = savedVersion;
+      } else {
+        // Default to enhanced if available, otherwise original
+        versions[caption.id] = (caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) ? 'enhanced' : 'original';
+      }
+    });
+    
+    return versions;
   });
   
   // Full-screen image preview states
