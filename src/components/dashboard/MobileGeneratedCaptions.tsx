@@ -102,7 +102,19 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const getDisplayImagePath = (caption: any) => {
     const enhancedPath = enhancedPaths[caption.id] || caption.enhanced_image_path;
     const status = enhancementStatuses[caption.id] || caption.image_enhancement_status;
-    const selectedVersion = selectedVersions[caption.id] || 'original';
+    
+    // Check if user has explicitly chosen a version
+    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+    let selectedVersion = selectedVersions[caption.id];
+    
+    // Auto-select enhanced if available and user hasn't explicitly chosen original
+    if (!userChoices[caption.id] && status === 'completed' && enhancedPath) {
+      selectedVersion = 'enhanced';
+    } else if (userChoices[caption.id]) {
+      selectedVersion = userChoices[caption.id];
+    } else {
+      selectedVersion = selectedVersion || 'original';
+    }
     
     if (selectedVersion === 'enhanced' && enhancedPath && status === 'completed') {
       return enhancedPath;
@@ -119,6 +131,11 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
   // Navigation handlers for image versions
   const handleVersionChange = async (captionId: string, version: 'original' | 'enhanced') => {
+    // Mark as explicit user choice
+    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+    userChoices[captionId] = version;
+    localStorage.setItem('userImageChoices', JSON.stringify(userChoices));
+    
     setSelectedVersions(prev => {
       const updated = { ...prev, [captionId]: version };
       // Store in localStorage for persistence across navigation
@@ -201,9 +218,12 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
       }
       if (caption.enhanced_image_path) {
         initialPaths[caption.id] = caption.enhanced_image_path;
-        // Auto-select enhanced version if available and completed
-        if (caption.image_enhancement_status === 'completed') {
+        // Auto-select enhanced version if available, completed, and user hasn't explicitly chosen original
+        const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+        if (caption.image_enhancement_status === 'completed' && !userChoices[caption.id]) {
           initialVersions[caption.id] = 'enhanced';
+        } else if (userChoices[caption.id]) {
+          initialVersions[caption.id] = userChoices[caption.id];
         }
       }
     });
@@ -308,8 +328,11 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
             const updatedList = enhancingProducts.filter((id: string) => id !== itemId);
             localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
 
-            // Auto-switch to enhanced version when enhancement completes
-            setSelectedVersions(prev => ({ ...prev, [itemId]: 'enhanced' }));
+            // Auto-switch to enhanced version when enhancement completes (only if user hasn't explicitly chosen original)
+            const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+            if (!userChoices[itemId] || userChoices[itemId] !== 'original') {
+              setSelectedVersions(prev => ({ ...prev, [itemId]: 'enhanced' }));
+            }
 
             // Refresh captions data to get the updated image paths
             setTimeout(async () => {

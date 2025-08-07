@@ -12,6 +12,7 @@ interface ImageVersionSelectorProps {
   onVersionChange: (version: 'original' | 'enhanced') => void;
   onEnhance?: () => void;
   isEnhancing?: boolean;
+  itemId?: string; // For tracking user choices
 }
 
 export const ImageVersionSelector: React.FC<ImageVersionSelectorProps> = ({
@@ -21,7 +22,8 @@ export const ImageVersionSelector: React.FC<ImageVersionSelectorProps> = ({
   selectedVersion,
   onVersionChange,
   onEnhance,
-  isEnhancing = false
+  isEnhancing = false,
+  itemId
 }) => {
   const getImageUrl = (path: string) => 
     `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${path}`;
@@ -78,7 +80,14 @@ export const ImageVersionSelector: React.FC<ImageVersionSelectorProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onVersionChange('original')}
+                onClick={() => {
+                  onVersionChange('original');
+                  if (itemId) {
+                    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+                    userChoices[itemId] = 'original';
+                    localStorage.setItem('userImageChoices', JSON.stringify(userChoices));
+                  }
+                }}
                 disabled={selectedVersion === 'original'}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
@@ -87,7 +96,14 @@ export const ImageVersionSelector: React.FC<ImageVersionSelectorProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onVersionChange('enhanced')}
+                onClick={() => {
+                  onVersionChange('enhanced');
+                  if (itemId) {
+                    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+                    userChoices[itemId] = 'enhanced';
+                    localStorage.setItem('userImageChoices', JSON.stringify(userChoices));
+                  }
+                }}
                 disabled={selectedVersion === 'enhanced'}
               >
                 Enhanced

@@ -57,7 +57,18 @@ const CaptionGridCard = ({
   const [enhancementStatus, setEnhancementStatus] = useState(caption.image_enhancement_status || 'none');
   const [enhancedImagePath, setEnhancedImagePath] = useState(caption.enhanced_image_path || null);
   const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(() => {
-    // Load saved selection from localStorage
+    // Check if user has explicitly chosen a version
+    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+    if (userChoices[caption.id]) {
+      return userChoices[caption.id];
+    }
+    
+    // Auto-select enhanced if available and completed
+    if (caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) {
+      return 'enhanced';
+    }
+    
+    // Load saved selection from localStorage as fallback
     const saved = localStorage.getItem('selectedImageVersions');
     const savedVersions = saved ? JSON.parse(saved) : {};
     return savedVersions[caption.id] || 'original';
@@ -124,11 +135,16 @@ const CaptionGridCard = ({
     return caption.image_path;
   };
 
-  // Navigation handlers
+  // Navigation handlers with user choice tracking
   const handlePreviousVersion = async () => {
     if (selectedVersion === 'enhanced') {
       const newVersion = 'original';
       setSelectedVersion(newVersion);
+      
+      // Mark as explicit user choice
+      const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+      userChoices[caption.id] = newVersion;
+      localStorage.setItem('userImageChoices', JSON.stringify(userChoices));
       
       // Store in localStorage for immediate UI responsiveness
       const saved = localStorage.getItem('selectedImageVersions');
@@ -158,6 +174,11 @@ const CaptionGridCard = ({
     if (selectedVersion === 'original' && canShowEnhanced) {
       const newVersion = 'enhanced';
       setSelectedVersion(newVersion);
+      
+      // Mark as explicit user choice
+      const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+      userChoices[caption.id] = newVersion;
+      localStorage.setItem('userImageChoices', JSON.stringify(userChoices));
       
       // Store in localStorage for immediate UI responsiveness
       const saved = localStorage.getItem('selectedImageVersions');
@@ -278,14 +299,17 @@ const CaptionGridCard = ({
             localStorage.setItem('enhancingProducts', JSON.stringify(updatedList));
             setIsMarkedForEnhancement(false);
             
-            // Auto-switch to enhanced version
-            const newVersion = 'enhanced';
-            setSelectedVersion(newVersion);
-            // Store in localStorage for persistence across navigation
-            const saved = localStorage.getItem('selectedImageVersions');
-            const savedVersions = saved ? JSON.parse(saved) : {};
-            savedVersions[caption.id] = newVersion;
-            localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
+            // Auto-switch to enhanced version only if user hasn't explicitly chosen original
+            const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+            if (!userChoices[caption.id] || userChoices[caption.id] !== 'original') {
+              const newVersion = 'enhanced';
+              setSelectedVersion(newVersion);
+              // Store in localStorage for persistence across navigation
+              const saved = localStorage.getItem('selectedImageVersions');
+              const savedVersions = saved ? JSON.parse(saved) : {};
+              savedVersions[caption.id] = newVersion;
+              localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
+            }
             
             clearInterval(pollInterval);
             

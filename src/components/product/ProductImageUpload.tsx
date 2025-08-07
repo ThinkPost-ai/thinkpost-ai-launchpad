@@ -32,7 +32,17 @@ const ProductImageUpload = ({
   const { user } = useAuth();
   const [enhancedImagePath, setEnhancedImagePath] = useState<string | null>(null);
   const [enhancementStatus, setEnhancementStatus] = useState<'none' | 'processing' | 'completed' | 'failed'>('none');
-  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(() => {
+    if (!productId) return 'original';
+    
+    // Check if user has explicitly chosen a version
+    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+    if (userChoices[productId]) {
+      return userChoices[productId];
+    }
+    
+    return 'original';
+  });
   const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
 
   const isVideo = file?.type.startsWith('video/');
@@ -130,6 +140,12 @@ const ProductImageUpload = ({
           
         setEnhancementStatus('completed');
         setEnhancedImagePath(compressedFileName);
+        
+        // Auto-switch to enhanced version if user hasn't explicitly chosen original
+        const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
+        if (!userChoices[productId] || userChoices[productId] !== 'original') {
+          setSelectedVersion('enhanced');
+        }
         
         // Clean up temp file
         if (enhancedPath.includes('enhanced-temp-')) {
