@@ -65,7 +65,9 @@ const UserManagement = () => {
     deleteUser,
     updateUserCredits,
     bulkCreditReset,
-    refreshUsers
+    refreshUsers,
+    defaultCredits,
+    updateDefaultCredits
   } = useAdminUserManagement();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -74,6 +76,8 @@ const UserManagement = () => {
   const [newCreditsAmount, setNewCreditsAmount] = useState<string>('');
   const [bulkResetDialogOpen, setBulkResetDialogOpen] = useState(false);
   const [bulkResetAmount, setBulkResetAmount] = useState<string>('30');
+  const [defaultCreditsDialogOpen, setDefaultCreditsDialogOpen] = useState(false);
+  const [newDefaultCredits, setNewDefaultCredits] = useState<string>('');
 
   const handleDeleteUser = (user: AdminUser) => {
     setSelectedUser(user);
@@ -111,6 +115,19 @@ const UserManagement = () => {
     if (!isNaN(credits)) {
       await bulkCreditReset(credits);
       setBulkResetDialogOpen(false);
+    }
+  };
+
+  const handleDefaultCreditsDialog = () => {
+    setNewDefaultCredits(defaultCredits.toString());
+    setDefaultCreditsDialogOpen(true);
+  };
+
+  const handleUpdateDefaultCredits = async () => {
+    const credits = parseInt(newDefaultCredits);
+    if (!isNaN(credits)) {
+      await updateDefaultCredits(credits);
+      setDefaultCreditsDialogOpen(false);
     }
   };
 
@@ -252,6 +269,14 @@ const UserManagement = () => {
             <Button onClick={exportUsers} variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export CSV
+            </Button>
+            <Button 
+              onClick={handleDefaultCreditsDialog} 
+              variant="outline" 
+              size="sm"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Default Credits ({defaultCredits})
             </Button>
             <Button 
               onClick={() => setBulkResetDialogOpen(true)} 
@@ -440,8 +465,36 @@ const UserManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Default Credits Dialog */}
+      <Dialog open={defaultCreditsDialogOpen} onOpenChange={setDefaultCreditsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Default Credits</DialogTitle>
+            <DialogDescription>
+              Set the default number of credits that new users will receive when they sign up.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              type="number"
+              placeholder="Enter default credit amount"
+              value={newDefaultCredits}
+              onChange={(e) => setNewDefaultCredits(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDefaultCreditsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateDefaultCredits}>
+              Update Default
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-export default UserManagement; 
+export default UserManagement;

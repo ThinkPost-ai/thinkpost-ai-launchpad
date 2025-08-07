@@ -39,6 +39,7 @@ export const useAdminUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProvider, setFilterProvider] = useState<string>('all');
   const [filterConnected, setFilterConnected] = useState<string>('all');
+  const [defaultCredits, setDefaultCredits] = useState<number>(15);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -202,6 +203,49 @@ export const useAdminUserManagement = () => {
     }
   };
 
+  const getDefaultCredits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'default_caption_credits')
+        .single();
+
+      if (error) throw error;
+      
+      const credits = parseInt(data.setting_value);
+      setDefaultCredits(credits);
+      return credits;
+    } catch (error: any) {
+      console.error('Error getting default credits:', error);
+      return 15; // fallback
+    }
+  };
+
+  const updateDefaultCredits = async (newDefaultCredits: number) => {
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .update({ setting_value: newDefaultCredits.toString() })
+        .eq('setting_key', 'default_caption_credits');
+
+      if (error) throw error;
+
+      setDefaultCredits(newDefaultCredits);
+      toast({
+        title: "Success",
+        description: `Default credits for new users updated to ${newDefaultCredits}`
+      });
+    } catch (error: any) {
+      console.error('Error updating default credits:', error);
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to update default credits",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Filter users based on search and filters
   useEffect(() => {
     let filtered = users;
@@ -235,6 +279,7 @@ export const useAdminUserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
+    getDefaultCredits();
   }, []);
 
   return {
@@ -250,6 +295,9 @@ export const useAdminUserManagement = () => {
     deleteUser,
     updateUserCredits,
     bulkCreditReset,
-    refreshUsers: fetchUsers
+    refreshUsers: fetchUsers,
+    defaultCredits,
+    getDefaultCredits,
+    updateDefaultCredits
   };
 }; 
