@@ -11,6 +11,7 @@ import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCaptionData } from '@/components/dashboard/captions/useCaptionData';
 import { supabase } from '@/integrations/supabase/client';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
@@ -20,6 +21,7 @@ const ProductCreation = () => {
   const { tiktokProfile, isLoading: tiktokLoading } = useTikTokConnection();
   const { profile: instagramProfile, isLoading: instagramLoading } = useInstagramConnection();
   const { session } = useAuth();
+  const { userCredits } = useCaptionData();
   
   const {
     products,
@@ -104,6 +106,7 @@ const ProductCreation = () => {
               index={index}
               product={product}
               canRemove={products.length > 1}
+              userCredits={userCredits}
               onUpdateProduct={updateProduct}
               onRemoveProduct={removeProduct}
               onImageSelect={handleImageSelect}

@@ -742,6 +742,7 @@ const GeneralContentUpload = () => {
                 onClick={handleSubmit}
                 disabled={uploading || saving || !formIsValid}
                 className="bg-gradient-primary hover:opacity-90 flex-1"
+                title={uploading || saving ? '' : 'Generate captions with AI (requires credits)'}
               >
                 {uploading ? (
                   <>

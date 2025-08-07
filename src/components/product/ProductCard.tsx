@@ -51,6 +51,7 @@ interface ProductCardProps {
   index: number;
   product: Product;
   canRemove: boolean;
+  userCredits: number;
   onUpdateProduct: (index: number, field: keyof Product, value: any) => void;
   onUpdateTikTokSettings: (index: number, settings: Partial<Product['tiktokSettings']>) => void;
   onRemoveProduct: (index: number) => void;
@@ -63,6 +64,7 @@ const ProductCard = ({
   index,
   product,
   canRemove,
+  userCredits,
   onUpdateProduct,
   onUpdateTikTokSettings,
   onRemoveProduct,
@@ -261,17 +263,21 @@ const ProductCard = ({
               </h3>
               <div className="space-y-3 mb-6">
                 {/* Generate Caption Toggle */}
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div className={`flex items-center justify-between p-3 border rounded-lg ${userCredits > 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60'}`}>
                   <div>
                     <Label className="text-base font-medium">
                       {t('upload.generateCaption')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      {t('upload.generateCaptionDescription')}
+                      {userCredits > 0 
+                        ? t('upload.generateCaptionDescription')
+                        : t('upload.noCreditsCaption', { credits: userCredits })
+                      }
                     </p>
                   </div>
                   <Switch
-                    checked={product.generateCaption}
+                    checked={product.generateCaption && userCredits > 0}
+                    disabled={userCredits === 0}
                     onCheckedChange={(checked) => 
                       onUpdateProduct(index, 'generateCaption', checked)
                     }
@@ -279,17 +285,21 @@ const ProductCard = ({
                 </div>
 
                 {/* Enhance Image Toggle */}
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div className={`flex items-center justify-between p-3 border rounded-lg ${userCredits > 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60'}`}>
                   <div>
                     <Label className="text-base font-medium">
                       {t('upload.enhanceImage')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      {t('upload.enhanceImageDescription')}
+                      {userCredits > 0 
+                        ? t('upload.enhanceImageDescription')
+                        : t('upload.noCreditsEnhance', { credits: userCredits })
+                      }
                     </p>
                   </div>
                   <Switch
-                    checked={product.enhanceImage}
+                    checked={product.enhanceImage && userCredits > 0}
+                    disabled={userCredits === 0}
                     onCheckedChange={(checked) => 
                       onUpdateProduct(index, 'enhanceImage', checked)
                     }
