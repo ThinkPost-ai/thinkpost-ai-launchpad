@@ -56,21 +56,22 @@ serve(async (req) => {
 
     console.log('User authenticated successfully:', user.id);
 
-    // Check and decrement credits using unified operation credit system
+    // Check credits first before decrementing
     console.log('Checking operation credits for user:', user.id);
-    const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_operation_credits', {
-      p_user_id: user.id,
-      operation_type: 'content_generation'
-    });
+    const { data: currentCredits, error: creditsCheckError } = await supabase
+      .from('operation_credits')
+      .select('content_generation_credits')
+      .eq('user_id', user.id)
+      .single();
 
-    if (creditsError) {
-      console.error('Credits check failed:', creditsError);
+    if (creditsCheckError) {
+      console.error('Credits check failed:', creditsCheckError);
       throw new Error('Failed to check operation credits');
     }
 
-    console.log('Credits remaining after decrement:', creditsData);
+    console.log('Current credits before operation:', currentCredits?.content_generation_credits);
 
-    if (creditsData < 0) {
+    if (!currentCredits || currentCredits.content_generation_credits <= 0) {
       console.log('User has no remaining credits');
       return new Response(JSON.stringify({ 
         error: 'Insufficient credits. You have reached your monthly limit.' 
@@ -79,6 +80,19 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Now decrement credits
+    const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_operation_credits', {
+      p_user_id: user.id,
+      operation_type: 'content_generation'
+    });
+
+    if (creditsError) {
+      console.error('Credits decrement failed:', creditsError);
+      throw new Error('Failed to decrement operation credits');
+    }
+
+    console.log('Credits remaining after decrement:', creditsData);
 
     // Get brand information for the user
     console.log('Fetching brand information for user:', user.id);
