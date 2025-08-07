@@ -145,6 +145,22 @@ const ProductImageUpload = ({
         const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
         if (!userChoices[productId] || userChoices[productId] !== 'original') {
           setSelectedVersion('enhanced');
+          
+          // CRITICAL: Update database selected_version when auto-switching to enhanced
+          try {
+            const { error } = await supabase
+              .from('products')
+              .update({ selected_version: 'enhanced' })
+              .eq('id', productId);
+            
+            if (error) {
+              console.error('Failed to update selected version to enhanced:', error);
+            } else {
+              console.log('✅ Auto-selected enhanced version in database for:', productId);
+            }
+          } catch (error) {
+            console.error('Error updating selected version to enhanced:', error);
+          }
         }
         
         // Clean up temp file

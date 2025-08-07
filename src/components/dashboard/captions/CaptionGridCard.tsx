@@ -309,6 +309,24 @@ const CaptionGridCard = ({
               const savedVersions = saved ? JSON.parse(saved) : {};
               savedVersions[caption.id] = newVersion;
               localStorage.setItem('selectedImageVersions', JSON.stringify(savedVersions));
+              
+              // CRITICAL: Update database selected_version when auto-switching to enhanced
+              if (caption.type === 'product') {
+                try {
+                  const { error } = await supabase
+                    .from('products')
+                    .update({ selected_version: newVersion })
+                    .eq('id', caption.id);
+                  
+                  if (error) {
+                    console.error('Failed to update selected version to enhanced:', error);
+                  } else {
+                    console.log('✅ Auto-selected enhanced version in database for:', caption.id);
+                  }
+                } catch (error) {
+                  console.error('Error updating selected version to enhanced:', error);
+                }
+              }
             }
             
             clearInterval(pollInterval);

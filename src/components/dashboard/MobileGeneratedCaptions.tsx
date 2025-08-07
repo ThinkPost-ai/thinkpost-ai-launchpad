@@ -332,6 +332,25 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
             const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
             if (!userChoices[itemId] || userChoices[itemId] !== 'original') {
               setSelectedVersions(prev => ({ ...prev, [itemId]: 'enhanced' }));
+              
+              // CRITICAL: Update database selected_version when auto-switching to enhanced
+              const caption = captions.find(c => c.id === itemId);
+              if (caption?.type === 'product') {
+                try {
+                  const { error } = await supabase
+                    .from('products')
+                    .update({ selected_version: 'enhanced' })
+                    .eq('id', itemId);
+                  
+                  if (error) {
+                    console.error('Failed to update selected version to enhanced:', error);
+                  } else {
+                    console.log('✅ Auto-selected enhanced version in database for:', itemId);
+                  }
+                } catch (error) {
+                  console.error('Error updating selected version to enhanced:', error);
+                }
+              }
             }
 
             // Refresh captions data to get the updated image paths
