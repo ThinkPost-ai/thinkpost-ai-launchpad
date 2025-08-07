@@ -69,7 +69,7 @@ serve(async (req) => {
 
     console.log('Credits remaining after decrement:', creditsData);
 
-    if (creditsData === 0) {
+    if (creditsData < 0) {
       console.log('User has no remaining credits');
       return new Response(JSON.stringify({ 
         error: 'Insufficient caption credits. You have reached your monthly limit.' 
