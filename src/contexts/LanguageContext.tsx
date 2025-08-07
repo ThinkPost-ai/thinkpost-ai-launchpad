@@ -505,6 +505,10 @@ const getTranslations = () => {
       'captions.description': 'You can review and edits captions',
       'captions.regenerate': 'Regenerate caption',
       'captions.noCredits': 'No caption credits remaining',
+      
+      // Upload Page Credits
+      'upload.noCreditsCaption': 'Content generation credits finished',
+      'upload.noCreditsEnhance': 'Image enhancement credits finished',
       'captions.generating': 'Generating...',
       'captions.generated': 'Caption generated successfully',
       'captions.failed': 'Failed to generate caption',
@@ -816,6 +820,7 @@ const getTranslations = () => {
       'generalContent.clickToUpload': 'Click to upload image or video',
       'generalContent.addMore': 'Add More Content',
       'generalContent.uploadAndGenerate': 'Upload & Generate Content',
+      'generalContent.uploadOnly': 'Upload Only',
       'generalContent.uploading': 'Uploading & Generating...',
       'generalContent.uploadSuccess': 'items uploaded with captions generated successfully',
       'generalContent.item': 'Item {number}',
@@ -1250,6 +1255,10 @@ const getTranslations = () => {
       'captions.description': 'يمكنك مراجعة وتعديل المحتوى',
       'captions.regenerate': 'إعادة توليد المحتوى',
       'captions.noCredits': 'لا توجد رصيد كافي لتوليد المحتوى',
+      
+      // Upload Page Credits
+      'upload.noCreditsCaption': 'انتهى رصيد انتاج المحتوى',
+      'upload.noCreditsEnhance': 'انتهى رصيد انتاج المحتوى',
       'captions.generating': 'جارٍ التوليد...',
       'captions.generated': 'تم توليد المحتوى بنجاح',
       'captions.failed': 'فشل في توليد المحتوى',
@@ -1561,6 +1570,7 @@ const getTranslations = () => {
       'generalContent.clickToUpload': 'انقر لرفع صورة أو فيديو',
       'generalContent.addMore': 'إضافة المزيد من المحتوى',
       'generalContent.uploadAndGenerate': 'رفع وتوليد المحتوى',
+      'generalContent.uploadOnly': 'رفع فقط',
       'generalContent.uploading': 'جارٍ الرفع والتوليد...',
       'generalContent.uploadSuccess': 'عنصر تم رفعه مع توليد المحتوى بنجاح',
       'generalContent.item': 'العنصر {number}',

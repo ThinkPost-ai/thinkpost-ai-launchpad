@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { useToast } from '@/hooks/use-toast';
+import { useCaptionData } from '@/components/dashboard/captions/useCaptionData';
 import { supabase } from '@/integrations/supabase/client';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 import { processImageForTikTok } from '@/utils/imageProcessing';
@@ -39,6 +40,7 @@ const GeneralContentUpload = () => {
   const { profile: instagramProfile } = useInstagramConnection();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userCredits } = useCaptionData();
 
   const [items, setItems] = useState<GeneralContentItem[]>([{
     id: '1',
@@ -51,6 +53,7 @@ const GeneralContentUpload = () => {
   }]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generateCaption, setGenerateCaption] = useState(true);
   const [tiktokAdvancedExpanded, setTiktokAdvancedExpanded] = useState<Record<string, boolean>>({});
 
   const contentTypes = [
@@ -322,7 +325,7 @@ const GeneralContentUpload = () => {
       }
 
       // Generate captions for uploaded items
-      if (uploadedItems.length > 0) {
+      if (uploadedItems.length > 0 && generateCaption && userCredits > 0) {
         console.log('Starting caption generation for', uploadedItems.length, 'items');
         
         // Generate captions for each uploaded item
@@ -722,6 +725,26 @@ const GeneralContentUpload = () => {
               {t('generalContent.addMore')}
             </Button>
 
+            {/* Caption Generation Toggle */}
+            <div className={`flex items-center justify-between p-3 border rounded-lg ${userCredits > 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900 opacity-60'}`}>
+              <div>
+                <Label className="text-base font-medium">
+                  {t('upload.generateCaption')}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {userCredits > 0 
+                    ? t('upload.generateCaptionDescription')
+                    : t('upload.noCreditsCaption')
+                  }
+                </p>
+              </div>
+              <Switch
+                checked={generateCaption && userCredits > 0}
+                disabled={userCredits === 0}
+                onCheckedChange={(checked) => setGenerateCaption(checked)}
+              />
+            </div>
+
             <div className="flex gap-4">
               <Button
                 onClick={handleSaveOnly}
@@ -738,11 +761,12 @@ const GeneralContentUpload = () => {
                   t('productActions.save')
                 )}
               </Button>
+
               <Button
                 onClick={handleSubmit}
                 disabled={uploading || saving || !formIsValid}
                 className="bg-gradient-primary hover:opacity-90 flex-1"
-                title={uploading || saving ? '' : 'Generate captions with AI (requires credits)'}
+                title={uploading || saving ? '' : (generateCaption && userCredits > 0 ? 'Generate captions with AI (requires credits)' : 'Upload content without caption generation')}
               >
                 {uploading ? (
                   <>
@@ -750,7 +774,7 @@ const GeneralContentUpload = () => {
                     {t('generalContent.uploading')}
                   </>
                 ) : (
-                  t('generalContent.uploadAndGenerate')
+                  generateCaption && userCredits > 0 ? t('generalContent.uploadAndGenerate') : t('generalContent.uploadOnly')
                 )}
               </Button>
             </div>
