@@ -45,18 +45,22 @@ export const useAdminUserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Starting to fetch admin users data...');
       
       // Use a database function to get users with proper created_at from auth.users
       const { data: usersData, error: usersError } = await supabase
         .rpc('get_admin_users_data');
 
+      console.log('📊 Users data result:', { usersData, usersError });
       if (usersError) throw usersError;
 
       // Get upload and caption counts
+      console.log('🖼️ Fetching image stats...');
       const { data: imageStats, error: imageError } = await supabase
         .from('images')
         .select('user_id, caption');
 
+      console.log('📷 Image stats result:', { imageStats, imageError });
       if (imageError) throw imageError;
 
       // Process the data
@@ -106,8 +110,15 @@ export const useAdminUserManagement = () => {
         avgCredits: Math.round(avgCredits * 10) / 10
       });
 
+      console.log('✅ Successfully processed user data:', { 
+        totalUsers: processedUsers.length, 
+        todaySignups, 
+        activeUsers, 
+        avgCredits: Math.round(avgCredits * 10) / 10 
+      });
+
     } catch (error: any) {
-      console.error('Error fetching users:', error);
+      console.error('❌ Error fetching users:', error);
       toast({
         title: "Error",
         description: "Failed to load users",
