@@ -377,6 +377,33 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tiktok_oauth_states: {
         Row: {
           created_at: string
@@ -419,7 +446,7 @@ export type Database = {
         Returns: number
       }
       delete_user_and_data: {
-        Args: { target_user_id: string }
+        Args: { user_id_to_delete: string }
         Returns: undefined
       }
       get_admin_users_data: {
