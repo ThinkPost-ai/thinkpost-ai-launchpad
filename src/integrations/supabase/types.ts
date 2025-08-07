@@ -473,7 +473,7 @@ export type Database = {
         Returns: number
       }
       decrement_operation_credits: {
-        Args: { user_id: string; operation_type?: string }
+        Args: { p_user_id: string; operation_type?: string }
         Returns: number
       }
       delete_user_and_data: {
