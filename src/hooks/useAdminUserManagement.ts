@@ -164,11 +164,28 @@ export const useAdminUserManagement = () => {
 
   const updateUserCredits = async (userId: string, newCredits: number) => {
     try {
-      const { error } = await supabase
+      console.log('💳 Attempting to update credits:', { userId, newCredits });
+      
+      // Check current user role first
+      const { data: currentUser } = await supabase.auth.getUser();
+      console.log('👤 Current user:', currentUser?.user?.id);
+      
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser?.user?.id)
+        .single();
+      
+      console.log('🔑 Current user role:', currentProfile?.role);
+      
+      const { data, error } = await supabase
         .from('profiles')
         .update({ caption_credits: newCredits })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
 
+      console.log('📊 Update result:', { data, error });
+      
       if (error) throw error;
 
       toast({
@@ -179,7 +196,7 @@ export const useAdminUserManagement = () => {
       // Refresh users list
       await fetchUsers();
     } catch (error: any) {
-      console.error('Error updating credits:', error);
+      console.error('❌ Error updating credits:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update credits",
