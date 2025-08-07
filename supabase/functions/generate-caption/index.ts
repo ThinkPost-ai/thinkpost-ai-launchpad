@@ -59,7 +59,7 @@ serve(async (req) => {
     // Check and decrement credits using unified operation credit system
     console.log('Checking operation credits for user:', user.id);
     const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_operation_credits', {
-      user_id: user.id,
+      p_user_id: user.id,
       operation_type: 'content_generation'
     });
 
