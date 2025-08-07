@@ -1,0 +1,56 @@
+-- Fix ambiguous column reference in decrement_operation_credits function
+DROP FUNCTION IF EXISTS public.decrement_operation_credits(uuid, text);
+
+CREATE OR REPLACE FUNCTION public.decrement_operation_credits(p_user_id uuid, operation_type text DEFAULT 'general'::text)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  current_credits INTEGER;
+BEGIN
+  -- Check if this operation has already been charged within the last 60 seconds
+  -- (to prevent double charging for enhancement + caption in same operation)
+  IF EXISTS (
+    SELECT 1 FROM public.operation_credits_log 
+    WHERE operation_credits_log.user_id = p_user_id 
+    AND operation_credits_log.created_at > (now() - interval '60 seconds')
+    AND operation_credits_log.operation_type = decrement_operation_credits.operation_type
+  ) THEN
+    -- Return current credits without charging again
+    SELECT caption_credits INTO current_credits
+    FROM public.profiles
+    WHERE id = p_user_id;
+    
+    RETURN COALESCE(current_credits, 0);
+  END IF;
+  
+  -- Get current credits and lock the row
+  SELECT caption_credits INTO current_credits
+  FROM public.profiles
+  WHERE id = p_user_id
+  FOR UPDATE;
+  
+  -- Check if user has credits
+  IF current_credits IS NULL OR current_credits <= 0 THEN
+    RETURN 0;
+  END IF;
+  
+  -- Decrement credits
+  UPDATE public.profiles
+  SET caption_credits = caption_credits - 1
+  WHERE id = p_user_id;
+  
+  -- Log the operation to prevent double charging
+  INSERT INTO public.operation_credits_log (user_id, operation_type, credits_before, credits_after)
+  VALUES (
+    p_user_id,
+    operation_type,
+    current_credits,
+    current_credits - 1
+  );
+  
+  RETURN current_credits - 1;
+END;
+$function$
