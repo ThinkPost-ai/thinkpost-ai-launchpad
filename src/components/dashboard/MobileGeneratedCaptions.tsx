@@ -224,7 +224,22 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     
     setEnhancementStatuses(initialStatuses);
     setEnhancedPaths(initialPaths);
-    setSelectedVersions(prev => ({ ...prev, ...initialVersions }));
+    
+    // Only auto-select enhanced versions if user hasn't manually chosen
+    const saved = localStorage.getItem('selectedImageVersions');
+    const savedVersions = saved ? JSON.parse(saved) : {};
+    
+    setSelectedVersions(prev => {
+      const finalVersions = { ...prev };
+      
+      Object.keys(initialVersions).forEach(captionId => {
+        if (!savedVersions[captionId]) {
+          finalVersions[captionId] = initialVersions[captionId];
+        }
+      });
+      
+      return finalVersions;
+    });
   }, [captions]);
 
   // Polling mechanism for enhancement status

@@ -32,10 +32,7 @@ const ProductImageUpload = ({
   const { user } = useAuth();
   const [enhancedImagePath, setEnhancedImagePath] = useState<string | null>(null);
   const [enhancementStatus, setEnhancementStatus] = useState<'none' | 'processing' | 'completed' | 'failed'>('none');
-  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(
-    // Default to enhanced if available, otherwise original
-    (enhancementStatus === 'completed' && enhancedImagePath) ? 'enhanced' : 'original'
-  );
+  const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>('original');
   const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
 
   const isVideo = file?.type.startsWith('video/');
@@ -104,6 +101,18 @@ const ProductImageUpload = ({
       console.error('Failed to check enhanced image:', error);
     }
   };
+
+  // Update selectedVersion when enhancement completes (only if user hasn't manually selected)
+  useEffect(() => {
+    const saved = localStorage.getItem('selectedImageVersions');
+    const savedVersions = saved ? JSON.parse(saved) : {};
+    const savedVersion = productId ? savedVersions[productId] : null;
+    
+    // Only update if user hasn't manually selected a version and enhancement is completed
+    if (!savedVersion && enhancementStatus === 'completed' && enhancedImagePath) {
+      setSelectedVersion('enhanced');
+    }
+  }, [enhancementStatus, enhancedImagePath, productId]);
 
   const handleImageCompression = async (enhancedPath: string) => {
     try {
