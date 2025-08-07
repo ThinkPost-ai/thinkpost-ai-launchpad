@@ -3,27 +3,82 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
  * Resize image to TikTok optimal dimensions (1080x1920) while maintaining aspect ratio
- * Takes base64 image data and returns resized base64 data
- * Uses a simpler approach compatible with Deno edge runtime
+ * Takes base64 image data and returns resized base64 data with 24-bit depth for TikTok compatibility
  */
 async function resizeImageForTikTok(base64Data: string): Promise<string> {
   try {
-    console.log('📐 Resizing image for TikTok optimal dimensions (1080x1920)...');
-    
-    // For now, we'll skip complex client-side resizing in the edge function
-    // The image is already enhanced by OpenAI and will be compressed by TinyPNG
-    // TikTok can handle various image sizes and will scale appropriately
+    console.log('📐 Resizing image for TikTok optimal dimensions (1080x1920) with 24-bit depth...');
     
     // TikTok optimal dimensions
     const targetWidth = 1080;
     const targetHeight = 1920;
     
-    console.log(`📏 Image prepared for TikTok posting (optimal: ${targetWidth}x${targetHeight})`);
-    console.log('✅ TikTok resize completed - using optimized image');
+    // Convert base64 to image data
+    const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    const blob = new Blob([imageBytes], { type: 'image/jpeg' });
     
-    // Return the original enhanced image since TinyPNG will optimize it
-    // and TikTok will handle final scaling
-    return base64Data;
+    // Create image bitmap for processing
+    const imageBitmap = await createImageBitmap(blob);
+    const { width: originalWidth, height: originalHeight } = imageBitmap;
+    
+    // Calculate dimensions maintaining aspect ratio
+    const aspectRatio = originalWidth / originalHeight;
+    let newWidth = targetWidth;
+    let newHeight = targetHeight;
+    
+    if (aspectRatio > targetWidth / targetHeight) {
+      // Image is wider, fit to width
+      newHeight = targetWidth / aspectRatio;
+    } else {
+      // Image is taller, fit to height
+      newWidth = targetHeight * aspectRatio;
+    }
+    
+    // Create canvas with TikTok dimensions
+    const canvas = new OffscreenCanvas(targetWidth, targetHeight);
+    const ctx = canvas.getContext('2d', { 
+      colorSpace: 'srgb',
+      willReadFrequently: false 
+    });
+    
+    if (!ctx) {
+      throw new Error('Failed to get canvas context');
+    }
+    
+    // Fill background with white for 24-bit RGB compatibility
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+    
+    // Center the image
+    const x = (targetWidth - newWidth) / 2;
+    const y = (targetHeight - newHeight) / 2;
+    
+    // Draw resized image with high quality
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(imageBitmap, x, y, newWidth, newHeight);
+    
+    // Convert to blob with 24-bit JPEG (ensures 24-bit depth)
+    const resizedBlob = await canvas.convertToBlob({
+      type: 'image/jpeg',
+      quality: 0.95  // High quality for TikTok
+    });
+    
+    // Convert blob back to base64
+    const arrayBuffer = await resizedBlob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 1024;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      binary += String.fromCharCode(...uint8Array.slice(i, i + chunkSize));
+    }
+    const resizedBase64 = btoa(binary);
+    
+    console.log(`📏 Image resized from ${originalWidth}x${originalHeight} to ${Math.round(newWidth)}x${Math.round(newHeight)} (centered in ${targetWidth}x${targetHeight})`);
+    console.log('✅ TikTok resize completed with 24-bit depth');
+    
+    imageBitmap.close(); // Clean up
+    return resizedBase64;
     
   } catch (error) {
     console.error('TikTok resize error:', error);
