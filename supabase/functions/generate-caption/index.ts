@@ -57,11 +57,11 @@ serve(async (req) => {
     console.log('User authenticated successfully:', user.id);
 
     // Check credits first before decrementing
-    console.log('Checking operation credits for user:', user.id);
+    console.log('Checking caption credits for user:', user.id);
     const { data: currentCredits, error: creditsCheckError } = await supabase
-      .from('operation_credits')
-      .select('content_generation_credits')
-      .eq('user_id', user.id)
+      .from('profiles')
+      .select('caption_credits')
+      .eq('id', user.id)
       .single();
 
     if (creditsCheckError) {
@@ -69,9 +69,9 @@ serve(async (req) => {
       throw new Error('Failed to check operation credits');
     }
 
-    console.log('Current credits before operation:', currentCredits?.content_generation_credits);
+    console.log('Current credits before operation:', currentCredits?.caption_credits);
 
-    if (!currentCredits || currentCredits.content_generation_credits <= 0) {
+    if (!currentCredits || currentCredits.caption_credits <= 0) {
       console.log('User has no remaining credits');
       return new Response(JSON.stringify({ 
         error: 'Insufficient credits. You have reached your monthly limit.' 
