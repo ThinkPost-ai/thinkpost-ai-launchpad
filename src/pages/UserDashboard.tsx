@@ -12,6 +12,7 @@ import MediaManagement from '@/components/dashboard/MediaManagement';
 import QuickActions from '@/components/dashboard/QuickActions';
 import TikTokConnection from '@/components/dashboard/TikTokConnection';
 import InstagramConnection from '@/components/dashboard/InstagramConnection';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 
 const UserDashboard = () => {
   const { user, loading } = useAuth();
@@ -138,6 +139,7 @@ const UserDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <WhatsAppFloat />
     </div>
   );
 };
