@@ -31,7 +31,7 @@ const Payment = () => {
     },
     growth: {
       name: 'النمو',
-      price: '280',
+      price: '279',
       currency: 'ريال',
       period: 'شهرياً',
       features: [

@@ -32,7 +32,7 @@ const Pricing = () => {
       id: 'growth',
       name: 'Growth',
       nameAr: 'النمو',
-      price: '280',
+      price: '279',
       currency: 'ريال',
       period: 'شهرياً',
       description: 'مثالي للشركات المتنامية',
