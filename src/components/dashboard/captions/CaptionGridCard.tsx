@@ -221,23 +221,28 @@ const CaptionGridCard = ({
     }
 
     try {
-      const response = await fetch(`/functions/v1/enhance-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify({
+      // Use the new enhance-image-multiple function for consistency
+      const { data: enhanceData, error: enhanceError } = await supabase.functions.invoke('enhance-image-multiple', {
+        body: {
           productId: caption.id,
-          imagePath: caption.image_path,
-        }),
+          imageUrl: `https://eztbwukcnddtvcairvpz.supabase.co/storage/v1/object/public/restaurant-images/${caption.image_path}`,
+          productName: caption.name,
+          brandName: null,
+          // Pass user data for callback processing
+          userId: (await supabase.auth.getUser()).data.user?.id,
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          product_name: caption.name,
+          price: caption.price,
+          description: caption.description,
+          image_path: caption.image_path,
+          original_image_path: caption.image_path
+        }
       });
 
-      const result = await response.json();
-      console.log('Enhancement response:', result);
+      console.log('Enhancement response:', { enhanceData, enhanceError });
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Enhancement failed');
+      if (enhanceError) {
+        throw new Error(enhanceError.message || 'Enhancement failed');
       }
 
       toast({
