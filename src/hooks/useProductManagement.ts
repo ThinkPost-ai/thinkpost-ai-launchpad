@@ -675,7 +675,7 @@ export const useProductManagement = () => {
                     userId: user.id,
                     user_id: user.id,
                     product_name: product.name,
-                    price: product.price ? (typeof product.price === 'string' ? parseFloat(product.price) : product.price) : null,
+                    price: product.price ? parseFloat(product.price) : null,
                     description: product.description || null,
                     image_path: product.image_path,
                     original_image_path: product.image_path
