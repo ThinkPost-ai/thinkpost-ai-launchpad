@@ -7,13 +7,57 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      enhanced_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_path: string
+          is_selected: boolean | null
+          product_id: string
+          prompt_used: string | null
+          updated_at: string
+          user_id: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_path: string
+          is_selected?: boolean | null
+          product_id: string
+          prompt_used?: string | null
+          updated_at?: string
+          user_id: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_path?: string
+          is_selected?: boolean | null
+          product_id?: string
+          prompt_used?: string | null
+          updated_at?: string
+          user_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enhanced_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       images: {
         Row: {
           caption: string | null
@@ -116,9 +160,13 @@ export type Database = {
           created_at: string
           description: string | null
           enhanced_image_path: string | null
+          enhancement_batch_id: string | null
+          enhancement_count: number | null
+          enhancement_requested_count: number | null
           id: string
           image_enhancement_status: string | null
           image_path: string | null
+          instagram_enabled: boolean | null
           is_new: boolean | null
           name: string
           price: number | null
@@ -137,9 +185,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           enhanced_image_path?: string | null
+          enhancement_batch_id?: string | null
+          enhancement_count?: number | null
+          enhancement_requested_count?: number | null
           id?: string
           image_enhancement_status?: string | null
           image_path?: string | null
+          instagram_enabled?: boolean | null
           is_new?: boolean | null
           name: string
           price?: number | null
@@ -158,9 +210,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           enhanced_image_path?: string | null
+          enhancement_batch_id?: string | null
+          enhancement_count?: number | null
+          enhancement_requested_count?: number | null
           id?: string
           image_enhancement_status?: string | null
           image_path?: string | null
+          instagram_enabled?: boolean | null
           is_new?: boolean | null
           name?: string
           price?: number | null
@@ -316,6 +372,9 @@ export type Database = {
           id: string
           image_id: string | null
           image_url: string | null
+          instagram_creation_id: string | null
+          instagram_media_id: string | null
+          instagram_publish_id: string | null
           media_type: string | null
           platform: string
           processed_image_path: string | null
@@ -342,6 +401,9 @@ export type Database = {
           id?: string
           image_id?: string | null
           image_url?: string | null
+          instagram_creation_id?: string | null
+          instagram_media_id?: string | null
+          instagram_publish_id?: string | null
           media_type?: string | null
           platform: string
           processed_image_path?: string | null
@@ -368,6 +430,9 @@ export type Database = {
           id?: string
           image_id?: string | null
           image_url?: string | null
+          instagram_creation_id?: string | null
+          instagram_media_id?: string | null
+          instagram_publish_id?: string | null
           media_type?: string | null
           platform?: string
           processed_image_path?: string | null
@@ -473,7 +538,15 @@ export type Database = {
         Returns: number
       }
       decrement_operation_credits: {
-        Args: { p_user_id: string; operation_type?: string }
+        Args: { operation_type?: string; p_user_id: string }
+        Returns: number
+      }
+      decrement_operation_credits_custom: {
+        Args: {
+          p_credit_amount: number
+          p_operation_type: string
+          p_user_id: string
+        }
         Returns: number
       }
       delete_user_and_data: {
@@ -483,18 +556,18 @@ export type Database = {
       get_admin_users_data: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          email: string
-          full_name: string
-          caption_credits: number
-          tiktok_connected: boolean
-          instagram_connected: boolean
-          updated_at: string
           auth_provider: string
-          restaurant_name: string
+          caption_credits: number
           category: string
           created_at: string
+          email: string
+          full_name: string
+          id: string
+          instagram_connected: boolean
+          restaurant_name: string
           role: string
+          tiktok_connected: boolean
+          updated_at: string
         }[]
       }
       get_total_credits: {
