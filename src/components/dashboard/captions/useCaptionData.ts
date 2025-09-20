@@ -139,7 +139,10 @@ export const useCaptionData = () => {
         };
       });
 
-      const allCaptions = [...transformedImages, ...transformedProducts].sort(
+      // Get loading placeholders from localStorage
+      const loadingPlaceholders = JSON.parse(localStorage.getItem('loadingPlaceholders') || '[]');
+      
+      const allCaptions = [...transformedImages, ...transformedProducts, ...loadingPlaceholders].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
@@ -174,6 +177,15 @@ export const useCaptionData = () => {
   useEffect(() => {
     fetchCaptions();
     fetchUserCredits();
+  }, [user]);
+
+  // Poll for updates to loading placeholders and new products
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      fetchCaptions();
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval);
   }, [user]);
 
   return {

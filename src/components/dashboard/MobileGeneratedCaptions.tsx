@@ -566,7 +566,70 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
   return (
     <div className="space-y-4 pb-6">
-      {captions.map((caption) => (
+      {captions.map((caption) => {
+        // Show loading placeholder for loading items
+        if (caption.isLoadingPlaceholder) {
+          return (
+            <Card key={`${caption.type}-${caption.id}`} className="p-4">
+              {/* Loading Image Section */}
+              <div className="w-full mb-4">
+                <div className="relative bg-gray-200 dark:bg-gray-700 h-64 rounded-lg animate-pulse">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple" />
+                  </div>
+                  
+                  {/* Loading Badge */}
+                  <div className="absolute top-2 left-2">
+                    <div className="flex items-center gap-1 bg-black/70 rounded-full px-2 py-1">
+                      <Loader2 className="h-3 w-3 text-white animate-spin" />
+                      <span className="text-xs text-white font-medium">Creating...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Loading Content */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 flex-1">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-deep-blue dark:text-white">Caption:</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 min-h-[80px]">
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/5 animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      disabled
+                      className="opacity-50"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Processing...
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        }
+        
+        return (
         <Card key={`${caption.type}-${caption.id}`} className="p-4">
           {/* Image Section */}
           <div className="w-full mb-4">
@@ -798,7 +861,8 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
             </div>
           )}
         </Card>
-      ))}
+        );
+      })}
 
       {/* Fixed Next Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t z-50">

@@ -429,6 +429,68 @@ const CaptionGridCard = ({
     }
   };
 
+  // Show loading placeholder if this is a loading placeholder
+  if (caption.isLoadingPlaceholder) {
+    return (
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="p-0">
+          <div className="relative aspect-square w-full bg-gray-200 dark:bg-gray-700 animate-pulse">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-vibrant-purple" />
+            </div>
+            
+            {/* Status badges */}
+            <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                Creating...
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-3">
+          <div className="space-y-2">
+            {/* Title skeleton */}
+            <div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
+            </div>
+
+            {/* Caption skeleton */}
+            <div className="space-y-1">
+              <h4 className="text-xs font-medium text-deep-blue dark:text-white">Caption:</h4>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2 min-h-[60px]">
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/5 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="p-3 pt-0 flex justify-between items-center">
+          <div className="flex gap-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              disabled
+              className="opacity-50"
+            >
+              <Edit className="h-3 w-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Processing...
+          </div>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="p-0">
