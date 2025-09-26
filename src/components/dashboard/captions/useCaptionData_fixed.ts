@@ -96,22 +96,13 @@ export const useCaptionData = () => {
       loadingPlaceholders = loadingPlaceholders.filter((placeholder: any) => {
         // Check if there's a real product with the same name
         const hasRealProduct = realProductNames.some(realName => realName === placeholder.name);
-        
-        // Also remove placeholders older than 10 minutes (in case of failures)
-        const placeholderAge = Date.now() - new Date(placeholder.created_at).getTime();
-        const isOld = placeholderAge > 10 * 60 * 1000; // 10 minutes
-        
-        if (isOld) {
-          console.log(`🕐 Removing old loading placeholder: ${placeholder.name} (${Math.round(placeholderAge / 60000)} minutes old)`);
-        }
-        
-        return !hasRealProduct && !isOld;
+        return !hasRealProduct;
       });
 
       // Update localStorage if placeholders were removed
       if (loadingPlaceholders.length !== initialPlaceholderCount) {
         localStorage.setItem('loadingPlaceholders', JSON.stringify(loadingPlaceholders));
-        console.log(`🗑️ Removed ${initialPlaceholderCount - loadingPlaceholders.length} resolved/expired loading placeholders`);
+        console.log(`🗑️ Removed ${initialPlaceholderCount - loadingPlaceholders.length} resolved loading placeholders`);
       }
       
       const allCaptions = [...transformedImages, ...transformedProducts, ...loadingPlaceholders].sort(
