@@ -2,81 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
- * Generate caption using OpenAI directly (without calling generate-caption function)
- */
-async function generateCaptionDirect(productName: string, price: number | null, description: string | null, brandName: string | null): Promise<string> {
-  try {
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
-    console.log(`🤖 Generating caption for: ${productName}`);
-
-    // Create a simple but effective prompt for caption generation
-    const prompt = `Create an engaging social media caption for this product:
-
-Product: ${productName}
-${price ? `Price: ${price}` : ''}
-${description ? `Description: ${description}` : ''}
-${brandName ? `Brand: ${brandName}` : ''}
-
-Requirements:
-- Write in Arabic and English
-- Include relevant hashtags
-- Make it engaging for social media
-- Keep it concise but compelling
-- Focus on the product's appeal
-
-Generate a caption that would work well on Instagram or TikTok.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a social media expert who creates engaging captions for food and product posts. Always include both Arabic and English text with relevant hashtags.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const caption = data.choices[0]?.message?.content?.trim();
-    
-    if (!caption) {
-      throw new Error('No caption generated');
-    }
-
-    console.log(`✅ Caption generated successfully: ${caption.substring(0, 100)}...`);
-    return caption;
-
-  } catch (error) {
-    console.error('Caption generation error:', error);
-    // Return a fallback caption
-    return `✨ ${productName} ${price ? `- ${price} ريال` : ''}\n\n${description || 'منتج رائع يستحق التجربة!'}\n\n#food #delicious #tasty #yummy #طعام #لذيذ`;
-  }
-}
-
-/**
  * Compress image using TinyPNG API
  * Takes base64 image data and returns compressed base64 data
  */
@@ -218,23 +143,6 @@ serve(async (req) => {
       console.error('⚠️ No user_id provided in callback data');
       throw new Error('No user_id provided for processing');
     }
-
-    // Get brand data for better captions
-    let brandName = null;
-    try {
-      const { data: brandData, error: brandError } = await supabase
-        .from('restaurants')
-        .select('name')
-        .eq('user_id', originalProductData.user_id)
-        .single();
-      
-      if (!brandError && brandData) {
-        brandName = brandData.name;
-        console.log(`📋 Found brand name: ${brandName}`);
-      }
-    } catch (error) {
-      console.log('No brand data found, using product name only');
-    }
     
     // Process each generated image and create product versions
     for (let i = 0; i < generatedImages.length; i++) {
@@ -271,16 +179,24 @@ serve(async (req) => {
         const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
         console.log(`✅ Enhanced image ${i + 1} uploaded successfully: ${enhancedImageUrl}`);
         
-        // Generate caption directly using OpenAI
+        // Generate caption for this version using CORRECT product data
         console.log(`📝 Generating caption for version ${i + 1}...`);
-        const generatedCaption = await generateCaptionDirect(
-          originalProductData.name,
-          originalProductData.price,
-          originalProductData.description,
-          brandName
-        );
+        const { data: captionData, error: captionError } = await supabase.functions.invoke('generate-caption', {
+          body: {
+            productName: originalProductData.name, // Use ACTUAL product name
+            price: originalProductData.price, // Use ACTUAL product price
+            description: originalProductData.description || generatedImage.prompt, // Use actual description or enhancement prompt
+            contentType: 'product',
+            contentCategory: 'random'
+          }
+        });
         
-        console.log(`✅ Caption generated for version ${i + 1}: ${generatedCaption.substring(0, 100)}...`);
+        if (captionError) {
+          console.error(`Caption generation failed for version ${i + 1}:`, captionError);
+          console.error(`Caption error details:`, captionError);
+        } else {
+          console.log(`✅ Caption generated for version ${i + 1}:`, captionData?.caption?.substring(0, 100) + '...');
+        }
         
         // Create new product record with enhanced image and generated caption
         const newProductData = {
@@ -291,7 +207,7 @@ serve(async (req) => {
           image_path: originalProductData.image_path, // Keep original image path
           enhanced_image_path: enhancedFileName,
           image_enhancement_status: 'completed',
-          caption: generatedCaption, // Use the generated caption
+          caption: captionData?.caption || `Enhanced version ${i + 1} of ${originalProductData.name}`, // Use generated caption or fallback
           is_new: true,
           // Default TikTok settings
           tiktok_enabled: false,
@@ -319,7 +235,7 @@ serve(async (req) => {
           console.error(`Failed to create product ${i + 1}:`, createError);
         } else {
           console.log(`✅ Created product version ${i + 1}: ${createdProduct.name} (ID: ${createdProduct.id})`);
-          console.log(`📝 Caption saved: ${createdProduct.caption ? 'YES' : 'NO'} - Length: ${createdProduct.caption?.length || 0}`);
+          console.log(`📝 Caption saved: ${createdProduct.caption ? 'YES' : 'NO'}`);
         }
         
       } catch (error) {
