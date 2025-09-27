@@ -283,8 +283,9 @@ const ScheduledPosts = () => {
 
     const mediaItems: MediaItem[] = [
       ...availableProducts.map(p => {
-        // Prioritize database selected_version over localStorage
-        let filePath = p.image_path;
+        // For enhanced products (Version 1, 2, 3), the image_path IS the enhanced image
+        // For original products, we need to check if they have enhanced versions
+        const isEnhancedProduct = p.name.includes(' - Version ');
         const enhancedPath = (p as any).enhanced_image_path;
         const enhancementStatus = (p as any).image_enhancement_status;
         const dbSelectedVersion = (p as any).selected_version; // From database
@@ -295,7 +296,8 @@ const ScheduledPosts = () => {
         
         console.log(`🔍 [SCHEDULING DEBUG] Product ${p.name}:`, {
           id: p.id,
-          original_path: p.image_path,
+          is_enhanced_product: isEnhancedProduct,
+          image_path: p.image_path,
           enhanced_path: enhancedPath,
           enhancement_status: enhancementStatus,
           db_selected_version: dbSelectedVersion,
@@ -305,18 +307,26 @@ const ScheduledPosts = () => {
           status_completed: enhancementStatus === 'completed'
         });
         
-        // Use enhanced image only if user selected it AND it's available and completed
-        if (userSelectedVersion === 'enhanced' && enhancedPath && enhancementStatus === 'completed') {
-          filePath = enhancedPath;
-          console.log(`✅ [SCHEDULING] Using user-selected enhanced image for ${p.name}: ${filePath}`);
+        let filePath = p.image_path; // Default to image_path
+        
+        if (isEnhancedProduct) {
+          // For enhanced products (Version 1, 2, 3), the image_path is already the enhanced image
+          filePath = p.image_path;
+          console.log(`✅ [SCHEDULING] Using enhanced product image for ${p.name}: ${filePath}`);
         } else {
-          console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath} (user selected: ${userSelectedVersion})`);
-          if (enhancedPath && enhancementStatus !== 'completed') {
-            console.log(`   Reason: Enhancement status is '${enhancementStatus}', not 'completed'`);
-          } else if (!enhancedPath && userSelectedVersion === 'enhanced') {
-            console.log(`   Reason: User selected enhanced but no enhanced image path found`);
+          // For original products, check if user wants enhanced version
+          if (userSelectedVersion === 'enhanced' && enhancedPath && enhancementStatus === 'completed') {
+            filePath = enhancedPath;
+            console.log(`✅ [SCHEDULING] Using user-selected enhanced image for ${p.name}: ${filePath}`);
           } else {
-            console.log(`   Reason: User selected original version`);
+            console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath} (user selected: ${userSelectedVersion})`);
+            if (enhancedPath && enhancementStatus !== 'completed') {
+              console.log(`   Reason: Enhancement status is '${enhancementStatus}', not 'completed'`);
+            } else if (!enhancedPath && userSelectedVersion === 'enhanced') {
+              console.log(`   Reason: User selected enhanced but no enhanced image path found`);
+            } else {
+              console.log(`   Reason: User selected original version`);
+            }
           }
         }
 

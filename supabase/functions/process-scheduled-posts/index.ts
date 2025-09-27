@@ -72,6 +72,16 @@ serve(async (req) => {
         // Get the media path - prioritize processed_image_path (contains enhanced image if available)
         let mediaPath = '';
         
+        console.log(`[AUTO-POST] Post data for ${post.id}:`, {
+          processed_image_path: post.processed_image_path,
+          video_path: post.video_path,
+          product_id: post.product_id,
+          product_image_path: post.products?.image_path,
+          product_enhanced_path: (post.products as any)?.enhanced_image_path,
+          product_enhancement_status: (post.products as any)?.image_enhancement_status,
+          product_name: post.products?.name || 'N/A'
+        });
+        
         // First priority: processed_image_path (stored during scheduling with enhanced image if available)
         if (post.processed_image_path) {
           mediaPath = post.processed_image_path;
