@@ -153,19 +153,34 @@ serve(async (req) => {
     }
 
     // If no authenticated user but we have a scheduledPostId, get user from scheduled post
+    let scheduledPostData: any = null;
     if (!user && scheduledPostId) {
+      console.log(`[POST-TO-TIKTOK] Fetching scheduled post data for ID: ${scheduledPostId}`);
+      
       const { data: postData, error: postError } = await supabase
         .from('scheduled_posts')
-        .select('user_id, media_type')
+        .select('user_id, media_type, status, platform')
         .eq('id', scheduledPostId)
         .single();
       
-      if (postError || !postData?.user_id) {
-        throw new Error('Scheduled post not found or missing user ID.');
+      console.log(`[POST-TO-TIKTOK] Query result:`, { postData, postError });
+      
+      if (postError) {
+        console.error(`[POST-TO-TIKTOK] Database error fetching scheduled post:`, postError);
+        throw new Error(`Scheduled post not found: ${postError.message}`);
       }
+      
+      if (!postData?.user_id) {
+        console.error(`[POST-TO-TIKTOK] Scheduled post found but missing user_id:`, postData);
+        throw new Error('Scheduled post found but missing user ID.');
+      }
+      
+      // Store the post data for later use
+      scheduledPostData = postData;
       
       // Create a user-like object for compatibility
       user = { id: postData.user_id };
+      console.log(`[POST-TO-TIKTOK] Using user_id from scheduled post: ${postData.user_id}`);
     }
 
     // If still no user, throw error
@@ -176,15 +191,23 @@ serve(async (req) => {
     // Get the media type from the scheduled post to determine if it's a photo or video
     let mediaType = 'video'; // default to video for backwards compatibility
     if (scheduledPostId) {
-      const { data: postData, error: postError } = await supabase
-        .from('scheduled_posts')
-        .select('media_type')
-        .eq('id', scheduledPostId)
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!postError && postData?.media_type) {
-        mediaType = postData.media_type;
+      // Use cached data if available, otherwise fetch it
+      if (scheduledPostData?.media_type) {
+        mediaType = scheduledPostData.media_type;
+        console.log(`[POST-TO-TIKTOK] Using cached media_type: ${mediaType}`);
+      } else {
+        // Fallback: fetch media_type if not cached
+        const { data: postData, error: postError } = await supabase
+          .from('scheduled_posts')
+          .select('media_type')
+          .eq('id', scheduledPostId)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!postError && postData?.media_type) {
+          mediaType = postData.media_type;
+          console.log(`[POST-TO-TIKTOK] Fetched media_type: ${mediaType}`);
+        }
       }
     }
 
