@@ -127,25 +127,24 @@ serve(async (req) => {
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization');
 
-    // If no auth header and we have a scheduledPostId, use service role for database access
-    const supabaseKey = authHeader ? 
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '' : 
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    // Check if this is a service role key (for internal function calls)
+    const isServiceRoleKey = authHeader?.includes('eyJ') && authHeader.includes('service_role');
+    
+    // Always use service role key for database access when we have a scheduledPostId
+    // or when the auth header is a service role key
+    const supabaseKey = (scheduledPostId || isServiceRoleKey) ? 
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' : 
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      supabaseKey,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
+      supabaseKey
     );
 
     let user: any = null;
     
-    // If we have an auth header, try to authenticate
-    if (authHeader) {
+    // If we have an auth header and it's not a service role key, try to authenticate
+    if (authHeader && !isServiceRoleKey) {
       const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
       if (!userError && authUser) {
         user = authUser;
