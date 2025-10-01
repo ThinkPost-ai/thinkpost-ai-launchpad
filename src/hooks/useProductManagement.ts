@@ -675,10 +675,12 @@ export const useProductManagement = () => {
                     userId: user.id,
                     user_id: user.id,
                     product_name: product.name,
-                    price: product.price ? parseFloat(product.price) : null,
+                    price: product.price ? parseFloat(product.price.toString()) : null,
                     description: product.description || null,
                     image_path: product.image_path,
-                    original_image_path: product.image_path
+                    original_image_path: product.image_path,
+                    // Pass caption generation preference
+                    generateCaption: products[index].generateCaption
                   }
                 });
                 
