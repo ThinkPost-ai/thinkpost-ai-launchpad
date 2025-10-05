@@ -216,19 +216,45 @@ serve(async (req) => {
 
     console.log('📤 Updating user profile in database');
 
-    // Update user profile with TikTok data
-    const { error: updateError } = await supabaseClient
+    // Update user profile with TikTok data (metadata only, no tokens)
+    const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({
         tiktok_open_id: open_id,
         tiktok_username: username,
         tiktok_avatar_url: avatarUrl,
-        tiktok_access_token: access_token,
-        tiktok_refresh_token: refresh_token,
         tiktok_token_expires_at: expiresAt.toISOString(),
         tiktok_connected: true
       })
       .eq('id', stateData.user_id)
+
+    if (updateProfileError) {
+      console.error('❌ Profile update error:', updateProfileError);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': `https://thinkpost.co/dashboard?error=profile_update_failed`
+        }
+      })
+    }
+
+    // Store OAuth tokens securely in user_oauth_tokens table
+    console.log('🔒 Storing OAuth tokens securely...')
+    const { error: updateError } = await supabaseClient
+      .from('user_oauth_tokens')
+      .upsert({
+        user_id: stateData.user_id,
+        tiktok_access_token: access_token,
+        tiktok_refresh_token: refresh_token,
+        tiktok_connected: true,
+        tiktok_open_id: open_id,
+        tiktok_username: username,
+        tiktok_token_expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      })
 
     if (updateError) {
       console.error('❌ Error updating profile:', updateError);

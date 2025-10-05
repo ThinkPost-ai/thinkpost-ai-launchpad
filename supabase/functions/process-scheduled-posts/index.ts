@@ -117,14 +117,14 @@ serve(async (req) => {
           continue;
         }
 
-        // Get user's TikTok connection first
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+        // Get user's TikTok tokens from secure user_oauth_tokens table
+        const { data: tokens, error: tokensError } = await supabase
+          .from('user_oauth_tokens')
           .select('tiktok_access_token, tiktok_refresh_token, tiktok_token_expires_at')
-          .eq('id', post.user_id)
+          .eq('user_id', post.user_id)
           .maybeSingle();
 
-        if (profileError || !profile || !profile.tiktok_access_token) {
+        if (tokensError || !tokens || !tokens.tiktok_access_token) {
           console.error(`[AUTO-POST] No TikTok connection found for user ${post.user_id}`);
           await supabase
             .from('scheduled_posts')

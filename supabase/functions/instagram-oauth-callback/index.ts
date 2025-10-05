@@ -191,20 +191,44 @@ Deno.serve(async (req) => {
 
     console.log('✅ User authenticated:', user.id)
 
-    // Update user profile with Instagram data
+    // Update user profile with Instagram data (metadata only, no tokens)
     console.log('🔄 Updating user profile with Instagram data...')
-    const { error: updateError } = await supabase
+    const { error: updateProfileError } = await supabase
       .from('profiles')
       .update({
         instagram_connected: true,
         instagram_user_id: profileData.id,
         instagram_username: profileData.username,
-        instagram_access_token: tokenData.access_token,
         instagram_avatar_url: profileData.profile_picture_url,
         facebook_page_id: pageWithInstagram?.id,
-        facebook_access_token: pageWithInstagram?.access_token,
       })
       .eq('id', user.id)
+
+    if (updateProfileError) {
+      console.error('❌ Profile update error:', updateProfileError)
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': `https://thinkpost.co/dashboard?error=profile_update_failed`
+        }
+      })
+    }
+
+    // Store OAuth tokens securely in user_oauth_tokens table
+    console.log('🔒 Storing OAuth tokens securely...')
+    const { error: updateError } = await supabase
+      .from('user_oauth_tokens')
+      .upsert({
+        user_id: user.id,
+        instagram_access_token: tokenData.access_token,
+        instagram_connected: true,
+        facebook_access_token: pageWithInstagram?.access_token,
+        facebook_page_id: pageWithInstagram?.id,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      })
 
     if (updateError) {
       console.error('❌ Database update error:', updateError)

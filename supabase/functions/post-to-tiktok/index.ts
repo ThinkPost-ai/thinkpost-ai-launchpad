@@ -49,12 +49,21 @@ async function refreshTikTokToken(supabase: any, userId: string, refreshToken: s
     // Calculate new expiration time
     const expiresAt = new Date(Date.now() + expires_in * 1000);
 
-    // Update the database with new tokens
+    // Update tokens in secure user_oauth_tokens table
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('user_oauth_tokens')
       .update({
         tiktok_access_token: access_token,
-        tiktok_refresh_token: new_refresh_token || refreshToken, // Use new refresh token if provided
+        tiktok_refresh_token: new_refresh_token || refreshToken,
+        tiktok_token_expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+    
+    // Also update expiration in profiles for quick reference
+    await supabase
+      .from('profiles')
+      .update({
         tiktok_token_expires_at: expiresAt.toISOString(),
       })
       .eq('id', userId);
@@ -212,28 +221,28 @@ serve(async (req) => {
 
     console.log(`Media type: ${mediaType}`);
 
-    // Fetch TikTok access token from the profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    // Fetch TikTok access token from secure user_oauth_tokens table
+    const { data: tokens, error: tokensError } = await supabase
+      .from('user_oauth_tokens')
       .select('tiktok_access_token, tiktok_refresh_token, tiktok_token_expires_at')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile?.tiktok_access_token) {
-      throw new Error('TikTok access token is missing in user profile. Please connect your TikTok account.');
+    if (tokensError || !tokens?.tiktok_access_token) {
+      throw new Error('TikTok access token is missing. Please connect your TikTok account.');
     }
 
-    let tiktokAccessToken = profile.tiktok_access_token;
+    let tiktokAccessToken = tokens.tiktok_access_token;
 
     // Check if token is expired or will expire soon (within 1 hour)
-    if (profile.tiktok_token_expires_at && profile.tiktok_refresh_token) {
-      const expiresAt = new Date(profile.tiktok_token_expires_at);
+    if (tokens.tiktok_token_expires_at && tokens.tiktok_refresh_token) {
+      const expiresAt = new Date(tokens.tiktok_token_expires_at);
       const now = new Date();
       const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour buffer
 
       if (expiresAt <= oneHourFromNow) {
         console.log('🔄 TikTok access token is expired or expires soon, refreshing...');
-        const refreshedToken = await refreshTikTokToken(supabase, user.id, profile.tiktok_refresh_token);
+        const refreshedToken = await refreshTikTokToken(supabase, user.id, tokens.tiktok_refresh_token);
         
         if (refreshedToken) {
           tiktokAccessToken = refreshedToken;
