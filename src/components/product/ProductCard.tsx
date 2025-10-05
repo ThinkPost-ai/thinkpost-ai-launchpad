@@ -13,6 +13,7 @@ import { Instagram } from 'lucide-react';
 import { useTikTokConnection } from '@/hooks/useTikTokConnection';
 import { useInstagramConnection } from '@/hooks/useInstagramConnection';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PhotoTipsDialog } from './PhotoTipsDialog';
 import {
   Tooltip,
   TooltipContent,
@@ -85,6 +86,9 @@ const ProductCard = ({
 
   // State for TikTok advanced settings expansion
   const [tiktokAdvancedExpanded, setTiktokAdvancedExpanded] = useState(false);
+
+  // State for photo tips dialog
+  const [showPhotoTips, setShowPhotoTips] = useState(false);
 
   // Helper function to check if "only me" should be disabled
   const isOnlyMeDisabled = () => {
@@ -209,6 +213,22 @@ const ProductCard = ({
                                       !product.tiktokSettings.yourBrand && 
                                       !product.tiktokSettings.brandedContent;
 
+  // Handler for enhance image toggle - show photo tips when enabling
+  const handleEnhanceImageChange = (checked: boolean) => {
+    if (checked && userCredits > 0) {
+      // Show photo tips dialog when enabling enhancement
+      setShowPhotoTips(true);
+    } else {
+      // Directly update the product if disabling or no credits
+      onUpdateProduct(index, 'enhanceImage', checked);
+    }
+  };
+
+  // Handler for confirming enhancement after seeing photo tips
+  const handleConfirmEnhancement = () => {
+    onUpdateProduct(index, 'enhanceImage', true);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -300,9 +320,7 @@ const ProductCard = ({
                   <Switch
                     checked={product.enhanceImage && userCredits > 0}
                     disabled={userCredits === 0}
-                    onCheckedChange={(checked) => 
-                      onUpdateProduct(index, 'enhanceImage', checked)
-                    }
+                    onCheckedChange={handleEnhanceImageChange}
                   />
                 </div>
               </div>
@@ -560,6 +578,13 @@ const ProductCard = ({
           </div>
         </div>
       </CardContent>
+
+      {/* Photo Tips Dialog */}
+      <PhotoTipsDialog
+        open={showPhotoTips}
+        onOpenChange={setShowPhotoTips}
+        onConfirm={handleConfirmEnhancement}
+      />
     </Card>
   );
 };

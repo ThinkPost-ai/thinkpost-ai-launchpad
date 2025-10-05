@@ -411,6 +411,20 @@ const getTranslations = () => {
       'upload.enhanceImage': 'Enhance Image',
       'upload.enhanceImageDescription': 'Improve image quality and optimize for social media',
       
+      // Photo Tips Dialog
+      'photoTips.title': '📸 Best Photo Practices for AI Enhancement',
+      'photoTips.description': 'Follow these tips to get the best results from our AI image enhancement:',
+      'photoTips.lighting.title': 'Good Lighting',
+      'photoTips.lighting.description': 'Use natural light or bright, even lighting. Avoid harsh shadows or dark areas.',
+      'photoTips.background.title': 'Clean Background',
+      'photoTips.background.description': 'Use a simple, uncluttered background to make your product stand out.',
+      'photoTips.angle.title': 'Clear View',
+      'photoTips.angle.description': 'Show your product from the best angle. Center it in the frame.',
+      'photoTips.quality.title': 'High Resolution',
+      'photoTips.quality.description': 'Use the highest quality setting on your camera or phone.',
+      'photoTips.result': 'Following these tips will help our AI create stunning, professional-looking enhanced images for your social media posts!',
+      'photoTips.enableEnhancement': 'Enable Enhancement',
+      
       // Product Form
       'productForm.productName': 'Product Name',
       'productForm.required': '*',
@@ -1160,6 +1174,20 @@ const getTranslations = () => {
       'upload.generateCaptionDescription': 'توليد محتوى تلقائياً بالذكاء الاصطناعي لهذا المنتج',
       'upload.enhanceImage': 'تحسين الصورة',
       'upload.enhanceImageDescription': 'تحسين جودة الصورة وتحسينها لشبكات التواصل الاجتماعي',
+      
+      // Photo Tips Dialog
+      'photoTips.title': '📸 أفضل الممارسات لتصوير المنتجات للذكاء الاصطناعي',
+      'photoTips.description': 'اتبع هذه النصائح للحصول على أفضل النتائج من تحسين الصور بالذكاء الاصطناعي:',
+      'photoTips.lighting.title': 'إضاءة جيدة',
+      'photoTips.lighting.description': 'استخدم الضوء الطبيعي أو الإضاءة الساطعة المتساوية. تجنب الظلال القاسية أو المناطق المظلمة.',
+      'photoTips.background.title': 'خلفية نظيفة',
+      'photoTips.background.description': 'استخدم خلفية بسيطة وغير مزدحمة لإبراز منتجك.',
+      'photoTips.angle.title': 'رؤية واضحة',
+      'photoTips.angle.description': 'اعرض منتجك من أفضل زاوية. ضعه في وسط الإطار.',
+      'photoTips.quality.title': 'دقة عالية',
+      'photoTips.quality.description': 'استخدم أعلى إعداد جودة في الكاميرا أو الهاتف.',
+      'photoTips.result': 'اتباع هذه النصائح سيساعد الذكاء الاصطناعي على إنشاء صور محسنة مذهلة ومهنية لمنشوراتك على وسائل التواصل الاجتماعي!',
+      'photoTips.enableEnhancement': 'تفعيل التحسين',
       
       // Product Form
       'productForm.productName': 'اسم المنتج',

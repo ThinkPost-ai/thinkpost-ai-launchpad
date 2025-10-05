@@ -29,7 +29,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
 
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
-    // Check credits before attempting to generate
+    // Check credits before attempting to generateccc
     if (userCredits <= 0) {
       toast({
         title: "No Remaining Credits",

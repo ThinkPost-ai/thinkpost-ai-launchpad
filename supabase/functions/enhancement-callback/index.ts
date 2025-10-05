@@ -168,7 +168,8 @@ serve(async (req) => {
       product_name: productName,
       product_price: productPrice,
       product_description: productDescription,
-      original_image_path: originalImagePath
+      original_image_path: originalImagePath,
+      generate_caption: generateCaption
     } = requestBody;
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -184,6 +185,11 @@ serve(async (req) => {
     console.log(`📞 Enhancement callback received for product: ${productId}`);
     console.log(`📦 Callback data:`, { success, imageCount: generatedImages?.length, error });
     console.log(`👤 User data:`, { userId, productName, productPrice, productDescription });
+    console.log(`🎯 Caption generation setting from Vercel:`, { generateCaption: generateCaption !== undefined ? generateCaption : 'undefined (defaulting to true)' });
+    
+    // Use the generateCaption flag directly from Vercel callback
+    const shouldGenerateCaption = generateCaption !== false; // Default to true if undefined for backward compatibility
+    console.log(`🎯 Final caption generation decision: ${shouldGenerateCaption}`);
     
     if (!success || error) {
       console.error(`❌ Enhancement failed for ${productId}:`, error);
@@ -271,16 +277,21 @@ serve(async (req) => {
         const enhancedImageUrl = `${supabaseUrl}/storage/v1/object/public/restaurant-images/${enhancedFileName}`;
         console.log(`✅ Enhanced image ${i + 1} uploaded successfully: ${enhancedImageUrl}`);
         
-        // Generate caption directly using OpenAI
-        console.log(`📝 Generating caption for version ${i + 1}...`);
-        const generatedCaption = await generateCaptionDirect(
-          originalProductData.name,
-          originalProductData.price,
-          originalProductData.description,
-          brandName
-        );
-        
-        console.log(`✅ Caption generated for version ${i + 1}: ${generatedCaption.substring(0, 100)}...`);
+        // Generate caption only if requested
+        let generatedCaption = '';
+        if (shouldGenerateCaption) {
+          console.log(`📝 Generating caption for version ${i + 1}...`);
+          generatedCaption = await generateCaptionDirect(
+            originalProductData.name,
+            originalProductData.price,
+            originalProductData.description,
+            brandName
+          );
+          console.log(`✅ Caption generated for version ${i + 1}: ${generatedCaption.substring(0, 100)}...`);
+        } else {
+          console.log(`⏭️ Skipping caption generation for version ${i + 1} (shouldGenerateCaption = false)`);
+          generatedCaption = ''; // Empty caption when not requested
+        }
         
         // Create new product record with enhanced image and generated caption
         const newProductData = {
