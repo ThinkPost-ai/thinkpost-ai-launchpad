@@ -27,9 +27,9 @@ export const useTikTokConnection = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_oauth_tokens')
         .select('tiktok_open_id, tiktok_username, tiktok_avatar_url, tiktok_connected')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) {
@@ -37,15 +37,14 @@ export const useTikTokConnection = () => {
         return;
       }
 
-      // If no profile exists, create one
+      // If no OAuth token record exists, create one
       if (!data) {
-        console.log('No profile found for user, creating one...');
+        console.log('No OAuth tokens found for user, creating record...');
         const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
+          .from('user_oauth_tokens')
           .insert({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            auth_provider: 'email'
+            user_id: user.id,
+            tiktok_connected: false
           })
           .select('tiktok_open_id, tiktok_username, tiktok_avatar_url, tiktok_connected')
           .single();
@@ -185,7 +184,7 @@ export const useTikTokConnection = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('user_oauth_tokens')
         .update({
           // Keep the previous account information for reconnection dialog
           // tiktok_open_id: null,  // Keep this
@@ -197,7 +196,7 @@ export const useTikTokConnection = () => {
           tiktok_token_expires_at: null,
           tiktok_connected: false
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;

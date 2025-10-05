@@ -26,10 +26,10 @@ export const useInstagramConnection = () => {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_oauth_tokens')
         .select('instagram_connected, instagram_username, instagram_user_id, instagram_avatar_url')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching Instagram status:', error);
@@ -54,7 +54,7 @@ export const useInstagramConnection = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('user_oauth_tokens')
         .update({
           instagram_connected: false,
           instagram_username: null,
@@ -62,7 +62,7 @@ export const useInstagramConnection = () => {
           instagram_avatar_url: null,
           instagram_access_token: null,
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error disconnecting Instagram:', error);
