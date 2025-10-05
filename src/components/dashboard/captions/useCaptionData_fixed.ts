@@ -46,15 +46,15 @@ export const useCaptionData = () => {
 
       const transformedImages: CaptionData[] = (images || []).map(image => ({
         id: image.id,
-        image_path: image.image_path,
-        enhanced_image_path: image.enhanced_image_path,
-        image_enhancement_status: image.image_enhancement_status,
+        image_path: image.file_path,
+        enhanced_image_path: null,
+        image_enhancement_status: 'none' as const,
         original_filename: image.original_filename,
         caption: image.caption,
         created_at: image.created_at,
         status: 'draft' as const,
         type: 'image' as const,
-        is_new: image.is_new,
+        is_new: false,
         content_type: image.content_type,
         media_type: image.media_type,
         social_stats: {
@@ -67,9 +67,9 @@ export const useCaptionData = () => {
 
       const transformedProducts: CaptionData[] = (products || []).map(product => ({
         id: product.id,
-        image_path: product.image_path,
-        enhanced_image_path: product.enhanced_image_path,
-        image_enhancement_status: product.image_enhancement_status,
+        image_path: product.image_path || null,
+        enhanced_image_path: product.enhanced_image_path || null,
+        image_enhancement_status: (product.image_enhancement_status as 'none' | 'processing' | 'completed' | 'failed') || 'none',
         name: product.name,
         price: product.price,
         description: product.description,
@@ -77,7 +77,7 @@ export const useCaptionData = () => {
         created_at: product.created_at,
         status: 'draft' as const,
         type: 'product' as const,
-        is_new: product.is_new,
+        is_new: product.is_new || false,
         social_stats: {
           instagram_views: Math.floor(Math.random() * 1000) + 100,
           instagram_likes: Math.floor(Math.random() * 100) + 10,
