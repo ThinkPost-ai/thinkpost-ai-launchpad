@@ -191,12 +191,11 @@ Deno.serve(async (req) => {
 
     console.log('✅ User authenticated:', user.id)
 
-    // Update user OAuth tokens with Instagram data
-    console.log('🔄 Updating user OAuth tokens with Instagram data...')
+    // Update user profile with Instagram data
+    console.log('🔄 Updating user profile with Instagram data...')
     const { error: updateError } = await supabase
-      .from('user_oauth_tokens')
-      .upsert({
-        user_id: user.id,
+      .from('profiles')
+      .update({
         instagram_connected: true,
         instagram_user_id: profileData.id,
         instagram_username: profileData.username,
@@ -204,10 +203,8 @@ Deno.serve(async (req) => {
         instagram_avatar_url: profileData.profile_picture_url,
         facebook_page_id: pageWithInstagram?.id,
         facebook_access_token: pageWithInstagram?.access_token,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
       })
+      .eq('id', user.id)
 
     if (updateError) {
       console.error('❌ Database update error:', updateError)

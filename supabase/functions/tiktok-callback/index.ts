@@ -214,24 +214,21 @@ serve(async (req) => {
       console.error('❌ Error fetching user info:', userInfoError);
     }
 
-    console.log('📤 Updating user OAuth tokens in database');
+    console.log('📤 Updating user profile in database');
 
-    // Update user OAuth tokens with TikTok data
+    // Update user profile with TikTok data
     const { error: updateError } = await supabaseClient
-      .from('user_oauth_tokens')
-      .upsert({
-        user_id: stateData.user_id,
+      .from('profiles')
+      .update({
         tiktok_open_id: open_id,
         tiktok_username: username,
         tiktok_avatar_url: avatarUrl,
         tiktok_access_token: access_token,
         tiktok_refresh_token: refresh_token,
         tiktok_token_expires_at: expiresAt.toISOString(),
-        tiktok_connected: true,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
+        tiktok_connected: true
       })
+      .eq('id', stateData.user_id)
 
     if (updateError) {
       console.error('❌ Error updating profile:', updateError);

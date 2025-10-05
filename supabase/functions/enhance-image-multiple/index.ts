@@ -163,9 +163,6 @@ serve(async (req) => {
     const productPrice = requestBody.productPrice || requestBody.price;
     const productDescription = requestBody.productDescription || requestBody.description;
     const originalImagePath = requestBody.originalImagePath || requestBody.image_path;
-    const generateCaption = requestBody.generateCaption !== undefined ? requestBody.generateCaption : true; // Default to true for backward compatibility
-    
-    console.log(`🎯 Caption generation setting for product ${productId}: ${generateCaption}`);
     
     // Call the new Vercel API with callback (async processing)
     const enhancementResponse = await fetch('https://python-hello-world-git-main-yousefs-projects-4d997d7d.vercel.app/api/improve2', {
@@ -183,8 +180,7 @@ serve(async (req) => {
         product_name: callbackProductName || 'Enhanced Product',
         product_price: productPrice,
         product_description: productDescription,
-        original_image_path: originalImagePath,
-        generate_caption: generateCaption
+        original_image_path: originalImagePath
       })
     });
 
