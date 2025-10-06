@@ -28,6 +28,8 @@ export const useCaptionData = () => {
 
   const fetchCaptions = async () => {
     try {
+      console.log('🔍 Fetching captions for user:', user?.id);
+      
       const { data: images, error: imagesError } = await supabase
         .from('images')
         .select('*')
@@ -35,6 +37,8 @@ export const useCaptionData = () => {
         .order('created_at', { ascending: false });
 
       if (imagesError) throw imagesError;
+      
+      console.log('📸 Fetched images:', images?.length || 0, images);
 
       const { data: products, error: productsError } = await supabase
         .from('products')
@@ -43,6 +47,8 @@ export const useCaptionData = () => {
         .order('created_at', { ascending: false });
 
       if (productsError) throw productsError;
+      
+      console.log('🍽️ Fetched products:', products?.length || 0, products);
 
       const transformedImages: CaptionData[] = (images || []).map(image => ({
         id: image.id,
@@ -117,6 +123,8 @@ export const useCaptionData = () => {
       const allCaptions = [...transformedImages, ...transformedProducts, ...loadingPlaceholders].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
+      
+      console.log('📋 Final captions array:', allCaptions.length, allCaptions);
 
       setCaptions(allCaptions);
     } catch (error: any) {
@@ -147,8 +155,13 @@ export const useCaptionData = () => {
   };
 
   useEffect(() => {
-    fetchCaptions();
-    fetchUserCredits();
+    if (user?.id) {
+      console.log('👤 User authenticated, fetching data for:', user.id);
+      fetchCaptions();
+      fetchUserCredits();
+    } else {
+      console.log('❌ No user found, skipping data fetch');
+    }
   }, [user]);
 
   // Poll for updates to loading placeholders and new products

@@ -238,7 +238,10 @@ const GeneralContentUpload = () => {
     if (!validateItems()) return;
 
     setSaving(true);
+
     try {
+      const savedItems = [];
+
       for (const item of items) {
         if (!item.file) continue;
 
@@ -249,7 +252,7 @@ const GeneralContentUpload = () => {
         const isVideo = item.file.type.startsWith('video/');
         
         // Save to images table without caption
-        const { error: imageError } = await supabase
+        const { data, error } = await supabase
           .from('images')
           .insert({
             user_id: user!.id,
@@ -261,18 +264,32 @@ const GeneralContentUpload = () => {
             media_type: isVideo ? 'video' : 'photo',
             tiktok_enabled: item.tiktokEnabled,
             instagram_enabled: item.instagramEnabled,
-          });
+          })
+          .select()
+          .single();
 
-        if (imageError) throw imageError;
+        if (error) throw error;
+        savedItems.push(data);
       }
 
       toast({
-        title: t('toast.success'),
-        description: `${items.length} ${t('generalContent.uploadSuccess')}`,
+        title: "Success!",
+        description: `${savedItems.length} item(s) saved successfully`
       });
 
-      // Navigate to review page
+      // Navigate to review content page
       navigate('/review-content');
+
+      // Reset form to initial state
+      setItems([{
+        id: '1',
+        file: null,
+        filePreview: null,
+        contentType: '',
+        description: '',
+        tiktokEnabled: false,
+        instagramEnabled: false,
+      }]);
 
     } catch (error: any) {
       console.error('Error saving general content:', error);
@@ -421,7 +438,10 @@ const GeneralContentUpload = () => {
         });
 
         // Navigate to captions review page
-        navigate('/review-content');
+        console.log('🚀 Navigating to review page after upload and generate...');
+        setTimeout(() => {
+          navigate('/review-content', { replace: true });
+        }, 100);
       }
 
     } catch (error: any) {
@@ -764,9 +784,9 @@ const GeneralContentUpload = () => {
 
               <Button
                 onClick={handleSubmit}
-                disabled={uploading || saving || !formIsValid}
-                className="bg-gradient-primary hover:opacity-90 flex-1"
-                title={uploading || saving ? '' : (generateCaption && userCredits > 0 ? 'Generate captions with AI (requires credits)' : 'Upload content without caption generation')}
+                disabled={generateCaption && userCredits > 0 ? (uploading || saving || !formIsValid) : true}
+                className={`bg-gradient-primary hover:opacity-90 flex-1 ${!(generateCaption && userCredits > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={generateCaption && userCredits > 0 ? (uploading || saving ? '' : 'Generate captions with AI (requires credits)') : 'Upload Only is temporarily disabled - please enable caption generation'}
               >
                 {uploading ? (
                   <>
@@ -774,7 +794,7 @@ const GeneralContentUpload = () => {
                     {t('generalContent.uploading')}
                   </>
                 ) : (
-                  generateCaption && userCredits > 0 ? t('generalContent.uploadAndGenerate') : t('generalContent.uploadOnly')
+                  generateCaption && userCredits > 0 ? t('generalContent.uploadAndGenerate') : 'Upload Only (Disabled)'
                 )}
               </Button>
             </div>
