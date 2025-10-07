@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Edit, 
   Wand2,
@@ -39,6 +40,9 @@ interface CaptionGridCardProps {
   onDeleteCaption: (itemId: string, itemType: 'image' | 'product') => void;
   generatingCaption: string | null;
   userCredits: number;
+  isSelected?: boolean;
+  onSelectionChange?: (id: string, selected: boolean) => void;
+  selectionMode?: boolean;
 }
 
 const CaptionGridCard = ({ 
@@ -47,7 +51,10 @@ const CaptionGridCard = ({
   onRegenerateCaption,
   onDeleteCaption,
   generatingCaption,
-  userCredits
+  userCredits,
+  isSelected = false,
+  onSelectionChange,
+  selectionMode = false
 }: CaptionGridCardProps) => {
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -129,9 +136,23 @@ const CaptionGridCard = ({
 
   // Function to get the appropriate image path (enhanced or original)
   const getDisplayImagePath = () => {
+    const enhancedPath = enhancedImagePath || caption.enhanced_image_path;
+    
+    // Only return enhanced path if explicitly selected as enhanced AND enhanced version exists
     if (selectedVersion === 'enhanced' && canShowEnhanced) {
-      return enhancedImagePath || caption.enhanced_image_path;
+      return enhancedPath;
     }
+    
+    // For 'original' selection, we need to find the actual original image
+    // If image_path is null or same as enhanced_path, this is a "Version" product
+    if (!caption.image_path || caption.image_path === enhancedPath) {
+      // This is a "Version" product, we need to find the original
+      // For now, return enhanced as fallback (this should be handled by parent component)
+      console.log(`⚠️ Version product ${caption.name} has no original image_path, using enhanced as fallback`);
+      return enhancedPath;
+    }
+    
+    // Normal case: return the original image path
     return caption.image_path;
   };
 
@@ -497,9 +518,21 @@ const CaptionGridCard = ({
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <Card className={`overflow-hidden hover:shadow-lg transition-all duration-200 ${isSelected ? 'ring-2 ring-vibrant-purple' : ''}`}>
       <CardHeader className="p-0">
         <div className="relative aspect-square w-full group">
+          {/* Selection Checkbox */}
+          {selectionMode && (
+            <div className="absolute top-2 right-2 z-20 bg-white dark:bg-gray-800 rounded-md p-1 shadow-md">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={(checked) => {
+                  onSelectionChange?.(caption.id, checked as boolean);
+                }}
+                className="h-5 w-5"
+              />
+            </div>
+          )}
           {caption.media_type === 'video' ? (
             <>
               <video

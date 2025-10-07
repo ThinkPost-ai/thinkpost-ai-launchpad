@@ -253,21 +253,19 @@ const ScheduledPosts = () => {
       postedPosts?.filter(p => p.image_id).map(p => p.image_id) || []
     );
 
-    // Fetch products with captions and their selected version from database
+    // Fetch products and their selected version from database (including those without captions)
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id, name, image_path, caption, enhanced_image_path, image_enhancement_status, selected_version')
-      .eq('user_id', user?.id)
-      .not('caption', 'is', null);
+      .eq('user_id', user?.id);
 
     if (productsError) throw productsError;
 
-    // Fetch images with captions
+    // Fetch images (including those without captions)
     const { data: images, error: imagesError } = await supabase
       .from('images')
       .select('id, file_path, caption, original_filename')
-      .eq('user_id', user?.id)
-      .not('caption', 'is', null);
+      .eq('user_id', user?.id);
 
     if (imagesError) throw imagesError;
 
@@ -361,7 +359,8 @@ const ScheduledPosts = () => {
     console.log(`Scheduling: Found ${products?.length || 0} total products, ${availableProducts.length} available for scheduling`);
     console.log(`Scheduling: Found ${images?.length || 0} total images, ${availableImages.length} available for scheduling`);
 
-    return mediaItems.filter(item => item.caption && item.file_path);
+    // Return all media items that have a file path (caption is optional)
+    return mediaItems.filter(item => item.file_path);
   };
 
   // Helper function to determine media type from file extension
@@ -482,14 +481,12 @@ const ScheduledPosts = () => {
         const { data: allProducts } = await supabase
           .from('products')
           .select('id')
-          .eq('user_id', user?.id)
-          .not('caption', 'is', null);
+          .eq('user_id', user?.id);
         
         const { data: allImages } = await supabase
           .from('images')
           .select('id')
-          .eq('user_id', user?.id)
-          .not('caption', 'is', null);
+          .eq('user_id', user?.id);
 
         const hasAnyContent = (allProducts?.length || 0) + (allImages?.length || 0) > 0;
 
@@ -511,7 +508,7 @@ const ScheduledPosts = () => {
           user_id: user!.id,
           product_id: mediaItem.type === 'product' ? mediaItem.id : null,
           image_id: mediaItem.type === 'image' ? mediaItem.id : null,
-          caption: mediaItem.caption!,
+          caption: mediaItem.caption || '', // Allow empty caption if not provided
           scheduled_date: date.toISOString(),
           platform: 'tiktok',
           status: 'scheduled' as const,

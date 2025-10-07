@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MessageSquare, Calendar } from 'lucide-react';
+import { MessageSquare, Calendar, Trash2, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCaptionData } from './captions/useCaptionData';
@@ -13,6 +13,16 @@ import MobileGeneratedCaptions from './MobileGeneratedCaptions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import CaptionGridCard from './captions/CaptionGridCard';
 import { useImageCompression } from '@/hooks/useImageCompression';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   const { toast } = useToast();
@@ -27,6 +37,10 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
   } = useCaptionData();
   
   const [generatingCaption, setGeneratingCaption] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const regenerateCaption = async (itemId: string, itemType: 'image' | 'product') => {
     // Check credits before attempting to generateccc
@@ -148,6 +162,65 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     setCaptions(prev => prev.filter(caption => caption.id !== id));
   };
 
+  const handleSelectionChange = (id: string, selected: boolean) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === captions.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(captions.map(c => c.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedItems).map(async (id) => {
+        const caption = captions.find(c => c.id === id);
+        if (!caption) return;
+        
+        const table = caption.type === 'product' ? 'products' : 'images';
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+      });
+
+      await Promise.all(deletePromises);
+
+      setCaptions(prev => prev.filter(caption => !selectedItems.has(caption.id)));
+      setSelectedItems(new Set());
+      setSelectionMode(false);
+      setShowDeleteDialog(false);
+
+      toast({
+        title: t('toast.success'),
+        description: `Successfully deleted ${selectedItems.size} item(s)`,
+      });
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: t('toast.error'),
+        description: 'Failed to delete some items',
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -165,7 +238,7 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-vibrant-purple" />
@@ -175,16 +248,71 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                 {t('captions.description')}
               </CardDescription>
             </div>
-            <Button 
-              onClick={() => window.location.href = '/schedule'}
-              className="bg-gradient-primary hover:opacity-90"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              {t('captions.schedule')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {captions.length > 0 && (
+                <Button 
+                  variant={selectionMode ? "secondary" : "outline"}
+                  onClick={() => {
+                    setSelectionMode(!selectionMode);
+                    setSelectedItems(new Set());
+                  }}
+                  size="sm"
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  {selectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                </Button>
+              )}
+              <Button 
+                onClick={() => window.location.href = '/schedule'}
+                className="bg-gradient-primary hover:opacity-90"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                {t('captions.schedule')}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Bulk Actions Toolbar */}
+          {selectionMode && captions.length > 0 && (
+            <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAll}
+                  >
+                    {selectedItems.size === captions.length ? (
+                      <>
+                        <Square className="h-4 w-4 mr-2" />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Select All
+                      </>
+                    )}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedItems.size} of {captions.length} selected
+                  </span>
+                </div>
+                {selectedItems.size > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected ({selectedItems.size})
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {captions.length === 0 ? (
             <EmptyCaptionsState />
           ) : (
@@ -198,12 +326,37 @@ const GeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) => {
                   onDeleteCaption={handleCaptionDelete}
                   generatingCaption={generatingCaption}
                   userCredits={userCredits}
+                  selectionMode={selectionMode}
+                  isSelected={selectedItems.has(caption.id)}
+                  onSelectionChange={handleSelectionChange}
                 />
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedItems.size} item(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected posts and their captions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

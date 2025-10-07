@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,9 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { useCaptionData } from './captions/useCaptionData';
 import {
@@ -76,6 +79,10 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [currentEditId, setCurrentEditId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Enhancement tracking states
   const [enhancingItems, setEnhancingItems] = useState<Set<string>>(new Set());
@@ -103,22 +110,52 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     const enhancedPath = enhancedPaths[caption.id] || caption.enhanced_image_path;
     const status = enhancementStatuses[caption.id] || caption.image_enhancement_status;
     
-    // Check if user has explicitly chosen a version
-    const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
-    let selectedVersion = selectedVersions[caption.id];
+    // Get the current selected version (default to 'original')
+    const currentSelectedVersion = selectedVersions[caption.id] || 'original';
     
-    // Auto-select enhanced if available and user hasn't explicitly chosen original
-    if (!userChoices[caption.id] && status === 'completed' && enhancedPath) {
-      selectedVersion = 'enhanced';
-    } else if (userChoices[caption.id]) {
-      selectedVersion = userChoices[caption.id];
-    } else {
-      selectedVersion = selectedVersion || 'original';
-    }
+    console.log(`🖼️ Image paths for ${caption.name || caption.id}:`, {
+      currentSelectedVersion,
+      originalPath: caption.image_path,
+      enhancedPath,
+      status,
+      captionName: caption.name
+    });
     
-    if (selectedVersion === 'enhanced' && enhancedPath && status === 'completed') {
+    // Only return enhanced path if explicitly selected as enhanced AND enhanced version exists
+    if (currentSelectedVersion === 'enhanced' && enhancedPath && status === 'completed') {
+      console.log(`✨ Returning enhanced path: ${enhancedPath}`);
       return enhancedPath;
     }
+    
+    // For 'original' selection, we need to find the actual original image
+    // If image_path is null or same as enhanced_path, this is a "Version" product
+    if (!caption.image_path || caption.image_path === enhancedPath) {
+      // This is a "Version" product, find the original product
+      if (caption.name && caption.name.includes(' - Version ')) {
+        const originalName = caption.name.replace(/ - Version \d+$/, '');
+        console.log(`🔍 Looking for original product with name: ${originalName}`);
+        
+        // Find the original product in captions
+        const originalProduct = captions.find(c => 
+          c.name === originalName && 
+          c.image_path && 
+          c.image_path !== c.enhanced_image_path &&
+          c.type === 'product'
+        );
+        
+        if (originalProduct) {
+          console.log(`📸 Found original product, returning path: ${originalProduct.image_path}`);
+          return originalProduct.image_path;
+        }
+      }
+      
+      // Fallback: if we can't find original, show enhanced (better than nothing)
+      console.log(`⚠️ Could not find original image, falling back to enhanced: ${enhancedPath}`);
+      return enhancedPath;
+    }
+    
+    // Normal case: return the original image path
+    console.log(`📸 Returning original path: ${caption.image_path}`);
     return caption.image_path;
   };
 
@@ -552,6 +589,65 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
     }
   };
 
+  const handleSelectionChange = (id: string, selected: boolean) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === captions.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(captions.map(c => c.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedItems).map(async (id) => {
+        const caption = captions.find(c => c.id === id);
+        if (!caption) return;
+        
+        const table = caption.type === 'product' ? 'products' : 'images';
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+      });
+
+      await Promise.all(deletePromises);
+
+      setCaptions(prev => prev.filter(caption => !selectedItems.has(caption.id)));
+      setSelectedItems(new Set());
+      setSelectionMode(false);
+      setShowDeleteDialog(false);
+
+      toast({
+        title: t('toast.success'),
+        description: `Successfully deleted ${selectedItems.size} item(s)`,
+      });
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: t('toast.error'),
+        description: 'Failed to delete some items',
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -566,6 +662,71 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
 
   return (
     <div className="space-y-4 pb-6">
+      {/* Selection Mode Toggle and Bulk Actions */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b pb-3">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <Button 
+            variant={selectionMode ? "secondary" : "outline"}
+            onClick={() => {
+              setSelectionMode(!selectionMode);
+              setSelectedItems(new Set());
+            }}
+            size="sm"
+            className="flex-1"
+          >
+            <CheckSquare className="h-4 w-4 mr-2" />
+            {selectionMode ? 'Cancel Selection' : 'Select Multiple'}
+          </Button>
+          <Button 
+            onClick={() => navigate('/schedule')}
+            className="bg-gradient-primary hover:opacity-90 flex-1"
+            size="sm"
+          >
+            {t('captions.next')}
+          </Button>
+        </div>
+
+        {/* Bulk Actions Bar */}
+        {selectionMode && captions.length > 0 && (
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectAll}
+                className="flex-1"
+              >
+                {selectedItems.size === captions.length ? (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Select All
+                  </>
+                )}
+              </Button>
+              {selectedItems.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete ({selectedItems.size})
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              {selectedItems.size} of {captions.length} selected
+            </p>
+          </div>
+        )}
+      </div>
+
       {captions.map((caption) => {
         // Show loading placeholder for loading items
         if (caption.isLoadingPlaceholder) {
@@ -630,10 +791,22 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
         }
         
         return (
-        <Card key={`${caption.type}-${caption.id}`} className="p-4">
+        <Card key={`${caption.type}-${caption.id}`} className={`p-4 ${selectedItems.has(caption.id) ? 'ring-2 ring-vibrant-purple' : ''}`}>
           {/* Image Section */}
           <div className="w-full mb-4">
             <div className="relative">
+              {/* Selection Checkbox */}
+              {selectionMode && (
+                <div className="absolute top-2 right-2 z-30 bg-white dark:bg-gray-800 rounded-md p-1.5 shadow-lg">
+                  <Checkbox
+                    checked={selectedItems.has(caption.id)}
+                    onCheckedChange={(checked) => {
+                      handleSelectionChange(caption.id, checked as boolean);
+                    }}
+                    className="h-6 w-6"
+                  />
+                </div>
+              )}
               {caption.media_type === 'video' ? (
                 <video
                   src={getImageUrl(getDisplayImagePath(caption))}
@@ -864,16 +1037,27 @@ const MobileGeneratedCaptions = ({ onCreditsUpdate }: GeneratedCaptionsProps) =>
         );
       })}
 
-      {/* Fixed Next Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t z-50">
-        <Button 
-          onClick={() => navigate('/schedule')}
-          className="w-full bg-gradient-primary hover:opacity-90 py-4 text-base font-medium"
-          size="lg"
-        >
-          {t('captions.next')}
-        </Button>
-      </div>
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedItems.size} item(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected posts and their captions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : t('captions.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Full-Screen Image Preview Modal */}
       {previewImage && (

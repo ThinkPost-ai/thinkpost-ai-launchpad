@@ -204,8 +204,8 @@ serve(async (req) => {
           name: `${originalProductData.name} - Version ${i + 1}`,
           price: originalProductData.price,
           description: originalProductData.description || generatedImage.prompt,
-          image_path: enhancedFileName,
-          enhanced_image_path: enhancedFileName,
+          image_path: originalImagePath, // Keep original image path
+          enhanced_image_path: enhancedFileName, // Set enhanced path separately
           image_enhancement_status: 'completed',
           caption: captionData?.caption || `Enhanced version ${i + 1} of ${originalProductData.name}`, // Use generated caption or fallback
           is_new: true,
