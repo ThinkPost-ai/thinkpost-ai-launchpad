@@ -140,19 +140,29 @@ const CaptionGridCard = ({
     
     // Only return enhanced path if explicitly selected as enhanced AND enhanced version exists
     if (selectedVersion === 'enhanced' && canShowEnhanced) {
+      console.log(`✅ Showing enhanced image for ${caption.name}:`, enhancedPath);
       return enhancedPath;
     }
     
-    // For 'original' selection, we need to find the actual original image
-    // If image_path is null or same as enhanced_path, this is a "Version" product
-    if (!caption.image_path || caption.image_path === enhancedPath) {
-      // This is a "Version" product, we need to find the original
-      // For now, return enhanced as fallback (this should be handled by parent component)
-      console.log(`⚠️ Version product ${caption.name} has no original image_path, using enhanced as fallback`);
-      return enhancedPath;
+    // For 'original' selection, validate we have a proper original image path
+    if (!caption.image_path) {
+      console.warn(`⚠️ No image_path found for ${caption.name} (ID: ${caption.id})`);
+      // Fallback to enhanced if no original exists
+      return enhancedPath || '';
+    }
+    
+    // Check if image_path incorrectly equals enhanced_path (shouldn't happen after fix)
+    if (caption.image_path === enhancedPath && enhancedPath) {
+      console.error(`❌ ERROR: image_path equals enhanced_image_path for ${caption.name} (ID: ${caption.id})`);
+      console.error(`   This indicates the product was created with the wrong image_path.`);
+      console.error(`   image_path: ${caption.image_path}`);
+      console.error(`   enhanced_image_path: ${enhancedPath}`);
+      // Still return it since it's all we have
+      return caption.image_path;
     }
     
     // Normal case: return the original image path
+    console.log(`✅ Showing original image for ${caption.name}:`, caption.image_path);
     return caption.image_path;
   };
 

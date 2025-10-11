@@ -187,14 +187,10 @@ export const useTikTokConnection = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          // Keep the previous account information for reconnection dialog
-          // tiktok_open_id: null,  // Keep this
-          // tiktok_username: null,  // Keep this
-          // tiktok_avatar_url: null,  // Keep this
-          // Only clear tokens and connection status
+          tiktok_open_id: null,
+          tiktok_username: null,
+          tiktok_avatar_url: null,
           tiktok_access_token: null,
-          tiktok_refresh_token: null,
-          tiktok_token_expires_at: null,
           tiktok_connected: false
         })
         .eq('id', user.id);
@@ -203,11 +199,12 @@ export const useTikTokConnection = () => {
         throw error;
       }
 
-      // Update local state to reflect disconnection while preserving account info
-      setTikTokProfile(prev => prev ? {
-        ...prev,
+      setTikTokProfile({
+        tiktok_open_id: null,
+        tiktok_username: null,
+        tiktok_avatar_url: null,
         tiktok_connected: false,
-      } : null);
+      });
 
       toast({
         title: t('toast.tiktokDisconnected'),

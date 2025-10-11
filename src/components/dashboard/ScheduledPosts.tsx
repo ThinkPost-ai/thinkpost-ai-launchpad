@@ -521,7 +521,7 @@ const ScheduledPosts = () => {
           tiktok_branded_content: false,
           tiktok_disable_duet: false,
           tiktok_disable_stitch: false,
-          approved_at: new Date().toISOString() // Auto-approve for immediate processing
+          approved_at: null // Require manual approval - user must click approve button
         };
 
         // Store the enhanced image path if available

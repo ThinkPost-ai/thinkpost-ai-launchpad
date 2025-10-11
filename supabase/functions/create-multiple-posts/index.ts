@@ -360,8 +360,8 @@ serve(async (req) => {
         name: `${originalProduct.name} - Version ${i + 1}`,
         price: originalProduct.price,
         description: originalProduct.description,
-        image_path: enhancedImage.imagePath,
-        enhanced_image_path: enhancedImage.imagePath,
+        image_path: originalProduct.image_path, // Preserve original uploaded image
+        enhanced_image_path: enhancedImage.imagePath, // Store enhanced version separately
         image_enhancement_status: 'completed',
         caption: captionData.caption,
         is_new: true,
