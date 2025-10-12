@@ -49,12 +49,14 @@ const TikTokCallback = () => {
         console.log('🚀 Forwarding to Supabase edge function:', supabaseCallbackUrl);
 
         // Make the request to the Supabase edge function WITH AUTHORIZATION
+        // Set redirect: 'manual' to prevent automatic redirect following
         const response = await fetch(supabaseCallbackUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${sessionData.session.access_token}`
-          }
+          },
+          redirect: 'manual' // Don't follow redirects automatically
         });
 
         console.log('📡 Supabase edge function response:', {
@@ -62,21 +64,17 @@ const TikTokCallback = () => {
           statusText: response.statusText,
           redirected: response.redirected,
           url: response.url,
+          type: response.type,
           headers: Object.fromEntries(response.headers.entries())
         });
 
-        if (response.redirected) {
-          // If the edge function returned a redirect, follow it
-          console.log('✅ Following redirect to:', response.url);
-          window.location.href = response.url;
-        } else if (response.ok) {
-          // If successful but no redirect, go to success page
-          console.log('✅ Success response, going to success page');
-          const responseText = await response.text();
-          console.log('📥 Response body:', responseText);
+        // Check if response indicates success (3xx redirect or 2xx success)
+        if (response.status >= 200 && response.status < 400) {
+          // Successful connection - redirect to success page
+          console.log('✅ TikTok connection successful (status: ' + response.status + '), redirecting to success page');
           window.location.href = '/tiktok-login-callback?tiktok=connected';
         } else {
-          // If there was an error, go to error page
+          // Only treat as error if status is actually an error code (4xx or 5xx)
           console.error('❌ Supabase edge function error:', response.status, response.statusText);
           
           try {

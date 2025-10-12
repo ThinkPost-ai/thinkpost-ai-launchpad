@@ -76,6 +76,7 @@ export const useCaptionData = () => {
         image_path: product.image_path || null,
         enhanced_image_path: product.enhanced_image_path || null,
         image_enhancement_status: (product.image_enhancement_status as 'none' | 'processing' | 'completed' | 'failed') || 'none',
+        selected_version: (product.selected_version as 'original' | 'enhanced') || 'original',
         name: product.name,
         price: product.price,
         description: product.description,

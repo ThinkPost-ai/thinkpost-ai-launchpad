@@ -64,21 +64,34 @@ const CaptionGridCard = ({
   const [enhancementStatus, setEnhancementStatus] = useState(caption.image_enhancement_status || 'none');
   const [enhancedImagePath, setEnhancedImagePath] = useState(caption.enhanced_image_path || null);
   const [selectedVersion, setSelectedVersion] = useState<'original' | 'enhanced'>(() => {
-    // Check if user has explicitly chosen a version
+    // Priority order:
+    // 1. Database selected_version (source of truth for products)
+    // 2. localStorage userImageChoices (explicit user choice)
+    // 3. Auto-select enhanced if completed and path exists
+    // 4. localStorage selectedImageVersions (legacy)
+    // 5. Default to 'original'
+    
+    // Check database selected_version first (for products)
+    if (caption.type === 'product' && caption.selected_version) {
+      console.log(`📊 Loading selected_version from database for ${caption.name}: ${caption.selected_version}`);
+      return caption.selected_version;
+    }
+    
+    // Check if user has explicitly chosen a version in this session
     const userChoices = JSON.parse(localStorage.getItem('userImageChoices') || '{}');
     if (userChoices[caption.id]) {
       return userChoices[caption.id];
     }
     
-    // Auto-select enhanced if available and completed
-    if (caption.image_enhancement_status === 'completed' && caption.enhanced_image_path) {
-      return 'enhanced';
-    }
-    
     // Load saved selection from localStorage as fallback
     const saved = localStorage.getItem('selectedImageVersions');
     const savedVersions = saved ? JSON.parse(saved) : {};
-    return savedVersions[caption.id] || 'original';
+    if (savedVersions[caption.id]) {
+      return savedVersions[caption.id];
+    }
+    
+    // Default to original
+    return 'original';
   });
   const [isMarkedForEnhancement, setIsMarkedForEnhancement] = useState(() => {
     const enhancingProducts = JSON.parse(localStorage.getItem('enhancingProducts') || '[]');

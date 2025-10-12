@@ -3,6 +3,7 @@ export interface CaptionData {
   image_path: string;
   enhanced_image_path?: string;
   image_enhancement_status?: 'none' | 'processing' | 'completed' | 'failed';
+  selected_version?: 'original' | 'enhanced'; // User's selection for which image version to use
   original_filename?: string;
   name?: string;
   price?: number;

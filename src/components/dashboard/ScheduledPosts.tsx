@@ -162,27 +162,21 @@ const ScheduledPosts = () => {
         console.log('🔍 Processing scheduled post:', {
           id: post.id,
           product_id: post.product_id,
-          original_image_path: post.products?.image_path || post.images?.file_path,
-          enhanced_image_path: (post.products as any)?.enhanced_image_path,
-          enhancement_status: (post.products as any)?.image_enhancement_status
+          processed_image_path: post.processed_image_path,
+          video_path: post.video_path,
+          original_image_path: post.products?.image_path || post.images?.file_path
         });
         
-        // Determine which image path to use (enhanced or original)
-        let imagePath = post.products?.image_path || post.images?.file_path;
-        const enhancedPath = (post.products as any)?.enhanced_image_path;
-        const enhancementStatus = (post.products as any)?.image_enhancement_status;
+        // CRITICAL: Use processed_image_path which was saved during scheduling
+        // This already has the correct image (original or enhanced) based on user's selection
+        let imagePath = post.processed_image_path || post.video_path || post.products?.image_path || post.images?.file_path;
         
-        // Use enhanced image if available and completed
-        if (enhancedPath && enhancementStatus === 'completed') {
-          imagePath = enhancedPath;
-          console.log('✅ Using enhanced image for post', post.id, ':', enhancedPath);
+        if (post.processed_image_path) {
+          console.log('✅ Using processed_image_path (user-selected) for post', post.id, ':', post.processed_image_path);
+        } else if (post.video_path) {
+          console.log('🎥 Using video_path for post', post.id, ':', post.video_path);
         } else {
-          console.log('❌ Using original image for post', post.id, ':', imagePath);
-          if (enhancedPath) {
-            console.log('   Enhancement status:', enhancementStatus);
-          } else {
-            console.log('   No enhanced image found');
-          }
+          console.log('⚠️ Using fallback image path for post', post.id, ':', imagePath);
         }
 
         return {
@@ -305,26 +299,43 @@ const ScheduledPosts = () => {
           status_completed: enhancementStatus === 'completed'
         });
         
-        let filePath = p.image_path; // Default to image_path
+        let filePath = p.image_path; // Default to original image_path
         
-        if (isEnhancedProduct) {
-          // For enhanced products (Version 1, 2, 3), the image_path is already the enhanced image
+        // ALWAYS respect user's selected_version choice, regardless of product type
+        // This allows users to choose Original even for Version products if they prefer
+        if (userSelectedVersion === 'enhanced' && enhancedPath && enhancementStatus === 'completed') {
+          // User explicitly selected enhanced version
+          filePath = enhancedPath;
+          console.log(`✅ [SCHEDULING] Using ENHANCED image (user selected) for ${p.name}: ${filePath}`);
+        } else if (userSelectedVersion === 'original' || !userSelectedVersion) {
+          // User selected original OR no selection saved (default to original)
           filePath = p.image_path;
-          console.log(`✅ [SCHEDULING] Using enhanced product image for ${p.name}: ${filePath}`);
-        } else {
-          // For original products, check if user wants enhanced version
-          if (userSelectedVersion === 'enhanced' && enhancedPath && enhancementStatus === 'completed') {
+          
+          // CRITICAL FIX: If original image path is null/empty, fall back to enhanced
+          // This happens with older Version products created before the fix
+          if (!filePath && enhancedPath && enhancementStatus === 'completed') {
             filePath = enhancedPath;
-            console.log(`✅ [SCHEDULING] Using user-selected enhanced image for ${p.name}: ${filePath}`);
+            console.warn(`⚠️ [SCHEDULING] User selected ORIGINAL but image_path is null for ${p.name}, using enhanced as fallback: ${filePath}`);
+            console.warn(`   This is an older Version product - original image path was not saved during creation`);
+          } else if (filePath) {
+            console.log(`✅ [SCHEDULING] Using ORIGINAL image (user selected: ${userSelectedVersion || 'default'}) for ${p.name}: ${filePath}`);
           } else {
-            console.log(`❌ [SCHEDULING] Using original image for ${p.name}: ${filePath} (user selected: ${userSelectedVersion})`);
-            if (enhancedPath && enhancementStatus !== 'completed') {
-              console.log(`   Reason: Enhancement status is '${enhancementStatus}', not 'completed'`);
-            } else if (!enhancedPath && userSelectedVersion === 'enhanced') {
-              console.log(`   Reason: User selected enhanced but no enhanced image path found`);
-            } else {
-              console.log(`   Reason: User selected original version`);
-            }
+            // No original AND no enhanced available
+            console.error(`❌ [SCHEDULING] No image available for ${p.name}! Both image_path and enhanced_image_path are null`);
+          }
+          
+          // Log additional context for debugging
+          if (!userSelectedVersion && isEnhancedProduct) {
+            console.log(`   ℹ️  Note: This is a Version product but no selection saved, defaulting to original`);
+          }
+        } else {
+          // Fallback case: user selected enhanced but it's not available
+          filePath = p.image_path || enhancedPath; // Use enhanced as last resort
+          console.warn(`⚠️ [SCHEDULING] User selected enhanced but not available for ${p.name}, using fallback: ${filePath}`);
+          if (enhancedPath && enhancementStatus !== 'completed') {
+            console.log(`   Reason: Enhancement status is '${enhancementStatus}', not 'completed'`);
+          } else if (!enhancedPath) {
+            console.log(`   Reason: No enhanced image path found`);
           }
         }
 

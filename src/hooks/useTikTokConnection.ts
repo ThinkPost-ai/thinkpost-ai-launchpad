@@ -184,19 +184,49 @@ export const useTikTokConnection = () => {
     if (!user?.id) return;
 
     try {
-      const { error } = await supabase
+      console.log('🔄 Starting TikTok disconnection for user:', user.id);
+      
+      // Clear TikTok data from profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           tiktok_open_id: null,
           tiktok_username: null,
           tiktok_avatar_url: null,
-          tiktok_access_token: null,
           tiktok_connected: false
         })
         .eq('id', user.id);
 
-      if (error) {
-        throw error;
+      if (profileError) {
+        console.error('❌ Profile update error:', profileError);
+        throw profileError;
+      }
+      
+      console.log('✅ Profile table cleared successfully');
+
+      // Also clear OAuth tokens from user_oauth_tokens table using UPSERT
+      // This works whether the record exists or not
+      const { error: tokensError } = await supabase
+        .from('user_oauth_tokens')
+        .upsert({
+          user_id: user.id,
+          tiktok_access_token: null,
+          tiktok_refresh_token: null,
+          tiktok_connected: false,
+          tiktok_open_id: null,
+          tiktok_username: null,
+          tiktok_token_expires_at: null,
+          tiktok_avatar_url: null,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (tokensError) {
+        console.error('❌ OAuth tokens clear error:', tokensError);
+        // Don't throw - profiles table was cleared which is the main requirement
+      } else {
+        console.log('✅ OAuth tokens cleared successfully');
       }
 
       setTikTokProfile({
@@ -206,15 +236,23 @@ export const useTikTokConnection = () => {
         tiktok_connected: false,
       });
 
+      console.log('✅ TikTok disconnection completed successfully');
+
       toast({
         title: t('toast.tiktokDisconnected'),
         description: t('toast.tiktokDisconnectedDesc'),
       });
-    } catch (error) {
-      console.error('Error disconnecting TikTok:', error);
+    } catch (error: any) {
+      console.error('❌ Error disconnecting TikTok:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       toast({
         title: t('toast.disconnectionFailed'),
-        description: t('toast.disconnectionFailedDesc'),
+        description: error.message || t('toast.disconnectionFailedDesc'),
         variant: "destructive"
       });
     }

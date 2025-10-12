@@ -739,6 +739,7 @@ export const useProductManagement = () => {
                         image_path: product.image_path, // Keep original image path
                         enhanced_image_path: enhancedImage.imagePath, // Use the enhanced image path
                         image_enhancement_status: 'completed',
+                        selected_version: 'enhanced', // Default Version products to enhanced (they ARE enhanced versions)
                         caption: captionData?.caption || `Generated caption ${i + 1} for ${product.name}`,
                         is_new: true,
                         // Include TikTok settings from the temporary product

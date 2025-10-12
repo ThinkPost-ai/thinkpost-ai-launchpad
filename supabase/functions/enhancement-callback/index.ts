@@ -302,6 +302,7 @@ serve(async (req) => {
           image_path: originalImagePath, // Keep original image path
           enhanced_image_path: enhancedFileName, // Set enhanced path separately
           image_enhancement_status: 'completed',
+          selected_version: 'enhanced', // Default Version products to enhanced (they ARE enhanced versions)
           caption: generatedCaption, // Use the generated caption
           is_new: true,
           // Default TikTok settings
