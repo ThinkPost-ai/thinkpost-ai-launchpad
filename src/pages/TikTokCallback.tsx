@@ -68,9 +68,23 @@ const TikTokCallback = () => {
           headers: Object.fromEntries(response.headers.entries())
         });
 
-        // Check if response indicates success (3xx redirect or 2xx success)
-        if (response.status >= 200 && response.status < 400) {
-          // Successful connection - redirect to success page
+        // CRITICAL FIX: Edge function ALWAYS returns 302 redirects (even for errors!)
+        // We need to check the Location header to determine success vs error
+        const locationHeader = response.headers.get('Location');
+        console.log('📍 Location header:', locationHeader);
+
+        if (locationHeader && locationHeader.includes('tiktok=connected')) {
+          // Success redirect - contains tiktok=connected parameter
+          console.log('✅ TikTok connection successful (detected from Location header), redirecting to success page');
+          window.location.href = '/tiktok-login-callback?tiktok=connected';
+        } else if (locationHeader && locationHeader.includes('error=')) {
+          // Error redirect - contains error parameter
+          console.error('❌ TikTok connection failed (detected from Location header):', locationHeader);
+          const errorMatch = locationHeader.match(/error=([^&]+)/);
+          const errorType = errorMatch ? errorMatch[1] : 'unknown';
+          window.location.href = `/tiktok-login-callback?error=${errorType}`;
+        } else if (response.status >= 200 && response.status < 400) {
+          // Fallback: treat as success if status is 2xx or 3xx and no clear error in Location
           console.log('✅ TikTok connection successful (status: ' + response.status + '), redirecting to success page');
           window.location.href = '/tiktok-login-callback?tiktok=connected';
         } else {

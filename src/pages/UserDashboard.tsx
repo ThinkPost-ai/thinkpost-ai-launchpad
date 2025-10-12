@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import OverviewCards from '@/components/dashboard/OverviewCards';
 import StatisticsCards from '@/components/dashboard/StatisticsCards';
@@ -18,12 +19,21 @@ const UserDashboard = () => {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { dismiss } = useToast();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [checkingRestaurant, setCheckingRestaurant] = useState(true);
 
   // Use custom hooks for data management
   const { restaurant, stats, isLoading } = useDashboardData();
+
+  // CRITICAL FIX: Clear all existing toasts when dashboard loads
+  // This removes any old error toasts that were created with long durations before the fix
+  useEffect(() => {
+    // Clear all existing toasts on dashboard mount
+    dismiss();
+    console.log('🧹 Dashboard mounted - cleared all existing toasts');
+  }, [dismiss]);
 
   useEffect(() => {
     if (!loading && !user) {
