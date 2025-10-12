@@ -7,7 +7,7 @@ import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const TikTokLoginCallback = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
 
@@ -54,10 +54,18 @@ const TikTokLoginCallback = () => {
     if (tiktokConnected === 'connected') {
       // Connection successful - show success toast and clear any error state
       console.log('✅ TikTok connection successful, showing success toast');
-      toast({
-        title: t('dashboard.tiktok.connectionSuccess'),
-        description: t('dashboard.tiktok.connectionSuccessDescription'),
-      });
+      
+      // Clear any existing toasts (especially error toasts)
+      // This prevents old error notifications from persisting
+      dismiss();
+      
+      // Small delay to ensure dismiss completes before showing success
+      setTimeout(() => {
+        toast({
+          title: t('dashboard.tiktok.connectionSuccess'),
+          description: t('dashboard.tiktok.connectionSuccessDescription'),
+        });
+      }, 100);
     }
 
     // Redirect to dashboard after a short delay
@@ -66,7 +74,7 @@ const TikTokLoginCallback = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate, toast, searchParams, t]);
+  }, [navigate, toast, dismiss, searchParams, t]);
 
   // Only treat as error if there's an error AND not connected
   const hasError = searchParams.get('error') && searchParams.get('tiktok') !== 'connected';
