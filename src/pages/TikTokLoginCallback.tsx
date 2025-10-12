@@ -15,7 +15,9 @@ const TikTokLoginCallback = () => {
     const tiktokConnected = searchParams.get('tiktok');
     const error = searchParams.get('error');
 
-    if (error) {
+    // CRITICAL FIX: Only show error if connection explicitly failed (not if it's connected)
+    // This prevents showing error toasts when connection is actually successful
+    if (error && tiktokConnected !== 'connected') {
       let errorMessage = t('toast.tiktokErrorGeneral');
       
       switch (error) {
@@ -50,6 +52,8 @@ const TikTokLoginCallback = () => {
     }
 
     if (tiktokConnected === 'connected') {
+      // Connection successful - show success toast and clear any error state
+      console.log('✅ TikTok connection successful, showing success toast');
       toast({
         title: t('dashboard.tiktok.connectionSuccess'),
         description: t('dashboard.tiktok.connectionSuccessDescription'),
@@ -62,9 +66,10 @@ const TikTokLoginCallback = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate, toast, searchParams]);
+  }, [navigate, toast, searchParams, t]);
 
-  const hasError = searchParams.get('error');
+  // Only treat as error if there's an error AND not connected
+  const hasError = searchParams.get('error') && searchParams.get('tiktok') !== 'connected';
   const isConnected = searchParams.get('tiktok') === 'connected';
 
   return (
