@@ -74,6 +74,7 @@ const PasswordRequirements = ({ password }: { password: string }) => {
 const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -81,6 +82,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordMatchError, setPasswordMatchError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [signupError, setSignupError] = useState('');
   const { signUp } = useAuth();
   const { t } = useLanguage();
@@ -125,6 +127,33 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     }
   };
 
+  // Phone number validation function
+  const validatePhoneNumber = (phone: string) => {
+    // Remove all non-digit characters for validation
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Accept international format with + or just digits
+    // Minimum 8 digits, maximum 15 digits (international standard)
+    if (digitsOnly.length < 8 || digitsOnly.length > 15) {
+      return t('auth.phoneNumberInvalid');
+    }
+    
+    return '';
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPhone = e.target.value;
+    setPhoneNumber(newPhone);
+    
+    // Validate phone number if it's not empty
+    if (newPhone) {
+      const error = validatePhoneNumber(newPhone);
+      setPhoneError(error);
+    } else {
+      setPhoneError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignupError(''); // Clear previous errors
@@ -132,9 +161,18 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     console.log('🚀 Starting signup process...', {
       name,
       email,
+      phoneNumber,
       passwordLength: password.length,
       hasConfirmPassword: !!confirmPassword
     });
+    
+    // Validate phone number before submission
+    const phoneValidationError = validatePhoneNumber(phoneNumber);
+    if (phoneValidationError) {
+      setPhoneError(phoneValidationError);
+      console.error('❌ Phone number validation failed:', phoneValidationError);
+      return;
+    }
     
     // Validate password before submission
     const passwordValidationError = validatePassword(password);
@@ -155,7 +193,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     
     try {
       console.log('📡 Calling signUp function...');
-      const { error } = await signUp(email, password, name);
+      const { error } = await signUp(email, password, name, phoneNumber);
       
       console.log('📡 SignUp response:', { error });
       
@@ -227,6 +265,31 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
               required
               className="border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber" className="text-deep-blue dark:text-white font-medium">
+              {t('auth.phoneNumber')} <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="phoneNumber"
+              type="tel"
+              placeholder={t('auth.enterPhoneNumber')}
+              value={phoneNumber}
+              onChange={handlePhoneNumberChange}
+              required
+              className={`border-gray-300 dark:border-gray-600 focus:border-vibrant-purple dark:focus:border-purple-400 ${
+                phoneError ? 'border-red-500 dark:border-red-400' : ''
+              }`}
+            />
+            {phoneError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {phoneError}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('auth.phoneNumberHint')}
+            </p>
           </div>
           
           <div className="space-y-2">
@@ -323,7 +386,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
           <Button
             type="submit"
-            disabled={isLoading || !!passwordError || !!passwordMatchError}
+            disabled={isLoading || !!passwordError || !!passwordMatchError || !!phoneError}
             className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold py-3 mt-4 min-h-[44px] text-base"
           >
             {isLoading ? (
