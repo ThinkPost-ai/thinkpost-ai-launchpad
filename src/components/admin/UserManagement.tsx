@@ -141,15 +141,18 @@ const UserManagement = () => {
 
   const exportUsers = () => {
     const csv = [
-      ['Name', 'Email', 'Restaurant', 'Category', 'Credits', 'Uploads', 'Captions', 'TikTok', 'Instagram', 'Created'].join(','),
+      ['Name', 'Email', 'Phone', 'Restaurant', 'Category', 'Credits', 'Uploads', 'Captions', 'Scheduled Posts', 'Posted', 'TikTok', 'Instagram', 'Created'].join(','),
       ...users.map(user => [
         user.full_name || 'N/A',
         user.email || 'N/A',
+        user.phone_number || 'N/A',
         user.restaurant_name || 'N/A',
         user.category || 'N/A',
         user.caption_credits,
         user.total_uploads,
         user.captions_generated,
+        user.scheduled_posts_count,
+        user.posted_count,
         user.tiktok_connected ? 'Yes' : 'No',
         user.instagram_connected ? 'Yes' : 'No',
         formatDate(user.created_at)
@@ -294,9 +297,12 @@ const UserManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Restaurant</TableHead>
                   <TableHead>Credits</TableHead>
                   <TableHead>Activity</TableHead>
+                  <TableHead>Scheduled</TableHead>
+                  <TableHead>Posted</TableHead>
                   <TableHead>Connections</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
@@ -305,7 +311,7 @@ const UserManagement = () => {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -317,6 +323,11 @@ const UserManagement = () => {
                           <div className="font-medium">{user.full_name || 'Unnamed User'}</div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
                           <div className="text-sm text-muted-foreground">{user.id.slice(0, 8)}...</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {user.phone_number || '-'}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -338,6 +349,16 @@ const UserManagement = () => {
                         <div className="text-sm">
                           <div>{user.total_uploads} uploads</div>
                           <div>{user.captions_generated} captions</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {user.scheduled_posts_count}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {user.posted_count}
                         </div>
                       </TableCell>
                       <TableCell>

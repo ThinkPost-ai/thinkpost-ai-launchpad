@@ -6,6 +6,7 @@ export interface AdminUser {
   id: string;
   full_name: string | null;
   email: string | null;
+  phone_number: string | null;
   caption_credits: number;
   tiktok_connected: boolean | null;
   instagram_connected: boolean | null;
@@ -17,6 +18,8 @@ export interface AdminUser {
   restaurant_name: string | null;
   category: string | null;
   role: string;
+  scheduled_posts_count: number;
+  posted_count: number;
 }
 
 export interface UserStats {
@@ -72,6 +75,7 @@ export const useAdminUserManagement = () => {
           id: user.id,
           full_name: user.full_name,
           email: user.email,
+          phone_number: user.phone_number || null,
           caption_credits: user.caption_credits,
           tiktok_connected: user.tiktok_connected,
           instagram_connected: user.instagram_connected,
@@ -82,7 +86,9 @@ export const useAdminUserManagement = () => {
           auth_provider: user.auth_provider,
           restaurant_name: user.restaurant_name || null,
           category: user.category || null,
-          role: user.role || 'user'
+          role: user.role || 'user',
+          scheduled_posts_count: user.scheduled_posts_count || 0,
+          posted_count: user.posted_count || 0
         };
       });
 
