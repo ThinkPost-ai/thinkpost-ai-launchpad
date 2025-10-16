@@ -29,6 +29,7 @@ serve(async (req) => {
       .insert({
         id: record.id,
         full_name: record.raw_user_meta_data?.full_name,
+        phone_number: record.raw_user_meta_data?.phone_number,
         avatar_url: record.raw_user_meta_data?.avatar_url,
         auth_provider: record.raw_user_meta_data?.auth_provider || 'email',
         tiktok_open_id: record.raw_user_meta_data?.tiktok_open_id

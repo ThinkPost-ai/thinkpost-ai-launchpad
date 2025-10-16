@@ -11,7 +11,7 @@ interface AuthContextType {
   hasRestaurant: boolean | null;
   checkingProfile: boolean;
   role: string | null;
-  signUp: (email: string, password: string, fullName: string, phoneNumber: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, phoneNumber?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   checkUserProfile: () => Promise<void>;
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, phoneNumber: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phoneNumber?: string) => {
     try {
       // Normalize email consistently
       const normalizedEmail = email.trim().toLowerCase();
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         originalEmail: email,
         normalizedEmail, 
         fullName,
-        phoneNumber,
+        phoneNumber, 
         passwordLength: password.length 
       });
       
