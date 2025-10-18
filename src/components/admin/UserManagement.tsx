@@ -141,7 +141,7 @@ const UserManagement = () => {
 
   const exportUsers = () => {
     const csv = [
-      ['Name', 'Email', 'Phone', 'Restaurant', 'Category', 'Credits', 'Uploads', 'Captions', 'Scheduled Posts', 'Posted', 'TikTok', 'Instagram', 'Created'].join(','),
+      ['Name', 'Email', 'Phone', 'Restaurant', 'Category', 'Credits', 'Uploads', 'Captions', 'Scheduled', 'Posted', 'TikTok', 'Instagram', 'Created'].join(','),
       ...users.map(user => [
         user.full_name || 'N/A',
         user.email || 'N/A',
@@ -300,7 +300,8 @@ const UserManagement = () => {
                   <TableHead>Phone</TableHead>
                   <TableHead>Restaurant</TableHead>
                   <TableHead>Credits</TableHead>
-                  <TableHead>Activity</TableHead>
+                  <TableHead>Uploads</TableHead>
+                  <TableHead>Captions</TableHead>
                   <TableHead>Scheduled</TableHead>
                   <TableHead>Posted</TableHead>
                   <TableHead>Connections</TableHead>
@@ -311,7 +312,7 @@ const UserManagement = () => {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
+                    <TableCell colSpan={11} className="text-center py-8">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -346,9 +347,13 @@ const UserManagement = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div>{user.total_uploads} uploads</div>
-                          <div>{user.captions_generated} captions</div>
+                        <div className="text-sm font-medium">
+                          {user.total_uploads}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {user.captions_generated}
                         </div>
                       </TableCell>
                       <TableCell>

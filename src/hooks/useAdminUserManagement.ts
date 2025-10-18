@@ -57,19 +57,33 @@ export const useAdminUserManagement = () => {
       console.log('📊 Users data result:', { usersData, usersError });
       if (usersError) throw usersError;
 
-      // Get upload and caption counts
-      console.log('🖼️ Fetching image stats...');
-      const { data: imageStats, error: imageError } = await supabase
-        .from('images')
+      // Get upload and caption counts from products table (where actual uploads are stored)
+      console.log('🖼️ Fetching product stats from products table...');
+      const { data: productStats, error: productError } = await supabase
+        .from('products')
         .select('user_id, caption');
 
-      console.log('📷 Image stats result:', { imageStats, imageError });
-      if (imageError) throw imageError;
+      console.log('📷 Product stats fetched:', { 
+        totalProducts: productStats?.length, 
+        error: productError 
+      });
+      if (productError) {
+        console.error('❌ Error fetching product stats:', productError);
+        throw productError;
+      }
 
       // Process the data
       const processedUsers: AdminUser[] = (usersData || []).map(user => {
-        const uploads = imageStats?.filter(img => img.user_id === user.id) || [];
-        const captions = uploads.filter(img => img.caption !== null);
+        // Get all products for this user
+        const userProducts = productStats?.filter(p => p.user_id === user.id) || [];
+        
+        // Uploads = total number of products (each product is an upload)
+        const totalUploads = userProducts.length;
+        
+        // Captions = how many products have captions
+        const totalCaptions = userProducts.filter(p => p.caption !== null && p.caption !== '').length;
+        
+        console.log(`📊 User ${user.email}: ${totalUploads} uploads (products), ${totalCaptions} captions`);
         
         return {
           id: user.id,
@@ -79,8 +93,8 @@ export const useAdminUserManagement = () => {
           caption_credits: user.caption_credits,
           tiktok_connected: user.tiktok_connected,
           instagram_connected: user.instagram_connected,
-          total_uploads: uploads.length,
-          captions_generated: captions.length,
+          total_uploads: totalUploads,
+          captions_generated: totalCaptions,
           created_at: user.created_at, // Now using real created_at from auth.users
           updated_at: user.updated_at,
           auth_provider: user.auth_provider,
