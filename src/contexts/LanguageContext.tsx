@@ -408,8 +408,8 @@ const getTranslations = () => {
       'upload.contentSettings': 'Content Settings',
       'upload.generateCaption': 'Generate Caption',
       'upload.generateCaptionDescription': 'Automatically generate AI-powered caption for this product',
-      'upload.enhanceImage': 'Enhance Image',
-      'upload.enhanceImageDescription': 'Improve image quality and optimize for social media',
+      'upload.enhanceImage': 'Generate 3 New Images by AI',
+      'upload.enhanceImageDescription': 'Create 3 enhanced images by AI',
       
       // Photo Tips Dialog
       'photoTips.title': '📸 Best Photo Practices for AI Enhancement',
@@ -1054,7 +1054,7 @@ const getTranslations = () => {
       'dashboard.loading': 'جارٍ تحميل لوحة التحكم...',
       'dashboard.tabs.overview': 'نظرة عامة',
       'dashboard.tabs.media': 'الوسائط',
-      'dashboard.tabs.captions': 'توليد المحتوى',
+      'dashboard.tabs.captions': 'توليد نص تسويقي',
       'dashboard.tabs.schedule': 'الجدولة',
       'dashboard.tabs.statistics': 'الإحصائيات',
         
@@ -1172,10 +1172,10 @@ const getTranslations = () => {
       'upload.complianceMessageBrand': 'بالنشر، فإنك توافق على {musicUsageConfirmation} الخاصة بـ TikTok',
       'upload.connected': 'متصل',
       'upload.contentSettings': 'إعدادات المحتوى',
-      'upload.generateCaption': 'توليد المحتوى',
+      'upload.generateCaption': 'توليد نص تسويقي',
       'upload.generateCaptionDescription': 'توليد محتوى تلقائياً بالذكاء الاصطناعي لهذا المنتج',
-      'upload.enhanceImage': 'تحسين الصورة',
-      'upload.enhanceImageDescription': 'تحسين جودة الصورة وتحسينها لشبكات التواصل الاجتماعي',
+      'upload.enhanceImage': 'توليد 3 صور جديدة بالذكاء الاصطناعي',
+      'upload.enhanceImageDescription': 'إنشاء 3 صور محسّنة بالذكاء الاصطناعي',
       
       // Photo Tips Dialog
       'photoTips.title': '📸 أفضل الممارسات لتصوير المنتجات للذكاء الاصطناعي',
