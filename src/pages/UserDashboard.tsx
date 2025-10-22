@@ -28,12 +28,12 @@ const UserDashboard = () => {
   const { restaurant, stats, isLoading } = useDashboardData();
 
   // CRITICAL FIX: Clear all existing toasts when dashboard loads
-  // This removes any old error toasts that were created with long durations before the fix
-  useEffect(() => {
-    // Clear all existing toasts on dashboard mount
-    dismiss();
-    console.log('🧹 Dashboard mounted - cleared all existing toasts');
-  }, [dismiss]);
+  // // This removes any old error toasts that were created with long durations before the fix
+  // useEffect(() => {
+  //   // Clear all existing toasts on dashboard mount
+  //   dismiss();
+  //   console.log('🧹 Dashboard mounted - cleared all existing toasts');
+  // }, [dismiss]);
 
   useEffect(() => {
     if (!loading && !user) {
